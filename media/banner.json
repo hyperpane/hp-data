@@ -1,0 +1,7 @@
+{
+  "accent": "#9bd13a",
+  "tagline": "Every database you use, in one window on your canvas.",
+  "chips": ["SQL", "Redis", "Kafka", "S3"],
+  "window": "Data",
+  "illustration": "illustration.svg"
+}

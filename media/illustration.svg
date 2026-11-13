@@ -1,0 +1,53 @@
+<g font-family="Inter, -apple-system, 'Segoe UI', sans-serif" font-size="12">
+  <path d="M0 0h168v404H16a16 16 0 0 1-16-16z" fill="#0f131c"/>
+  <line x1="168" y1="0" x2="168" y2="404" stroke="#232a38"/>
+  <text x="14" y="24" fill="#9aa3b6" font-size="10" font-weight="600" letter-spacing="1">EXPLORER</text>
+  <rect x="12" y="38" width="16" height="16" rx="4" fill="#336791"/><text x="20" y="50" fill="#fff" font-size="8" font-weight="700" text-anchor="middle">Pg</text>
+  <circle cx="27" cy="53" r="3" fill="#3fb950" stroke="#0f131c"/>
+  <text x="36" y="50" fill="#f4f6fb" font-weight="600">Shop</text>
+  <text x="30" y="74" fill="#58a6ff">▾ shop</text>
+  <text x="42" y="94" fill="#bc8cff">▾ public</text>
+  <text x="54" y="114" fill="#c9d1e0">▾ Tables</text>
+  <rect x="8" y="122" width="152" height="20" rx="5" fill="#9bd13a" fill-opacity="0.16"/>
+  <text x="68" y="136" fill="#3fb950">▦</text><text x="82" y="136" fill="#f4f6fb">orders</text><text x="124" y="136" fill="#5d6678" font-size="10">5K</text>
+  <text x="68" y="158" fill="#3fb950">▦</text><text x="82" y="158" fill="#c9d1e0">customers</text>
+  <text x="68" y="180" fill="#3fb950">▦</text><text x="82" y="180" fill="#c9d1e0">products</text>
+  <rect x="12" y="200" width="16" height="16" rx="4" fill="#dc382d"/><text x="20" y="212" fill="#fff" font-size="8" font-weight="700" text-anchor="middle">Rd</text>
+  <text x="36" y="212" fill="#f4f6fb" font-weight="600">Cache</text>
+  <rect x="12" y="228" width="16" height="16" rx="4" fill="#e8e8e8"/><text x="20" y="240" fill="#111" font-size="8" font-weight="700" text-anchor="middle">Kf</text>
+  <text x="36" y="240" fill="#f4f6fb" font-weight="600">Events</text>
+  <rect x="12" y="256" width="16" height="16" rx="4" fill="#569a31"/><text x="20" y="268" fill="#fff" font-size="8" font-weight="700" text-anchor="middle">S3</text>
+  <text x="36" y="268" fill="#f4f6fb" font-weight="600">Assets</text>
+  <rect x="12" y="284" width="16" height="16" rx="4" fill="#00ed64"/><text x="20" y="296" fill="#111" font-size="8" font-weight="700" text-anchor="middle">Mg</text>
+  <text x="36" y="296" fill="#f4f6fb" font-weight="600">Catalog</text>
+
+  <rect x="168" y="0" width="372" height="30" fill="#0f131c"/>
+  <rect x="168" y="0" width="112" height="30" fill="#171d2a"/><rect x="168" y="28" width="112" height="2" fill="#9bd13a"/>
+  <text x="182" y="19" fill="#f4f6fb" font-size="11">▸ Shop console</text>
+  <text x="294" y="19" fill="#9aa3b6" font-size="11">orders</text>
+  <line x1="168" y1="30" x2="540" y2="30" stroke="#232a38"/>
+  <g font-family="'JetBrains Mono', Menlo, monospace" font-size="11.5">
+    <text x="182" y="54" fill="#5d6678">1</text><text x="200" y="54"><tspan fill="#ff7b72">SELECT</tspan><tspan fill="#c9d1e0"> c.name, </tspan><tspan fill="#d2a8ff">sum</tspan><tspan fill="#c9d1e0">(o.qty)</tspan></text>
+    <text x="182" y="72" fill="#5d6678">2</text><text x="200" y="72"><tspan fill="#ff7b72">FROM</tspan><tspan fill="#c9d1e0"> orders o </tspan><tspan fill="#ff7b72">JOIN</tspan><tspan fill="#c9d1e0"> customers c</tspan></text>
+    <text x="182" y="90" fill="#5d6678">3</text><text x="200" y="90"><tspan fill="#ff7b72">WHERE</tspan><tspan fill="#c9d1e0"> o.status = </tspan><tspan fill="#a5d6ff">'paid'</tspan></text>
+    <text x="182" y="108" fill="#5d6678">4</text><text x="200" y="108"><tspan fill="#ff7b72">GROUP BY</tspan><tspan fill="#c9d1e0"> 1 </tspan><tspan fill="#ff7b72">ORDER BY</tspan><tspan fill="#c9d1e0"> 2 </tspan><tspan fill="#ff7b72">DESC</tspan><tspan fill="#c9d1e0">;</tspan></text>
+  </g>
+  <line x1="168" y1="124" x2="540" y2="124" stroke="#232a38"/>
+  <text x="182" y="142" fill="#f4f6fb" font-size="11" font-weight="600">Result</text><text x="228" y="142" fill="#5d6678" font-size="10">20 · 18 ms</text>
+  <line x1="168" y1="152" x2="540" y2="152" stroke="#232a38"/>
+  <g font-family="'JetBrains Mono', Menlo, monospace" font-size="11">
+    <text x="210" y="170" fill="#9aa3b6" font-family="Inter, sans-serif" font-weight="600">name</text><text x="430" y="170" fill="#9aa3b6" font-family="Inter, sans-serif" font-weight="600">total</text>
+    <line x1="168" y1="178" x2="540" y2="178" stroke="#232a38"/>
+    <text x="190" y="196" fill="#5d6678" text-anchor="end">1</text><text x="210" y="196" fill="#c9d1e0">Customer 42</text><text x="500" y="196" fill="#c9d1e0" text-anchor="end">96</text>
+    <rect x="168" y="204" width="372" height="22" fill="#9bd13a" fill-opacity="0.12"/>
+    <text x="190" y="219" fill="#5d6678" text-anchor="end">2</text><text x="210" y="219" fill="#f4f6fb">Customer 7</text><rect x="420" y="205" width="90" height="20" fill="#d29922" fill-opacity="0.25"/><text x="500" y="219" fill="#f4f6fb" text-anchor="end">88</text>
+    <text x="190" y="242" fill="#5d6678" text-anchor="end">3</text><text x="210" y="242" fill="#c9d1e0">Customer 133</text><text x="500" y="242" fill="#c9d1e0" text-anchor="end">81</text>
+    <text x="190" y="265" fill="#5d6678" text-anchor="end">4</text><text x="210" y="265" fill="#c9d1e0">Customer 18</text><text x="500" y="265" fill="#c9d1e0" text-anchor="end">79</text>
+    <text x="190" y="288" fill="#5d6678" text-anchor="end">5</text><text x="210" y="288" fill="#c9d1e0">Customer 201</text><text x="500" y="288" fill="#c9d1e0" text-anchor="end">74</text>
+    <text x="190" y="311" fill="#5d6678" text-anchor="end">6</text><text x="210" y="311" fill="#c9d1e0">Customer 64</text><text x="500" y="311" fill="#c9d1e0" text-anchor="end">70</text>
+    <text x="190" y="334" fill="#5d6678" text-anchor="end">7</text><text x="210" y="334" fill="#5d6678" font-style="italic">NULL</text><text x="500" y="334" fill="#c9d1e0" text-anchor="end">65</text>
+  </g>
+  <line x1="168" y1="378" x2="540" y2="378" stroke="#232a38"/>
+  <rect x="180" y="384" width="92" height="14" rx="4" fill="#3fb950" fill-opacity="0.18"/><text x="226" y="395" fill="#3fb950" font-size="9.5" text-anchor="middle">Save 1 change ⌘S</text>
+  <text x="284" y="395" fill="#5d6678" font-size="9.5">20 rows · 18 ms</text>
+</g>

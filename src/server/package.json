@@ -1,0 +1,11 @@
+{
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "kafkajs": "2.2.4",
+    "mongodb": "7.8.0",
+    "mysql2": "3.24.6",
+    "pg": "8.23.1",
+    "ssh2": "1.17.0"
+  }
+}

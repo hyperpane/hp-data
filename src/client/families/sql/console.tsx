@@ -5,12 +5,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Play, PlayCircle, Square } from 'lucide-react';
-import { NodeButton } from '@hyperpane/ui';
+import { NodeButton, Picker, SplitPane, Toolbar, ToolbarSeparator } from '@hyperpane/ui';
 import { readsOnly, splitStatements } from '../../../shared/sql.ts';
 import type { QueryResult, TreeNode } from '../../../shared/types.ts';
 import type { TabProps } from '../../app/tabs.ts';
+import { useRowsPort } from '../../lib/hooks.ts';
 import { CodeEditor } from '../../ui/code.tsx';
-import { MiniSelect, Split, Toolbar } from '../../ui/parts.tsx';
 import { Results, type RunLog } from './results.tsx';
 
 const LIMITS = ['100', '500', '1000', '5000', '20000'] as const;
@@ -39,6 +39,7 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
   const [running, setRunning] = useState<AbortController | null>(null);
   const n = useRef(0);
   const editor = useRef<{ run(): void; focus(): void } | null>(null);
+  const sendRows = useRowsPort(connection.name, visible);
 
   // What's typed, kept with the tab a little after the last key.
   useEffect(() => {
@@ -82,6 +83,8 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
     try {
       const r = await api.stream<QueryResult[]>('query', { id: connection.id, project, sql, limit: Number(limit), database: database || undefined }, ac.signal);
       setResults(r);
+      // The last with rows, the one shown first.
+      sendRows(r.findLast((x) => x.columns.length > 0));
       setLog((l) => [...l, ...r.map((x) => ({ n: ++n.current, at, statement: x.statement ?? sql, ok: true, said: x.command || (x.columns.length ? `${x.rows.length} rows` : 'Done'), ms: x.ms }))].slice(-300));
     } catch (e) {
       const message = ac.signal.aborted ? 'Cancelled.' : (e as Error).message;
@@ -109,16 +112,18 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
             Cancel
           </NodeButton>
         )}
-        <span className="mx-1 h-4 w-px bg-[var(--node-border)]" />
-        {databases.length > 0 && <MiniSelect title="The database statements run in" value={database} options={[...(database && !databases.includes(database) ? [{ value: database, label: database }] : []), ...(!database ? [{ value: '', label: 'Default database' }] : []), ...databases.map((d) => ({ value: d, label: d }))]} onChange={setDatabase} />}
-        <MiniSelect title="The most rows a statement gives" value={limit} options={LIMITS.map((l) => ({ value: l, label: `${Number(l).toLocaleString()} rows` }))} onChange={(v) => setLimit(v as typeof limit)} />
+        <ToolbarSeparator />
+        {databases.length > 0 && <Picker label="The database statements run in" value={database} options={[...(database && !databases.includes(database) ? [{ value: database, label: database }] : []), ...(!database ? [{ value: '', label: 'Default database' }] : []), ...databases.map((d) => ({ value: d, label: d }))]} onValueChange={setDatabase} />}
+        <Picker label="The most rows a statement gives" value={limit} options={LIMITS.map((l) => ({ value: l, label: `${Number(l).toLocaleString()} rows` }))} onValueChange={(v) => setLimit(v as typeof limit)} />
         {connection.readOnly && <span className="ml-1 rounded-[3px] border border-[var(--node-border)] px-1 text-[10px] text-[var(--node-muted)]">read only</span>}
         <span className="ml-auto truncate text-[10.5px] text-[var(--node-muted)]">⌘Enter runs the statement at the cursor</span>
       </Toolbar>
-      <Split
+      <SplitPane
         id={`console.${kind.family}`}
-        dir="column"
+        direction="column"
         initial={220}
+        min={80}
+        minOther={80}
         first={<EditorRunner text={text} setText={setText} dialect={dialectOf(kind.engine)} schema={schema} onRun={run} handle={editor} />}
         second={<Results results={results} error={error} log={log} running={!!running} api={api} onClearError={() => setError(null)} />}
       />

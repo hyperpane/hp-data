@@ -5,14 +5,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Plus, RefreshCw, RotateCcw, SquareTerminal, Upload } from 'lucide-react';
-import { NodeButton, NodeInput, ToolButton, cn } from '@hyperpane/ui';
+import { NodeButton, NodeInput, Picker, StatusBar, Tabs, ToolButton, Toolbar, ToolbarSeparator, ToolbarSpacer, cn } from '@hyperpane/ui';
 import { qualified, type Dialect } from '../../../shared/sql.ts';
 import type { Cell } from '../../../shared/types.ts';
 import type { BrowseResult, RowEdit, TableInfo, TableRef } from '../../../shared/sql.ts';
 import type { TabProps } from '../../app/tabs.ts';
+import { useRowsPort } from '../../lib/hooks.ts';
 import { Grid, type GridEdits, hasEdits, noEdits } from '../../ui/grid.tsx';
 import { CodeEditor } from '../../ui/code.tsx';
-import { ErrorBox, MiniSelect, StatusLine, Toolbar, ValueViewer, count, ms } from '../../ui/parts.tsx';
+import { ErrorBox, ValueViewer, count, ms } from '../../ui/parts.tsx';
 import { Structure } from './structure.tsx';
 
 const SIZES = ['50', '100', '200', '500', '1000'] as const;
@@ -37,6 +38,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
   const dialect = (kind.engine === 'postgres' || kind.engine === 'mysql' || kind.engine === 'sqlite' || kind.engine === 'clickhouse' ? kind.engine : 'postgres') as Dialect;
   const name = qualified(dialect, table);
   const editable = !!page?.editable && !readOnly;
+  const sendRows = useRowsPort(connection.name, visible);
 
   useEffect(() => setState({ view, size, where: applied, order }), [view, size, applied, order]);
 
@@ -51,6 +53,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
           setPage(r);
           setError(null);
           setEdits(noEdits());
+          sendRows(r, r.statement ?? r.sql);
         },
         (e: Error) => !ac.signal.aborted && setError(e.message),
       )
@@ -125,17 +128,21 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <Toolbar>
-        <div className="flex h-6 overflow-hidden rounded-[5px] border border-[var(--node-border)]">
-          {(['data', 'structure', 'ddl'] as const).map((v) => (
-            <button key={v} type="button" onClick={() => setView(v)} className={cn('px-2.5 text-[11px]', view === v ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] hover:text-[var(--node-fg)]')}>
-              {v === 'data' ? 'Data' : v === 'structure' ? 'Structure' : 'DDL'}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="pills"
+          label="View"
+          value={view}
+          onValueChange={setView}
+          items={[
+            { value: 'data', label: 'Data' },
+            { value: 'structure', label: 'Structure' },
+            { value: 'ddl', label: 'DDL' },
+          ]}
+        />
         {view === 'data' && (
           <>
             <ToolButton label="Refresh" icon={RefreshCw} onClick={() => (hasEdits(edits) ? api.toast('Save or revert the changes first.', true) : setTick((t) => t + 1))} />
-            <span className="mx-0.5 h-4 w-px bg-[var(--node-border)]" />
+            <ToolbarSeparator />
             <ToolButton label="First page" icon={ChevronFirst} disabled={offset === 0} onClick={() => go(0)} />
             <ToolButton label="Previous page" icon={ChevronLeft} disabled={offset === 0} onClick={() => go(offset - Number(size))} />
             <span className="min-w-[90px] text-center text-[11px] text-[var(--node-muted)] tabular-nums">
@@ -144,10 +151,10 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             </span>
             <ToolButton label="Next page" icon={ChevronRight} disabled={rowsShown < Number(size) || (total !== null && offset + rowsShown >= total)} onClick={() => go(offset + Number(size))} />
             <ToolButton label="Last page" icon={ChevronLast} disabled={last === null || offset >= last} onClick={() => last !== null && go(last)} />
-            <MiniSelect title="Rows per page" value={size} options={SIZES.map((x) => ({ value: x, label: x }))} onChange={(v) => (setSize(v), setOffset(0))} />
+            <Picker label="Rows per page" value={size} options={SIZES.map((x) => ({ value: x, label: x }))} onValueChange={(v) => (setSize(v), setOffset(0))} />
             {editable && (
               <>
-                <span className="mx-0.5 h-4 w-px bg-[var(--node-border)]" />
+                <ToolbarSeparator />
                 <ToolButton label="Add a row" icon={Plus} onClick={() => setEdits((e) => ({ ...e, added: [...e.added, page!.columns.map(() => null)] }))} />
               </>
             )}
@@ -163,7 +170,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
                 </NodeButton>
               </>
             )}
-            <span className="ml-auto" />
+            <ToolbarSpacer />
             <ToolButton label="Open the query in a console" icon={SquareTerminal} onClick={() => open({ key: `${connection.id}:console:${Date.now().toString(36)}`, type: 'console', conn: connection.id, ref: { database: table.database }, title: `${table.table}`, state: { text: `${page?.sql ?? `SELECT * FROM ${name}`};\n` } })} />
           </>
         )}
@@ -220,13 +227,13 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               className={cn('flex-1', loading && 'opacity-60')}
               empty={applied ? 'No row matches the filter.' : 'The table is empty.'}
             />
-            <StatusLine>
+            <StatusBar>
               <span>{count(rowsShown, 'row')}</span>
               <span>{ms(page.ms)}</span>
               {readOnly ? <span>read only</span> : !page.editable && <span>Not editable: {kind.engine === 'clickhouse' ? 'ClickHouse rows aren’t edited one by one' : 'no primary key'}</span>}
               {hasEdits(edits) && <span className="text-[#d29922]">{count(pending.length, 'change')} not saved (⌘S)</span>}
               <span className="ml-auto truncate font-mono">{page.sql}</span>
-            </StatusLine>
+            </StatusBar>
           </>
         ) : (
           !error && <div className="p-6 text-center text-[var(--node-muted)]">Loading {table.table}…</div>

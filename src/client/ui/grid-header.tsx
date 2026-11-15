@@ -3,7 +3,7 @@
 // fits it to what it shows).
 
 import { ArrowDown, ArrowUp, Key } from 'lucide-react';
-import { cn } from '@hyperpane/ui';
+import { cn, styles } from '@hyperpane/ui';
 import type { Cell, Column } from '../../shared/types.ts';
 import { MIN_W, NUM_W, ROW, initialWidth } from './grid-model.ts';
 
@@ -11,7 +11,7 @@ export function GridHeader({ columns, all, total, w, setWidths, order, onSort }:
   const sortOf = (name: string) => order?.find((o) => o.column === name);
   const p = { onSort };
   return (
-        <div className="sticky top-0 z-20 flex bg-[var(--node-bg)]" style={{ height: ROW, width: total }}>
+        <div className={cn(styles.stickyTop, 'z-20 flex bg-[var(--node-bg)]')} style={{ height: ROW, width: total }}>
           <div className="sticky left-0 z-30 flex-none border-r border-b border-[var(--node-border)] bg-[var(--node-bg)]" style={{ width: NUM_W }} />
           {columns.map((c, i) => {
             const s = sortOf(c.name);

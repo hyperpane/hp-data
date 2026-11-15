@@ -4,9 +4,8 @@
 
 import { useMemo, useState } from 'react';
 import { KeyRound } from 'lucide-react';
-import { NodeButton } from '@hyperpane/ui';
+import { NodeButton, SplitPane } from '@hyperpane/ui';
 import type { TabProps } from '../../app/tabs.ts';
-import { Split } from '../../ui/parts.tsx';
 import { KeyList } from './key-list.tsx';
 import { KeyPanel } from './key-panel.tsx';
 import { attempt, callsOf } from './lib.ts';
@@ -43,11 +42,12 @@ export function KeysView(p: TabProps) {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col text-[12px]">
-      <Split
+      <SplitPane
         id={`kv.keys.${p.connection.id}`}
-        dir="row"
+        direction="row"
         initial={340}
         min={200}
+        minOther={200}
         first={
           <KeyList
             scan={scan}

@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Clock, Copy, Pencil, RefreshCw, Trash2 } from 'lucide-react';
-import { ToolButton } from '@hyperpane/ui';
+import { ToolButton, Toolbar } from '@hyperpane/ui';
 import type { KvValue } from '../../../shared/kv.ts';
 import type { KvEdit } from '../../../shared/kv.ts';
 import type { Api } from '../../lib/api.ts';
@@ -91,7 +91,7 @@ export function KeyPanel(p: KeyPanelProps) {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="flex h-9 flex-none items-center gap-2 border-b border-[var(--node-border)] px-2">
+      <Toolbar className="gap-2">
         {value && <TypeBadge type={value.type} />}
         <span className="min-w-0 truncate font-mono text-[12px] select-text" title={key}>
           {key}
@@ -118,7 +118,7 @@ export function KeyPanel(p: KeyPanelProps) {
           {!p.readOnly && <ToolButton label="Rename…" icon={Pencil} onClick={() => void rename()} />}
           {!p.readOnly && <ToolButton label="Delete…" icon={Trash2} onClick={() => void remove()} />}
         </div>
-      </div>
+      </Toolbar>
       {value?.meta && (
         <div className="flex flex-none flex-wrap gap-x-3 border-b border-[var(--node-border)] px-2 py-1 text-[10.5px] text-[var(--node-muted)]">
           {Object.entries(value.meta).map(([k, v]) => (

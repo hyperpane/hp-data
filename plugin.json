@@ -10,7 +10,7 @@
   "license": "MIT",
   "homepage": "https://github.com/hyperpane/hp-data",
   "engines": {
-    "hyperpane": ">=0.2.0",
+    "hyperpane": ">=0.2.2",
     "node": ">=22.15.0"
   },
   "client": {
@@ -30,13 +30,16 @@
         "size": [
           1120,
           700
+        ],
+        "ports": [
+          { "id": "rows", "label": "Rows", "direction": "out", "type": "json" }
         ]
       }
     ]
   },
   "signature": {
     "key": "ed25519:5LgmP9NjLnpvz48igrFekSqi+4k6gzaO8sNwlsgNKFc=",
-    "sig": "fEYnzQr3PrNkLqJ0O9nLrscK3YLOroggsYgiwluEM39qdu6D0e/7qnKpJsMm7BWAFz6CzW384jlD0vKJgBmICg==",
-    "server": "kLOYLG+wGNWKadg4g24oS6xwq/Q6+qzK9YOTm4uH/CHPGEC6gyoSPT3yP655qPKtB1/t/yrZBS5d6FvOnMUSBw=="
+    "sig": "NQ2cXGVYplYSHZoLkgW2iLFRQ4rCVGLEXp5gB3Xje01SOvLjHCZyQSq8A0bbRMF8ehkG2jiU7BmVddM2aYrVDA==",
+    "server": "fmrwPFOaX8MwPgpNi3vOMpZQ9QYlPpV67m7YwxKSROL+LXETGW6QsAel2pqhVvhbej/vB38i2XvHD9SnTZDlBg=="
   }
 }

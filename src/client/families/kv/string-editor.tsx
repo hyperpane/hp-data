@@ -3,7 +3,7 @@
 // RedisJSON documents use it too, always as JSON.
 
 import { useEffect, useMemo, useState } from 'react';
-import { NodeButton, cn } from '@hyperpane/ui';
+import { NodeButton, Tabs } from '@hyperpane/ui';
 import { CodeEditor } from '../../ui/code.tsx';
 import { prettyJson } from './lib.ts';
 
@@ -52,20 +52,14 @@ export function StringEditor(p: StringEditorProps) {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex h-8 flex-none items-center gap-2 border-b border-[var(--node-border)] px-2 text-[11px]">
         {pretty && !p.json && (
-          <div className="flex overflow-hidden rounded-[5px] border border-[var(--node-border)]">
-            {(['Text', 'JSON'] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                className={cn('h-5 px-2 text-[10.5px]', (m === 'JSON') === asJson ? 'bg-[color-mix(in_srgb,var(--node-fg)_12%,transparent)] text-[var(--node-fg)]' : 'text-[var(--node-muted)]')}
-                onClick={() => setAsJson(m === 'JSON')}
-                disabled={changed}
-                title={changed ? 'Save or undo the change first' : undefined}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            variant="pills"
+            label="Show the value as"
+            className="h-6"
+            value={asJson ? 'json' : 'text'}
+            onValueChange={(v) => setAsJson(v === 'json')}
+            items={(['text', 'json'] as const).map((v) => ({ value: v, label: v === 'json' ? 'JSON' : 'Text', disabled: changed && (v === 'json') !== asJson, title: changed ? 'Save or undo the change first' : undefined }))}
+          />
         )}
         <span className="text-[var(--node-muted)]">
           {p.size !== undefined && `${p.size.toLocaleString()} bytes`}

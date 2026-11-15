@@ -1,9 +1,11 @@
 // The window's hooks: a setting kept in this browser, an element's width,
-// a pointer drag, a list that follows its end, and saving soon after the
-// last change.
+// a pointer drag, a list that follows its end, saving soon after the last
+// change, and sending results out of the Rows port.
 
 import { useEffect, useRef, useState } from 'react';
 import { useHost } from '@hyperpane/sdk/client';
+import type { QueryResult } from '../../shared/types.ts';
+import { rowsOut } from './rows.ts';
 
 export type Host = ReturnType<typeof useHost>;
 
@@ -104,4 +106,17 @@ export function useSoon<T>(value: T, save: (v: T) => void, ms = 500) {
     const t = setTimeout(() => fn.current(value), ms);
     return () => clearTimeout(t);
   }, [key]);
+}
+
+/** Sends a tab's new result out of the Rows port, while the tab is shown.
+ * Called where a result arrives, so a re-render sends nothing. */
+export function useRowsPort(connection: string, visible: boolean) {
+  const host = useHost();
+  const shown = useRef(visible);
+  shown.current = visible;
+  return (r: QueryResult | null | undefined, statement?: string) => {
+    if (!r || !shown.current) return;
+    const out = rowsOut(r, connection, statement ?? r.statement);
+    if (out) host.ports.emit('rows', out);
+  };
 }

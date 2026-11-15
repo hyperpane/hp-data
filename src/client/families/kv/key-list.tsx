@@ -4,9 +4,8 @@
 
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, Folder, FolderTree, List, Plus, RefreshCw, Search } from 'lucide-react';
-import { NodeButton, ToolButton, cn, useMenu } from '@hyperpane/ui';
+import { NodeButton, StatusBar, ToolButton, cn, useMenu } from '@hyperpane/ui';
 import type { KeyEntry } from '../../../shared/kv.ts';
-import { StatusLine } from '../../ui/parts.tsx';
 import { type KeyNode, keyTree, ttlText } from './lib.ts';
 import { Muted, TypeBadge } from './parts.tsx';
 import type { Scan } from './use-scan.ts';
@@ -149,12 +148,12 @@ export function KeyList(p: KeyListProps) {
           </div>
         )}
       </div>
-      <StatusLine>
+      <StatusBar>
         <span>
           {scan.loading && !scan.keys.length ? 'Scanning…' : `${scan.keys.length.toLocaleString()} ${scan.keys.length === 1 ? 'key' : 'keys'}${scan.more ? ' so far' : ''}`}
           {scan.total !== undefined && ` · ${scan.total.toLocaleString()} in the database`}
         </span>
-      </StatusLine>
+      </StatusBar>
       {menu.element}
     </div>
   );

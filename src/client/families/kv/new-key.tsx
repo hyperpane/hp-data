@@ -2,7 +2,7 @@
 // nothing empty), and a TTL; refused when a key of that name is there.
 
 import { useState } from 'react';
-import { cn } from '@hyperpane/ui';
+import { Tabs, cn } from '@hyperpane/ui';
 import { NEW_KEY_TYPES } from '../../../shared/kv.ts';
 import type { KeyEntry, KeyType, KeyValue } from '../../../shared/kv.ts';
 import type { Api } from '../../lib/api.ts';
@@ -65,18 +65,7 @@ export function NewKey({ calls, api, stringsOnly, prefix, onClose, onCreated }: 
     <Dialog title="New key" ok={busy ? 'Adding…' : 'Add'} onOk={() => void create()} onClose={onClose} busy={busy}>
       {!stringsOnly && (
         <Field label="Type">
-          <div className="flex flex-wrap gap-1">
-            {NEW_KEY_TYPES.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setType(t)}
-                className={cn('h-6 rounded-[5px] border px-2 text-[11px]', t === type ? 'border-[var(--node-accent)] text-[var(--node-accent)]' : 'border-[var(--node-border)] text-[var(--node-muted)] hover:text-[var(--node-fg)]')}
-              >
-                {TYPE_NAMES[t]}
-              </button>
-            ))}
-          </div>
+          <Tabs variant="pills" label="Type" className="self-start" value={type} onValueChange={setType} items={NEW_KEY_TYPES.map((t) => ({ value: t, label: TYPE_NAMES[t] }))} />
         </Field>
       )}
       <Field label="Name">

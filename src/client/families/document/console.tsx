@@ -7,12 +7,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EditorView } from '@codemirror/view';
 import { History, Play, Square } from 'lucide-react';
-import { JsonTree, NodeButton, ToolButton, cn, useMenu } from '@hyperpane/ui';
+import { JsonTree, NodeButton, SplitPane, StatusBar, Tabs, ToolButton, Toolbar, useMenu } from '@hyperpane/ui';
 import type { CommandResult } from '../../../shared/document.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { CodeEditor, statementAt } from '../../ui/code.tsx';
 import { Grid } from '../../ui/grid.tsx';
-import { ErrorBox, Split, StatusLine, Toolbar, ms } from '../../ui/parts.tsx';
+import { ErrorBox, ms } from '../../ui/parts.tsx';
 import { flatList, paragraphAt, pretty, requestAt, tableOf } from './format.ts';
 
 const HISTORY = 50;
@@ -122,13 +122,16 @@ export function ConsoleView(p: TabProps) {
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
       {out && !isText && Array.isArray(result) && result.length > 0 && result.every((x) => x && typeof x === 'object' && !Array.isArray(x)) && (
         <Toolbar className="h-8">
-          <div className="flex flex-none rounded-md border border-[var(--node-border)] p-px">
-            {(['tree', 'table'] as const).map((v) => (
-              <button key={v} type="button" onClick={() => setView(v)} className={cn('rounded px-2 py-0.5 text-[11px]', view === v ? 'bg-[var(--node-hover)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] hover:text-[var(--node-fg)]')}>
-                {v === 'tree' ? 'JSON' : 'Table'}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            variant="pills"
+            label="Show as"
+            value={view}
+            onValueChange={setView}
+            items={[
+              { value: 'tree', label: 'JSON' },
+              { value: 'table', label: 'Table' },
+            ]}
+          />
           <NodeButton className="ml-auto" onClick={() => api.copy(typeof result === 'string' ? result : JSON.stringify(result, null, 2), 'the result')}>
             Copy
           </NodeButton>
@@ -145,14 +148,14 @@ export function ConsoleView(p: TabProps) {
           <JsonTree value={shown} depth={2} footer className="min-h-0 flex-1" />
         </div>
       )}
-      <StatusLine>
+      <StatusBar>
         {out && <span>{ms(out.ms)}</span>}
         {out?.status !== undefined && <span className={out.status >= 400 ? 'text-[#f85149]' : undefined}>{out.status}</span>}
         {items !== null && <span>{items.toLocaleString()} {items === 1 ? 'item' : 'items'}</span>}
         {out && <span className="min-w-0 truncate font-mono">{out.ran.replace(/\s+/g, ' ').slice(0, 120)}</span>}
-      </StatusLine>
+      </StatusBar>
     </div>
   );
 
-  return <Split id="doc-console" dir="column" initial={220} first={editor} second={results} />;
+  return <SplitPane id="doc-console" direction="column" initial={220} min={80} minOther={80} first={editor} second={results} />;
 }

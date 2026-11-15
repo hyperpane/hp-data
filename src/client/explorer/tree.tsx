@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronsDownUp, Ellipsis, LoaderCircle, Plus, RefreshCw, Search, TriangleAlert } from 'lucide-react';
-import { NodeInput, ToolButton, cn, useMenu, type MenuEntry } from '@hyperpane/ui';
+import { NodeInput, ToolButton, Toolbar, cn, useMenu, type MenuEntry } from '@hyperpane/ui';
 import { address, kindOf } from '../../shared/kinds.ts';
 import { optionsMenu, usePrefs } from './options.ts';
 import type { Connection, State, TreeNode } from '../../shared/types.ts';
@@ -251,7 +251,7 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex h-9 flex-none items-center gap-1 border-b border-[var(--node-border)] px-2">
+      <Toolbar>
         <span className="mr-auto truncate text-[11px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">Explorer</span>
         <ToolButton label="New connection" icon={Plus} onClick={() => ops.pickKind()} />
         <ToolButton label="Refresh everything open" icon={RefreshCw} onClick={() => connections.filter((c) => expanded.has(keyOf(c.id, []))).forEach((c) => refresh(c.id, []))} />
@@ -274,7 +274,7 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
             )
           }
         />
-      </div>
+      </Toolbar>
       <div className="flex-none border-b border-[var(--node-border)] p-1.5">
         <label className="relative block">
           <Search className="pointer-events-none absolute top-1/2 left-2 size-3 -translate-y-1/2 text-[var(--node-muted)]" />

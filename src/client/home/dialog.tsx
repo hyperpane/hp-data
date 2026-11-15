@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, LoaderCircle, X, XCircle } from 'lucide-react';
-import { NodeButton, NodeInput, cn } from '@hyperpane/ui';
+import { Checkbox, NodeButton, NodeInput, Tabs, cn } from '@hyperpane/ui';
 import { type Field, type Kind, type Values, kindOf, parseUrl, shown } from '../../shared/kinds.ts';
 import type { Connection, ConnectionInput, SessionInfo } from '../../shared/types.ts';
 import type { Api } from '../lib/api.ts';
@@ -138,19 +138,16 @@ export function ConnectionDialog({ target, api, project, onClose, onSaved }: { t
         ) : (
           <>
           {sections.length > 1 && (
-            <div className="flex flex-none gap-0.5 border-b border-[var(--node-border)] px-3">
-              {sections.map((x) => {
-                const on = x.id === section;
+            <Tabs
+              label="Settings"
+              className="px-3"
+              value={section}
+              onValueChange={setSection}
+              items={sections.map((x) => {
                 const lit = x.id === 'ssh' ? values.sshEnabled === true : x.id === 'tls' ? fields.some((f) => f.section === 'tls' && (values[f.key] || secrets[f.key] || c?.saved.includes(f.key))) : false;
-                return (
-                  <button key={x.id} type="button" onClick={() => setSection(x.id)} className={cn('relative flex items-center gap-1.5 px-2.5 py-2 text-[11.5px]', on ? 'text-[var(--node-fg)]' : 'text-[var(--node-muted)] hover:text-[var(--node-fg)]')}>
-                    {x.label}
-                    {lit && <span className="size-1.5 rounded-full bg-[#3fb950]" />}
-                    {on && <span className="absolute inset-x-1 bottom-0 h-[2px] rounded bg-[var(--node-accent)]" />}
-                  </button>
-                );
+                return { value: x.id, title: x.label, label: lit ? <span className="flex items-center gap-1.5">{x.label}<span className="size-1.5 rounded-full bg-[#3fb950]" /></span> : x.label };
               })}
-            </div>
+            />
           )}
           <div className="flex max-h-[62vh] flex-col gap-3 overflow-auto p-4">
             {section === 'general' && (
@@ -173,8 +170,10 @@ export function ConnectionDialog({ target, api, project, onClose, onSaved }: { t
             )}
             {rows.map((row) => (
               <div key={row.map((f) => f.key).join()} className={cn('grid gap-2', row.length === 2 ? (row[1].key === 'port' ? 'grid-cols-[1fr_96px]' : 'grid-cols-2') : 'grid-cols-1')}>
-                {row.map((f) => (
-                  <label key={f.key} className="flex min-w-0 flex-col gap-1">
+                {row.map((f) => {
+                  const Wrap = f.type === 'boolean' || f.type === 'select' ? 'div' : 'label';
+                  return (
+                  <Wrap key={f.key} className="flex min-w-0 flex-col gap-1">
                     {f.type !== 'boolean' && (
                       <span className="text-[11px] text-[var(--node-muted)]">
                         {f.label}
@@ -183,8 +182,9 @@ export function ConnectionDialog({ target, api, project, onClose, onSaved }: { t
                     )}
                     <FieldInput f={f} value={f.secret ? secrets[f.key] : values[f.key]} saved={!!c?.saved.includes(f.key)} onChange={(v) => set(f, v)} />
                     {f.help && <span className="text-[10.5px] text-[var(--node-muted)]">{f.help}</span>}
-                  </label>
-                ))}
+                  </Wrap>
+                  );
+                })}
               </div>
             ))}
             {section === 'ssh' && values.sshEnabled === true && values.sshHost && (
@@ -203,10 +203,7 @@ export function ConnectionDialog({ target, api, project, onClose, onSaved }: { t
             )}
             {section === 'general' && (
             <div className="flex flex-wrap items-center gap-4 border-t border-[var(--node-border)] pt-3">
-              <label className="flex items-center gap-2 text-[12px]" title="No edits from tables, no writes from consoles (as far as can be told)">
-                <input type="checkbox" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} className="accent-[var(--node-accent)]" />
-                Read only
-              </label>
+              <Checkbox className="text-[12px]" title="No edits from tables, no writes from consoles (as far as can be told)" checked={readOnly} onCheckedChange={setReadOnly} label="Read only" />
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] text-[var(--node-muted)]">Color</span>
                 <button type="button" aria-label="No color" onClick={() => setColor(null)} className={cn('size-4 rounded-full border border-[var(--node-border)]', color === null && 'ring-2 ring-[var(--node-accent)] ring-offset-1 ring-offset-[var(--node-bg)]')} />
@@ -251,7 +248,7 @@ export function ConnectionDialog({ target, api, project, onClose, onSaved }: { t
                     Save
                   </NodeButton>
                 )}
-                <NodeButton disabled={saving || missing.length > 0} onClick={() => doSave(true)} className="border-[var(--node-accent)] bg-[var(--node-accent)] text-white hover:brightness-110">
+                <NodeButton variant="primary" disabled={saving || missing.length > 0} onClick={() => doSave(true)}>
                   {c ? 'Save' : 'Save and Connect'}
                 </NodeButton>
               </div>

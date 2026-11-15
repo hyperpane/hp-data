@@ -4,10 +4,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Send, Trash2 } from 'lucide-react';
-import { NodeButton, NodeInput, ToolButton, cn } from '@hyperpane/ui';
+import { NodeButton, NodeInput, Picker, Tabs, ToolButton } from '@hyperpane/ui';
 import type { TabProps } from '../../app/tabs.ts';
 import { CodeEditor } from '../../ui/code.tsx';
-import { MiniSelect } from '../../ui/parts.tsx';
 import type { Caps } from './caps.ts';
 import { pretty } from './format.ts';
 
@@ -98,22 +97,25 @@ export function PublishForm({ p, caps, base, partitions, draft, onDraft, onSent 
           </label>
         )}
         {caps.partitions && (
-          <label className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1">
             <span className="text-[10.5px] text-[var(--node-muted)]">Partition</span>
-            <MiniSelect value={draft.partition} options={[{ value: '', label: 'By key' }, ...partitions.map((n) => ({ value: String(n), label: String(n) }))]} onChange={(partition) => set({ partition })} />
-          </label>
+            <Picker label="Partition" value={draft.partition} options={[{ value: '', label: 'By key' }, ...partitions.map((n) => ({ value: String(n), label: String(n) }))]} onValueChange={(partition) => set({ partition })} />
+          </div>
         )}
         {caps.engine === 'rabbitmq' && caps.noun === 'queue' && <span className="pb-1 text-[10.5px] text-[var(--node-muted)]">Through the default exchange, routing key “{caps.name}”.</span>}
       </div>
       <div className="flex flex-none items-center gap-2 px-3 pb-1">
         <span className="text-[10.5px] text-[var(--node-muted)]">Value</span>
-        <div className="flex flex-none rounded-md border border-[var(--node-border)] p-px">
-          {(['json', 'text'] as const).map((l) => (
-            <button key={l} type="button" onClick={() => setLanguage(l)} className={cn('rounded px-1.5 py-px text-[10.5px]', language === l ? 'bg-[color-mix(in_srgb,var(--node-fg)_10%,transparent)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] hover:text-[var(--node-fg)]')}>
-              {l === 'json' ? 'JSON' : 'Text'}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="pills"
+          label="The value as"
+          value={language}
+          onValueChange={setLanguage}
+          items={[
+            { value: 'json', label: 'JSON' },
+            { value: 'text', label: 'Text' },
+          ]}
+        />
         {language === 'json' && pretty(draft.value).json && (
           <button type="button" className="text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]" onClick={() => set({ value: pretty(draft.value).text })}>
             Format

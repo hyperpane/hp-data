@@ -3,11 +3,11 @@
 
 import { useEffect, useState } from 'react';
 import { CircleCheck, CircleX } from 'lucide-react';
-import { cn } from '@hyperpane/ui';
+import { StatusBar, Tabs, cn } from '@hyperpane/ui';
 import type { Cell, QueryResult } from '../../../shared/types.ts';
 import type { Api } from '../../lib/api.ts';
 import { Grid } from '../../ui/grid.tsx';
-import { ErrorBox, StatusLine, ValueViewer, count, ms } from '../../ui/parts.tsx';
+import { ErrorBox, ValueViewer, count, ms } from '../../ui/parts.tsx';
 
 export interface RunLog {
   n: number;
@@ -34,27 +34,33 @@ export function Results({ results, error, log, running, api, onClearError }: { r
   const shown = typeof tab === 'number' ? results[tab] : null;
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <div className="flex h-7 flex-none items-stretch overflow-x-auto border-b border-[var(--node-border)] text-[11px] [scrollbar-width:none]">
-        {withRows.map(({ r, i }) => (
-          <button key={i} type="button" onClick={() => setTab(i)} className={cn('flex flex-none items-center gap-1 border-r border-[var(--node-border)] px-2.5', tab === i ? 'bg-[color-mix(in_srgb,var(--node-fg)_6%,transparent)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] hover:text-[var(--node-fg)]')}>
-            {withRows.length > 1 ? `Result ${withRows.findIndex((x) => x.i === i) + 1}` : 'Result'}
-            <span className="text-[10px] text-[var(--node-muted)]">{r.rows.length}{r.truncated ? '+' : ''}</span>
-          </button>
-        ))}
-        <button type="button" onClick={() => setTab('output')} className={cn('flex flex-none items-center gap-1 border-r border-[var(--node-border)] px-2.5', tab === 'output' ? 'bg-[color-mix(in_srgb,var(--node-fg)_6%,transparent)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] hover:text-[var(--node-fg)]')}>
-          Output
-          {error && <span className="size-1.5 rounded-full bg-[#f85149]" />}
-        </button>
-        {running && <span className="ml-auto flex items-center px-2 text-[var(--node-muted)]">Running…</span>}
-      </div>
+      <Tabs
+        label="Results"
+        className="overflow-x-auto [scrollbar-width:none]"
+        value={String(tab)}
+        onValueChange={(v) => setTab(v === 'output' ? 'output' : Number(v))}
+        items={[
+          ...withRows.map(({ r, i }, n) => ({
+            value: String(i),
+            title: `${r.rows.length.toLocaleString()}${r.truncated ? '+' : ''} rows`,
+            label: (
+              <>
+                {withRows.length > 1 ? `Result ${n + 1}` : 'Result'} <span className="text-[10px] text-[var(--node-muted)]">{r.rows.length}{r.truncated ? '+' : ''}</span>
+              </>
+            ),
+          })),
+          { value: 'output', title: 'Output', label: error ? <span className="flex items-center gap-1.5">Output<span className="size-1.5 rounded-full bg-[#f85149]" /></span> : 'Output' },
+        ]}
+        end={running && <span className="text-[var(--node-muted)]">Running…</span>}
+      />
       {shown ? (
         <>
           <Grid columns={shown.columns} rows={shown.rows} copy={api.copy} className="flex-1" onOpenValue={(r, c, v) => setValue({ title: `${shown.columns[c].name} · row ${r + 1}`, value: v })} empty="The statement gave no rows." />
-          <StatusLine>
+          <StatusBar>
             <span>{count(shown.rows.length, 'row')}{shown.truncated ? ' (more not fetched: raise the limit, or add LIMIT)' : ''}</span>
             <span>{ms(shown.ms)}</span>
             {shown.statement && <span className="truncate font-mono">{shown.statement.replace(/\s+/g, ' ').slice(0, 160)}</span>}
-          </StatusLine>
+          </StatusBar>
         </>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto font-mono text-[11px] select-text">

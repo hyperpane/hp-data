@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Copy, Forward, X } from 'lucide-react';
-import { JsonTree, NodeButton, ToolButton, cn } from '@hyperpane/ui';
+import { JsonTree, NodeButton, Tabs, ToolButton } from '@hyperpane/ui';
 import type { Message } from '../../../shared/queue.ts';
 import type { Api } from '../../lib/api.ts';
 import type { Caps } from './caps.ts';
@@ -25,13 +25,17 @@ export function MessagePane({ m, caps, api, readOnly, onAgain, onClose }: { m: M
       <div className="flex h-8 flex-none items-center gap-1 border-b border-[var(--node-border)] px-2">
         <span className="truncate font-mono text-[11.5px]">{placeOf(m)}</span>
         {v.json && (
-          <div className="ml-2 flex flex-none rounded-md border border-[var(--node-border)] p-px">
-            {(['tree', 'text'] as const).map((x) => (
-              <button key={x} type="button" onClick={() => setMode(x)} className={cn('rounded px-1.5 py-px text-[10.5px]', mode === x ? 'bg-[color-mix(in_srgb,var(--node-fg)_10%,transparent)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] hover:text-[var(--node-fg)]')}>
-                {x === 'tree' ? 'Tree' : 'Text'}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            variant="pills"
+            label="Show the value as"
+            className="ml-2 h-6"
+            value={mode}
+            onValueChange={setMode}
+            items={[
+              { value: 'tree', label: 'Tree' },
+              { value: 'text', label: 'Text' },
+            ]}
+          />
         )}
         <div className="ml-auto flex flex-none items-center gap-1">
           <NodeButton onClick={() => api.copy(v.json && mode === 'text' ? v.text : m.value, 'the value')}>

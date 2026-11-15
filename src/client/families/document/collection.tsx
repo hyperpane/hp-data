@@ -6,11 +6,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus, RefreshCw, SquareTerminal } from 'lucide-react';
-import { NodeButton, NodeInput, ToolButton, cn } from '@hyperpane/ui';
+import { NodeButton, NodeInput, Picker, StatusBar, Tabs, ToolButton, Toolbar, cn } from '@hyperpane/ui';
 import type { DocFindResult } from '../../../shared/document.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { Grid } from '../../ui/grid.tsx';
-import { ErrorBox, MiniSelect, StatusLine, Toolbar, count, ms } from '../../ui/parts.tsx';
+import { ErrorBox, count, ms } from '../../ui/parts.tsx';
 import { DocList } from './docs.tsx';
 import { DocEditor, type Editing } from './editor.tsx';
 import { keyOf, tableOf, toText } from './format.ts';
@@ -183,18 +183,16 @@ export function CollectionView(p: TabProps) {
         </div>
       </div>
       <Toolbar>
-        <div className="flex flex-none rounded-md border border-[var(--node-border)] p-px">
-          {(['json', 'table'] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => (setView(v), p.setState({ view: v }))}
-              className={cn('rounded px-2 py-0.5 text-[11px]', view === v ? 'bg-[var(--node-hover)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] hover:text-[var(--node-fg)]')}
-            >
-              {v === 'json' ? 'JSON' : 'Table'}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="pills"
+          label="Show as"
+          value={view}
+          onValueChange={(v) => (setView(v), p.setState({ view: v }))}
+          items={[
+            { value: 'json', label: 'JSON' },
+            { value: 'table', label: 'Table' },
+          ]}
+        />
         {view === 'json' && (
           <>
             <ToolButton label="Open every document" icon={ChevronsUpDown} onClick={() => setExpand((n) => Math.abs(n) + 1)} />
@@ -214,10 +212,11 @@ export function CollectionView(p: TabProps) {
           <span className="text-[11px] text-[var(--node-muted)] tabular-nums">{pageText}</span>
           <ToolButton label="The page before" icon={ChevronLeft} disabled={!hasPrev || loading} onClick={prev} />
           <ToolButton label="The next page" icon={ChevronRight} disabled={!hasNext || loading} onClick={next} />
-          <MiniSelect
+          <Picker
+            label="Documents per page"
             value={String(limit)}
             options={LIMITS}
-            onChange={(v) => {
+            onValueChange={(v) => {
               setLimit(Number(v));
               run(applied, Number(v));
             }}
@@ -248,7 +247,7 @@ export function CollectionView(p: TabProps) {
           <DocList docs={docs} mongo={mongo} readOnly={readOnly} actions={actions} offset={start} expandAll={expand} />
         </div>
       )}
-      <StatusLine>
+      <StatusBar>
         {result && <span>{count(docs.length, 'document')}</span>}
         {result && <span>{ms(result.ms)}</span>}
         {readOnly && <span>Read only</span>}
@@ -257,7 +256,7 @@ export function CollectionView(p: TabProps) {
             Cancel
           </button>
         )}
-      </StatusLine>
+      </StatusBar>
       {editing && <DocEditor editing={editing} readOnly={readOnly} hint={hint} onSave={save} onClose={() => setEditing(null)} />}
     </div>
   );

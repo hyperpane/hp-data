@@ -7,12 +7,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUp, Database, FolderPlus, ListTree, RefreshCw, Trash2, Upload } from 'lucide-react';
-import { NodeButton, NodeInput, ToolButton, cn, useMenu } from '@hyperpane/ui';
+import { NodeButton, NodeInput, ResizeHandle, StatusBar, ToolButton, Toolbar, cn, useMenu, useResizable } from '@hyperpane/ui';
 import type { ListResult } from '../../../shared/object.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { useKept } from '../../lib/hooks.ts';
-import { Handle } from '../../ui/parts.tsx';
-import { ErrorBox, StatusLine, Toolbar, count } from '../../ui/parts.tsx';
+import { ErrorBox, count } from '../../ui/parts.tsx';
 import { formatSize } from '../../ui/cells.ts';
 import { List } from './list.tsx';
 import { linkMenu, menuFor } from './menu.ts';
@@ -35,8 +34,7 @@ export function BucketView(p: TabProps) {
   const [sort, setSort] = useKept<Sort>('data.object.sort', { column: 'name', desc: false });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [anchor, setAnchor] = useState<string | null>(null);
-  const [previewWidth, setPreviewWidth] = useKept('data.object.preview', 340);
-  const previewStart = useRef(previewWidth);
+  const preview = useResizable({ id: 'data.object.preview', initial: 340, min: 200, max: 900, axis: 'x', invert: true });
   const abort = useRef<AbortController | null>(null);
   const picker = useRef<HTMLInputElement>(null);
   const menu = useMenu();
@@ -215,22 +213,14 @@ export function BucketView(p: TabProps) {
         />
         {previewing && (
           <>
-            <Handle
-              dir="row"
-              onDrag={(dx, _dy, done) => {
-                const next = Math.max(200, Math.min(900, Math.round(previewStart.current - dx)));
-                setPreviewWidth(next);
-                if (done) previewStart.current = next;
-              }}
-              onReset={() => ((previewStart.current = 340), setPreviewWidth(340))}
-            />
-            <div className="flex min-h-0 flex-none flex-col" style={{ width: previewWidth }}>
+            <ResizeHandle axis="x" dragging={preview.dragging} {...preview.handleProps} />
+            <div className="flex min-h-0 flex-none flex-col" style={{ width: preview.size }}>
               <Preview where={where} objectKey={previewing} onDownload={() => open(rows.find((r) => r.key === previewing) ?? { key: previewing, folder: false, name: previewing, size: null, modified: null })} onLink={(e) => menu.open(e, linkMenu(ctx, previewing))} />
             </div>
           </>
         )}
       </div>
-      <StatusLine>
+      <StatusBar>
         <span>
           {count(folders, 'folder')}, {count(files, 'file')}
           {next ? ' loaded' : ''}
@@ -240,7 +230,7 @@ export function BucketView(p: TabProps) {
         {selected.size > 0 && <span>{count(selected.size, 'selected', 'selected')}</span>}
         {busy && <span className="truncate text-[var(--node-fg)]">{busy}</span>}
         {readOnly && <span className="ml-auto">Read only</span>}
-      </StatusLine>
+      </StatusBar>
       {menu.element}
     </div>
   );

@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { NodeButton, ToolButton, cn } from '@hyperpane/ui';
+import { ColumnResizer, NodeButton, ToolButton, cn, styles, useColumnWidths } from '@hyperpane/ui';
 import type { KvValue } from '../../../shared/kv.ts';
 import type { KvEdit } from '../../../shared/kv.ts';
 import { ValueViewer } from '../../ui/parts.tsx';
@@ -57,21 +57,27 @@ export function Collection(p: CollectionProps) {
   const { head, rows } = rowsOf(v, offset);
   const [open, setOpen] = useState<{ row: Row; col: number } | null>(null);
   const last = head.length - 1;
+  // The first column (a field, an entry's id, an index) is as wide as it was
+  // dragged, for each kind of value (kept on this machine); the value takes
+  // what's left.
+  const cols = useColumnWidths('data.kv', { field: 200, id: 170, index: 90 }, { min: 40, max: 800 });
+  const first = v.type === 'hash' ? 'field' : v.type === 'stream' ? 'id' : 'index';
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-auto">
         <table className="w-full table-fixed border-collapse font-mono text-[11.5px]">
           <colgroup>
-            {head.length > 1 && <col style={{ width: v.type === 'hash' ? '32%' : v.type === 'stream' ? 170 : 90 }} />}
+            {head.length > 1 && <col style={{ width: cols.widths[first] }} />}
             <col />
             {!p.readOnly && <col style={{ width: 28 }} />}
           </colgroup>
-          <thead className="sticky top-0 bg-[var(--node-bg)]">
+          <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-bg)]')}>
             <tr className="h-6 text-left text-[10.5px] text-[var(--node-muted)]">
-              {head.map((h) => (
-                <th key={h} className="border-b border-[var(--node-border)] px-2 font-sans font-medium">
+              {head.map((h, i) => (
+                <th key={h} className="relative border-b border-[var(--node-border)] px-2 font-sans font-medium">
                   {h}
+                  {i === 0 && head.length > 1 && <ColumnResizer {...cols.resizer(first)} />}
                 </th>
               ))}
               {!p.readOnly && <th className="border-b border-[var(--node-border)]" />}

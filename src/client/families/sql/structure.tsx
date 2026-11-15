@@ -1,7 +1,9 @@
 // A table's structure: its columns (type, null, default, key), indexes and
-// foreign keys, as tables.
+// foreign keys, as tables. The columns' Name takes what's left; Type, Null
+// and Default are as wide as they were dragged (kept on this machine).
 
 import { Key } from 'lucide-react';
+import { ColumnResizer, useColumnWidths } from '@hyperpane/ui';
 import type { TableInfo } from '../../../shared/sql.ts';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -17,31 +19,51 @@ const th = 'border-b border-[var(--node-border)] px-2 py-1 text-left font-medium
 const td = 'border-b border-[color-mix(in_srgb,var(--node-border)_60%,transparent)] px-2 py-1';
 
 export function Structure({ info, copy }: { info: TableInfo; copy(text: string, what?: string): void }) {
+  const cols = useColumnWidths('data.sql.structure', { type: 200, nullable: 72, fallback: 88 }, { min: 40, max: 600 });
   return (
     <div className="min-h-0 flex-1 overflow-auto p-3 select-text">
       <div className="flex max-w-[900px] flex-col gap-5">
         <Section title={`Columns · ${info.columns.length}${info.rows !== null ? ` · about ${info.rows.toLocaleString()} rows` : ''}`}>
-          <table className="w-full border-collapse text-[11.5px]">
+          <table className="w-full table-fixed border-collapse text-[11.5px]">
+            <colgroup>
+              <col />
+              <col style={{ width: cols.widths.type }} />
+              <col style={{ width: cols.widths.nullable }} />
+              <col style={{ width: cols.widths.fallback }} />
+            </colgroup>
             <thead>
               <tr>
                 <th className={th}>Name</th>
-                <th className={th}>Type</th>
-                <th className={th}>Null</th>
-                <th className={th}>Default</th>
+                <th className={`${th} relative`}>
+                  Type
+                  <ColumnResizer {...cols.resizer('type', 'start')} />
+                </th>
+                <th className={`${th} relative`}>
+                  Null
+                  <ColumnResizer {...cols.resizer('nullable', 'start')} />
+                </th>
+                <th className={`${th} relative`}>
+                  Default
+                  <ColumnResizer {...cols.resizer('fallback', 'start')} />
+                </th>
               </tr>
             </thead>
             <tbody>
               {info.columns.map((c) => (
                 <tr key={c.name} className="hover:bg-[color-mix(in_srgb,var(--node-fg)_4%,transparent)]" onDoubleClick={() => copy(c.name, 'the name')}>
                   <td className={`${td} font-mono`}>
-                    <span className="flex items-center gap-1.5">
-                      {c.key && <Key className="size-3 text-[#e3b341]" />}
-                      {c.name}
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      {c.key && <Key className="size-3 flex-none text-[#e3b341]" />}
+                      <span className="truncate" title={c.name}>
+                        {c.name}
+                      </span>
                     </span>
                   </td>
-                  <td className={`${td} font-mono text-[#58a6ff]`}>{c.type}</td>
-                  <td className={td}>{c.nullable === false ? 'not null' : 'null'}</td>
-                  <td className={`${td} text-[var(--node-muted)]`}>{c.readOnly ? 'generated' : c.hasDefault ? 'yes' : ''}</td>
+                  <td className={`${td} truncate font-mono text-[#58a6ff]`} title={c.type}>
+                    {c.type}
+                  </td>
+                  <td className={`${td} truncate`}>{c.nullable === false ? 'not null' : 'null'}</td>
+                  <td className={`${td} truncate text-[var(--node-muted)]`}>{c.readOnly ? 'generated' : c.hasDefault ? 'yes' : ''}</td>
                 </tr>
               ))}
             </tbody>

@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Eraser, RefreshCw, Trash2 } from 'lucide-react';
-import { ToolButton, cn, useAsync } from '@hyperpane/ui';
+import { Tabs, ToolButton, cn, useAsync } from '@hyperpane/ui';
 import type { QueueInfo } from '../../../shared/queue.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { ErrorBox } from '../../ui/parts.tsx';
@@ -69,18 +69,7 @@ export function QueueTab(p: TabProps) {
         <Figures info={info.value ?? null} loading={info.loading} />
       </div>
       {info.error && <ErrorBox error={info.error} />}
-      <div className="flex flex-none items-center gap-0.5 border-b border-[var(--node-border)] px-2">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setView(t.id)}
-            className={cn('-mb-px border-b-2 px-2 py-1.5 text-[12px]', view === t.id ? 'border-[var(--node-accent)] text-[var(--node-fg)]' : 'border-transparent text-[var(--node-muted)] hover:text-[var(--node-fg)]')}
-          >
-            {t.name}
-          </button>
-        ))}
-      </div>
+      <Tabs label={caps.noun} className="px-2" value={view} onValueChange={setView} items={tabs.map((t) => ({ value: t.id, label: t.name }))} />
       {caps.peek && seen && (
         <div className={cn('min-h-0 flex-1 flex-col', view === 'messages' ? 'flex' : 'hidden')}>
           <Messages

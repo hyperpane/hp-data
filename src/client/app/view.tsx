@@ -5,7 +5,7 @@
 
 import { useRef, useState } from 'react';
 import { PanelLeft } from 'lucide-react';
-import { NodeMessage, ToolButton } from '@hyperpane/ui';
+import { NodeMessage, ResizeHandle, ToolButton, useResizable } from '@hyperpane/ui';
 import { type Kind, kindOf } from '../../shared/kinds.ts';
 import type { Connection } from '../../shared/types.ts';
 import { type ExplorerHandle, Explorer } from '../explorer/tree.tsx';
@@ -14,7 +14,6 @@ import { ConnectionDialog, type DialogTarget } from '../home/dialog.tsx';
 import { Home } from '../home/home.tsx';
 import type { ConnectionOps } from '../home/menu.ts';
 import { useKept, useWidth } from '../lib/hooks.ts';
-import { Handle } from '../ui/parts.tsx';
 import { TabStrip } from './tab-strip.tsx';
 import type { Tab } from './tabs.ts';
 import { useWorkspace } from './workspace.ts';
@@ -22,13 +21,12 @@ import { useWorkspace } from './workspace.ts';
 export function DataView() {
   const w = useWorkspace();
   const { api, project, state, error, tabs, active } = w;
-  const [side, setSide] = useKept('data.sidebar', 260);
   const [sideOpen, setSideOpen] = useKept('data.sideOpen', true);
   const [dialog, setDialog] = useState<DialogTarget | null>(null);
   const explorer = useRef<ExplorerHandle | null>(null);
   const consoles = useRef(0);
-  const sideStart = useRef(side);
   const [box, width] = useWidth<HTMLDivElement>();
+  const side = useResizable({ id: 'data.sidebar', initial: 260, min: 180, max: () => (width ? Math.max(240, width - 320) : Infinity), axis: 'x' });
 
   const firstTab = (c: Connection) => {
     const kind = kindOf(c.kind);
@@ -105,18 +103,10 @@ export function DataView() {
     <div ref={box} className="relative flex h-full min-w-0 text-xs text-[var(--node-fg)]">
       {showSide && (
         <>
-          <aside className="flex min-h-0 flex-none flex-col" style={{ width: side }}>
+          <aside className="flex min-h-0 flex-none flex-col" style={{ width: side.size }}>
             <Explorer state={state} api={api} project={project} ops={ops} open={w.open} handle={explorer} activeConn={active.conn} />
           </aside>
-          <Handle
-            dir="row"
-            onDrag={(dx, _dy, done) => {
-              const next = Math.max(180, Math.min(Math.max(240, width - 320), Math.round(sideStart.current + dx)));
-              setSide(next);
-              if (done) sideStart.current = next;
-            }}
-            onReset={() => ((sideStart.current = 260), setSide(260))}
-          />
+          <ResizeHandle axis="x" dragging={side.dragging} {...side.handleProps} />
         </>
       )}
       <main className="flex min-h-0 min-w-0 flex-1 flex-col">

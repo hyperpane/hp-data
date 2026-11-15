@@ -5,10 +5,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Radio, RefreshCw } from 'lucide-react';
-import { NodeButton, NodeInput, cn } from '@hyperpane/ui';
+import { ColumnResizer, NodeButton, NodeInput, Picker, SplitPane, StatusBar, Toolbar, cn, styles, useColumnWidths } from '@hyperpane/ui';
 import type { Message } from '../../../shared/queue.ts';
 import type { TabProps } from '../../app/tabs.ts';
-import { ErrorBox, MiniSelect, Split, StatusLine, Toolbar, count, ms } from '../../ui/parts.tsx';
+import { ErrorBox, count, ms } from '../../ui/parts.tsx';
 import type { Caps } from './caps.ts';
 import { MessagePane } from './message-pane.tsx';
 import { clock, fullTime, matches, placeOf, preview } from './format.ts';
@@ -101,6 +101,9 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
 
   const shown = useMemo(() => list.map((m, i) => ({ m, i })).filter(({ m }) => matches(m, filter)), [list, filter]);
   const selected = sel === null ? null : (list[sel] ?? null);
+  // Time, where and the key are as wide as they were dragged (kept on this
+  // machine); the value takes what's left.
+  const cols = useColumnWidths('data.queue.messages', { time: 92, at: 76, key: 120 }, { min: 40, max: 600 });
 
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -116,13 +119,29 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
     <div className="flex min-h-0 flex-1 flex-col">
       <div ref={scroller} tabIndex={0} onKeyDown={onKey} className="min-h-0 flex-1 overflow-auto outline-none">
         <table className="w-full table-fixed border-collapse text-[11.5px]">
-          <thead className="sticky top-0 z-10 bg-[var(--node-bg)]">
+          <colgroup>
+            <col style={{ width: cols.widths.time }} />
+            <col style={{ width: cols.widths.at }} />
+            <col style={{ width: cols.widths.key }} />
+            <col />
+            <col style={{ width: 34 }} />
+          </colgroup>
+          <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-bg)]')}>
             <tr className="text-left text-[10.5px] text-[var(--node-muted)]">
-              <th className="w-[92px] border-b border-[var(--node-border)] px-2 py-1 font-normal">Time</th>
-              <th className="w-[76px] border-b border-[var(--node-border)] px-2 py-1 font-normal">{caps.partitions ? 'Part:Offset' : 'Message'}</th>
-              <th className="w-[120px] border-b border-[var(--node-border)] px-2 py-1 font-normal">{caps.engine === 'rabbitmq' ? 'Routing key' : caps.engine === 'sqs' ? 'Group' : 'Key'}</th>
+              <th className="relative border-b border-[var(--node-border)] px-2 py-1 font-normal">
+                Time
+                <ColumnResizer {...cols.resizer('time')} />
+              </th>
+              <th className="relative border-b border-[var(--node-border)] px-2 py-1 font-normal">
+                {caps.partitions ? 'Part:Offset' : 'Message'}
+                <ColumnResizer {...cols.resizer('at')} />
+              </th>
+              <th className="relative border-b border-[var(--node-border)] px-2 py-1 font-normal">
+                {caps.engine === 'rabbitmq' ? 'Routing key' : caps.engine === 'sqs' ? 'Group' : 'Key'}
+                <ColumnResizer {...cols.resizer('key')} />
+              </th>
               <th className="border-b border-[var(--node-border)] px-2 py-1 font-normal">Value</th>
-              <th className="w-[34px] border-b border-[var(--node-border)] px-1 py-1 text-right font-normal" title="Headers">
+              <th className="border-b border-[var(--node-border)] px-1 py-1 text-right font-normal" title="Headers">
                 H
               </th>
             </tr>
@@ -166,26 +185,26 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
     <div className="flex min-h-0 flex-1 flex-col">
       <Toolbar>
         {caps.from && (
-          <MiniSelect<From>
-            title="Where to look"
+          <Picker<From>
+            label="Where to look"
             value={q.from}
             options={[
               { value: 'latest', label: 'Newest' },
               { value: 'earliest', label: 'Oldest' },
               { value: 'offset', label: 'From offset' },
             ]}
-            onChange={(from) => {
+            onValueChange={(from) => {
               const next = { ...q, from, partition: from === 'offset' && q.partition === 'all' ? String(partitions[0] ?? 0) : q.partition };
               set(next);
               if (from !== 'offset') void load(next);
             }}
           />
         )}
-        {caps.partitions && partitionOptions.length > 0 && <MiniSelect title="Partition" value={q.partition} options={partitionOptions} onChange={(partition) => (set({ partition }), void load({ ...q, partition }))} />}
+        {caps.partitions && partitionOptions.length > 0 && <Picker label="Partition" value={q.partition} options={partitionOptions} onValueChange={(partition) => (set({ partition }), void load({ ...q, partition }))} />}
         {caps.from && q.from === 'offset' && (
           <NodeInput className="h-6 w-[90px] font-mono" value={q.offset} placeholder="offset" aria-label="Offset" onChange={(e) => set({ offset: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && void load()} />
         )}
-        <MiniSelect title="How many" value={q.limit} options={LIMITS.map((l) => ({ value: l, label: `${l} messages` }))} onChange={(limit) => (set({ limit }), void load({ ...q, limit }))} />
+        <Picker label="How many" value={q.limit} options={LIMITS.map((l) => ({ value: l, label: `${l} messages` }))} onValueChange={(limit) => (set({ limit }), void load({ ...q, limit }))} />
         <NodeButton disabled={busy} onClick={() => void load()}>
           <RefreshCw className={cn('size-3.5', busy && 'animate-spin')} />
           Refresh
@@ -204,12 +223,12 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
       </Toolbar>
       {caps.peekNote && <div className="flex-none border-b border-[var(--node-border)] px-3 py-1 text-[10.5px] text-[var(--node-muted)]">{caps.peekNote}</div>}
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
-      {selected ? <Split id="queue.messages" dir="row" initial={560} min={240} first={table} second={<MessagePane m={selected} caps={caps} api={api} readOnly={p.readOnly} onAgain={() => onAgain(selected)} onClose={() => setSel(null)} />} /> : table}
-      <StatusLine>
+      {selected ? <SplitPane id="queue.messages" direction="row" initial={560} min={240} minOther={240} first={table} second={<MessagePane m={selected} caps={caps} api={api} readOnly={p.readOnly} onAgain={() => onAgain(selected)} onClose={() => setSel(null)} />} /> : table}
+      <StatusBar>
         <span>{filter ? `${count(shown.length, 'message')} of ${list.length.toLocaleString()}` : count(list.length, 'message')}</span>
         {took !== null && <span>looked in {ms(took)}</span>}
         {live && <span className="text-[#3fb950]">live{fresh.size ? `: ${fresh.size.toLocaleString()} new` : ''}</span>}
-      </StatusLine>
+      </StatusBar>
     </div>
   );
 }

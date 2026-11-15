@@ -82,6 +82,9 @@ if [ "$install" = 1 ]; then
       # ssh2 runs in JavaScript without its optional native binding: what
       # it ships for building one (and Windows' Pageant helper) isn't packed.
       find "src/$part/node_modules" \( -name '*.gyp' -o -name '*.exe' -o -name '*.node' \) -type f -delete 2>/dev/null || true
+      # Nor the dependencies' own tests (ssh2's hold sample keys GitHub
+      # refuses as secrets).
+      for t in test tests __tests__; do rm -rf "src/$part"/node_modules/*/"$t" "src/$part"/node_modules/@*/*/"$t"; done
     fi
   done
 fi

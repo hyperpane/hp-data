@@ -54,6 +54,8 @@ if "%INSTALL%"=="1" (
       if errorlevel 1 (popd & exit /b 1)
       rem ssh2 runs in JavaScript: its native build files aren't packed.
       if exist node_modules for /r node_modules %%F in (*.gyp *.exe *.node) do del /q "%%F"
+      rem Nor the dependencies' own tests (ssh2's hold sample keys).
+      if exist node_modules for /d %%D in (node_modules\* node_modules\@*\*) do for %%T in (test tests __tests__) do if exist "%%D\%%T" rd /s /q "%%D\%%T"
       popd
     )
   )

@@ -16,13 +16,13 @@ export const actions: TreeActions = (c) => {
     if (c.readOnly) return [];
     return [
       {
-        label: 'New Bucket…',
+        label: 'New Bucket',
         run: () =>
           void (async () => {
             const name = (await c.api.prompt('New bucket', 'Name (3–63 lowercase letters, digits, dots, hyphens)', '', 'my-bucket'))?.trim();
             if (!name) return;
             await c.api.call('objCreateBucket', { id: c.connection.id, project: c.project ?? undefined, bucket: name });
-            c.api.toast(`Made bucket ${name}.`);
+            c.api.toast(`Made bucket ${name}`);
             c.refresh();
             c.open({ type: 'bucket', conn: c.connection.id, ref: { bucket: name }, title: name });
           })().catch(c.api.fail),

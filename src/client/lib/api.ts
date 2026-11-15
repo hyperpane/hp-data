@@ -39,7 +39,7 @@ export function makeApi(host: Host): Api {
     prompt: (title, label, value, placeholder) => host.ui.prompt({ title, label, value, placeholder }),
     copy: (text, what) => {
       void host.app.clipboardWrite({ text }).then(
-        () => what && host.app.toast(`Copied ${what}.`),
+        () => what && host.app.toast(`Copied ${what}`),
         (e: Error) => api.fail(e),
       );
     },

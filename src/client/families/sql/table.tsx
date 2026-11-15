@@ -96,7 +96,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
     setSaving(true);
     try {
       const r = await api.call<{ affected: number }>('apply', { id: connection.id, project, table, edits: pending });
-      api.toast(`Saved: ${count(r.affected, 'row')} changed.`);
+      api.toast(`Saved: ${count(r.affected, 'row')} changed`);
       setTick((t) => t + 1);
     } catch (e) {
       api.fail(e);
@@ -121,7 +121,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
   const last = total !== null ? Math.max(0, Math.floor((total - 1) / Number(size)) * Number(size)) : null;
   const rowsShown = page?.rows.length ?? 0;
   const go = (o: number) => {
-    if (hasEdits(edits)) return api.toast('Save or revert the changes first.', true);
+    if (hasEdits(edits)) return api.toast('Save or revert the changes first', true);
     setOffset(Math.max(0, o));
   };
 
@@ -141,7 +141,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
         />
         {view === 'data' && (
           <>
-            <ToolButton label="Refresh" icon={RefreshCw} onClick={() => (hasEdits(edits) ? api.toast('Save or revert the changes first.', true) : setTick((t) => t + 1))} />
+            <ToolButton label="Refresh" icon={RefreshCw} onClick={() => (hasEdits(edits) ? api.toast('Save or revert the changes first', true) : setTick((t) => t + 1))} />
             <ToolbarSeparator />
             <ToolButton label="First page" icon={ChevronFirst} disabled={offset === 0} onClick={() => go(0)} />
             <ToolButton label="Previous page" icon={ChevronLeft} disabled={offset === 0} onClick={() => go(offset - Number(size))} />
@@ -212,7 +212,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               onEdits={setEdits}
               order={order}
               onSort={(column, add) => {
-                if (hasEdits(edits)) return api.toast('Save or revert the changes first.', true);
+                if (hasEdits(edits)) return api.toast('Save or revert the changes first', true);
                 setOffset(0);
                 setOrder((o) => {
                   const cur = o.find((x) => x.column === column);
@@ -225,7 +225,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               copy={api.copy}
               onOpenValue={(r, c, v) => setValue({ r, c, value: v })}
               className={cn('flex-1', loading && 'opacity-60')}
-              empty={applied ? 'No row matches the filter.' : 'The table is empty.'}
+              empty={applied ? 'No row matches the filter' : 'The table is empty'}
             />
             <StatusBar>
               <span>{count(rowsShown, 'row')}</span>
@@ -239,9 +239,9 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
           !error && <div className="p-6 text-center text-[var(--node-muted)]">Loading {table.table}…</div>
         )
       ) : view === 'structure' ? (
-        info ? <Structure info={info} copy={api.copy} /> : <div className="p-6 text-center text-[var(--node-muted)]">Loading…</div>
+        info ? <Structure info={info} copy={api.copy} /> : <div className="p-6 text-center text-[var(--node-muted)]">Loading</div>
       ) : (
-        <CodeEditor value={info?.ddl ?? '-- Loading…'} language="sql" dialect={dialect === 'clickhouse' ? 'standard' : dialect} readOnly className="flex-1" />
+        <CodeEditor value={info?.ddl ?? '-- Loading'} language="sql" dialect={dialect === 'clickhouse' ? 'standard' : dialect} readOnly className="flex-1" />
       )}
       {value && page && (
         <ValueViewer

@@ -24,27 +24,27 @@ export function NewKey({ calls, api, stringsOnly, prefix, onClose, onCreated }: 
       case 'string':
         return { type, value: a };
       case 'hash':
-        return a ? { type, fields: [{ field: a, value: b }], total: 1 } : 'Give the first field a name.';
+        return a ? { type, fields: [{ field: a, value: b }], total: 1 } : 'Give the first field a name';
       case 'list':
         return { type, items: [a], total: 1 };
       case 'set':
-        return a ? { type, members: [a], total: 1 } : 'Type the first member.';
+        return a ? { type, members: [a], total: 1 } : 'Type the first member';
       case 'zset': {
         const score = Number(b.trim() || '0');
-        if (!a) return 'Type the first member.';
-        return Number.isFinite(score) ? { type, members: [{ member: a, score }], total: 1 } : 'A score is a number.';
+        if (!a) return 'Type the first member';
+        return Number.isFinite(score) ? { type, members: [{ member: a, score }], total: 1 } : 'A score is a number';
       }
       case 'stream':
-        return a ? { type, entries: [{ id: '*', fields: { [a]: b } }], total: 1 } : 'Give the first entry a field.';
+        return a ? { type, entries: [{ id: '*', fields: { [a]: b } }], total: 1 } : 'Give the first entry a field';
     }
   };
 
   const create = async () => {
-    if (!name) return api.fail('Give the key a name.');
+    if (!name) return api.fail('Give the key a name');
     const v = value();
     if (typeof v === 'string') return api.fail(v);
     const seconds = ttl.trim() ? parseTtl(ttl) : null;
-    if (ttl.trim() && seconds === null) return api.fail(`“${ttl}” isn’t a time: try 90, 15m, 2h or 7d.`);
+    if (ttl.trim() && seconds === null) return api.fail(`“${ttl}” isn’t a time: try 90, 15m, 2h or 7d`);
     setBusy(true);
     const ok = await attempt(api, () => calls.call('kvSet', { key: name, value: v, ttl: seconds, create: true }));
     setBusy(false);
@@ -62,7 +62,7 @@ export function NewKey({ calls, api, stringsOnly, prefix, onClose, onCreated }: 
   const [la, lb] = labels[type];
 
   return (
-    <Dialog title="New key" ok={busy ? 'Adding…' : 'Add'} onOk={() => void create()} onClose={onClose} busy={busy}>
+    <Dialog title="New key" ok={busy ? 'Adding' : 'Add'} onOk={() => void create()} onClose={onClose} busy={busy}>
       {!stringsOnly && (
         <Field label="Type">
           <Tabs variant="pills" label="Type" className="self-start" value={type} onValueChange={setType} items={NEW_KEY_TYPES.map((t) => ({ value: t, label: TYPE_NAMES[t] }))} />

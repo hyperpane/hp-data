@@ -40,7 +40,7 @@ export function capsOf(engine: Engine, ref: Ref): Caps {
       purge: true,
       keyLabel: 'Message ID',
       routing: false,
-      peekNote: 'Looking takes the messages and puts them back: they stay in the queue, in order, but come back marked redelivered.',
+      peekNote: 'Looking takes the messages and puts them back: they stay in the queue, in order, but come back marked redelivered',
     };
   }
   const fifo = (ref.queue ?? '').endsWith('.fifo');

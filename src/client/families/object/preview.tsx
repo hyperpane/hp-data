@@ -41,14 +41,14 @@ export function Preview({ where, objectKey, onDownload, onLink, className }: { w
       setHead(h);
       const shown = shownAs(objectKey, h.contentType);
       if (h.size === 0) return setContent({ kind: 'none', why: 'Empty.' });
-      if (shown === 'image' && h.size > IMAGE_MAX) return setContent({ kind: 'none', why: `Too big to preview (${formatSize(h.size)}).` });
+      if (shown === 'image' && h.size > IMAGE_MAX) return setContent({ kind: 'none', why: `Too big to preview (${formatSize(h.size)})` });
       const r = await api.call<Read>('objRead', { ...base, limit: shown === 'image' ? IMAGE_MAX : PREVIEW_BYTES });
       if (!live) return;
       if (shown === 'image') {
         blobUrl = URL.createObjectURL(new Blob([r.bytes as Uint8Array<ArrayBuffer>], { type: h.contentType?.startsWith('image/') ? h.contentType : objectKey.toLowerCase().endsWith('.svg') ? 'image/svg+xml' : '' }));
         return setContent({ kind: 'image', url: blobUrl });
       }
-      if (shown === 'unknown' && !looksLikeText(r.bytes)) return setContent({ kind: 'none', why: 'No preview.' });
+      if (shown === 'unknown' && !looksLikeText(r.bytes)) return setContent({ kind: 'none', why: 'No preview' });
       const text = new TextDecoder().decode(r.bytes);
       if (shown === 'json' && !r.truncated) {
         try {
@@ -74,7 +74,7 @@ export function Preview({ where, objectKey, onDownload, onLink, className }: { w
           {nameOf(objectKey)}
         </span>
         {content && 'text' in content && <ToolButton label="Copy the text" icon={Copy} onClick={() => api.copy(content.text, 'the text')} />}
-        <ToolButton label="Copy Link…" icon={Link} onClick={onLink} />
+        <ToolButton label="Copy Link" icon={Link} onClick={onLink} />
         <ToolButton label="Download" icon={Download} onClick={onDownload} />
       </div>
       {error ? (
@@ -91,7 +91,7 @@ export function Preview({ where, objectKey, onDownload, onLink, className }: { w
               ))}
               {!head && (
                 <tr>
-                  <td className="px-2 py-1 text-[var(--node-muted)]">Loading…</td>
+                  <td className="px-2 py-1 text-[var(--node-muted)]">Loading</td>
                 </tr>
               )}
             </tbody>

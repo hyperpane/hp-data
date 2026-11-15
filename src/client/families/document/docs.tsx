@@ -30,7 +30,7 @@ export function DocList({ docs, mongo, readOnly, actions, offset, expandAll }: {
     ...(readOnly ? [] : [null, { label: 'Delete', danger: true, run: () => actions.remove(i) }]),
   ];
 
-  if (!docs.length) return <div className="p-6 text-center text-[11.5px] text-[var(--node-muted)]">No documents match.</div>;
+  if (!docs.length) return <div className="p-6 text-center text-[11.5px] text-[var(--node-muted)]">No documents match</div>;
   return (
     <div className="min-h-0 flex-1 overflow-auto">
       {docs.map((d, i) => {

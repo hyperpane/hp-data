@@ -88,7 +88,7 @@ export function ConsoleView(p: TabProps) {
   const editor = (
     <div ref={box} className="flex min-h-0 flex-1 flex-col">
       <Toolbar>
-        <ToolButton label={running ? 'Running…' : 'Run (⌘Enter)'} icon={Play} disabled={!!running} onClick={() => void run(text)} />
+        <ToolButton label={running ? 'Running' : 'Run (⌘Enter)'} icon={Play} disabled={!!running} onClick={() => void run(text)} />
         {running && <ToolButton label="Cancel" icon={Square} onClick={() => (running.abort(), setRunning(null))} />}
         <ToolButton
           label="History"
@@ -138,7 +138,7 @@ export function ConsoleView(p: TabProps) {
         </Toolbar>
       )}
       {!out ? (
-        !error && <div className="p-6 text-center text-[11.5px] text-[var(--node-muted)]">{running ? 'Running…' : 'Run something to see its result here.'}</div>
+        !error && <div className="p-6 text-center text-[11.5px] text-[var(--node-muted)]">{running ? 'Running' : 'Run something to see its result here'}</div>
       ) : isText ? (
         <pre className="min-h-0 flex-1 overflow-auto p-2 font-mono text-[11.5px] whitespace-pre select-text">{typeof result === 'string' ? result : JSON.stringify(result, null, 2)}</pre>
       ) : table ? (

@@ -104,8 +104,8 @@ export function BucketView(p: TabProps) {
 
   const put = (puts: Put[]) =>
     puts.length &&
-    void run('Uploading…', () =>
-      upload(where, prefix, puts, (done, of, name) => setBusy(done < of ? `Uploading ${of > 1 ? `${done + 1} of ${of}: ` : ''}${name}…` : null)).then((n) => api.toast(`Uploaded ${count(n, 'file')} to ${bucket}/${prefix}.`)),
+    void run('Uploading', () =>
+      upload(where, prefix, puts, (done, of, name) => setBusy(done < of ? `Uploading ${of > 1 ? `${done + 1} of ${of}: ` : ''}${name}…` : null)).then((n) => api.toast(`Uploaded ${count(n, 'file')} to ${bucket}/${prefix}`)),
     );
 
   const open = (row: Row) => (row.folder ? go(row.key) : void run(null, () => api.save('objDownload', { id: where.id, project: where.project ?? undefined, bucket, key: row.key }, row.name.split('/').pop() || row.name), false));
@@ -169,9 +169,9 @@ export function BucketView(p: TabProps) {
         <ToolButton label={flat ? 'By folder' : 'Flat: everything under this folder'} icon={ListTree} active={flat} onClick={() => setFlat(!flat)} />
         {!readOnly && (
           <>
-            <ToolButton label="Upload Files…" icon={Upload} disabled={!!busy} onClick={() => picker.current?.click()} />
-            <ToolButton label="New Folder…" icon={FolderPlus} onClick={() => void run(null, () => newFolder(where, prefix))} />
-            <ToolButton label="Delete…" icon={Trash2} disabled={!selected.size || !!busy} onClick={() => void run(null, () => remove(where, [...selected]))} />
+            <ToolButton label="Upload Files" icon={Upload} disabled={!!busy} onClick={() => picker.current?.click()} />
+            <ToolButton label="New Folder" icon={FolderPlus} onClick={() => void run(null, () => newFolder(where, prefix))} />
+            <ToolButton label="Delete" icon={Trash2} disabled={!selected.size || !!busy} onClick={() => void run(null, () => remove(where, [...selected]))} />
           </>
         )}
         <ToolButton label="Refresh" icon={RefreshCw} disabled={loading} onClick={reload} />
@@ -200,12 +200,12 @@ export function BucketView(p: TabProps) {
           onMenu={showMenu}
           onKey={onKey}
           onDrop={readOnly ? null : (dt) => void droppedFiles(dt).then(put, api.fail)}
-          empty={<p className="pointer-events-none px-3 py-3 text-[var(--node-muted)]">{loading ? 'Loading…' : filter ? 'Nothing loaded matches.' : prefix ? 'This folder is empty.' : 'This bucket is empty.'}{!readOnly && !loading && !filter ? ' Drop files here to upload them.' : ''}</p>}
+          empty={<p className="pointer-events-none px-3 py-3 text-[var(--node-muted)]">{loading ? 'Loading' : filter ? 'Nothing loaded matches' : prefix ? 'This folder is empty' : 'This bucket is empty'}{!readOnly && !loading && !filter ? ' Drop files here to upload them' : ''}</p>}
           footer={
             next && (
               <div className="px-2 py-1.5">
                 <NodeButton disabled={loading} onClick={() => void load(true)}>
-                  {loading ? 'Loading…' : 'Load more'}
+                  {loading ? 'Loading' : 'Load more'}
                 </NodeButton>
               </div>
             )

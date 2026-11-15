@@ -229,7 +229,7 @@ export function Grid(p: GridProps) {
 
   const down = useRef<[number, number] | null>(null);
 
-  if (!columns.length) return <div className={cn('flex items-center justify-center p-6 text-[var(--node-muted)]', p.className)}>{p.empty ?? 'Nothing to show.'}</div>;
+  if (!columns.length) return <div className={cn('flex items-center justify-center p-6 text-[var(--node-muted)]', p.className)}>{p.empty ?? 'Nothing to show'}</div>;
 
   return (
     <div
@@ -316,7 +316,7 @@ export function Grid(p: GridProps) {
           );
         })}
       </div>
-      {!all.length && <div className="absolute inset-x-0 top-10 text-center font-sans text-[var(--node-muted)]">{p.empty ?? 'No rows.'}</div>}
+      {!all.length && <div className="absolute inset-x-0 top-10 text-center font-sans text-[var(--node-muted)]">{p.empty ?? 'No rows'}</div>}
       {menu.element}
     </div>
   );

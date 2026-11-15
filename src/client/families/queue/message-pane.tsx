@@ -54,14 +54,14 @@ export function MessagePane({ m, caps, api, readOnly, onAgain, onClose }: { m: M
       <div className="min-h-0 flex-1 overflow-auto">
         <section className="border-b border-[var(--node-border)]">
           {m.binary && <p className="px-3 pt-2 text-[10.5px] text-[var(--node-muted)]">Not text: shown as base64.</p>}
-          {m.meta?.truncated && <p className="px-3 pt-2 text-[10.5px] text-[var(--node-muted)]">Cut at 1 MB: the rest isn’t shown.</p>}
+          {m.meta?.truncated && <p className="px-3 pt-2 text-[10.5px] text-[var(--node-muted)]">Cut at 1 MB: the rest isn’t shown</p>}
           {v.json && mode === 'tree' ? (
             <JsonTree value={v.value} depth={3} className="px-1 py-1 text-[11.5px]" />
           ) : (
             <pre className="px-3 py-2 font-mono text-[11.5px] break-all whitespace-pre-wrap select-text">{v.text || <span className="text-[var(--node-muted)]">{m.meta?.tombstone ? 'null (a tombstone)' : 'empty'}</span>}</pre>
           )}
         </section>
-        <Pairs title={`Headers${headers.length ? ` (${headers.length})` : ''}`} rows={headers} empty="No headers." api={api} />
+        <Pairs title={`Headers${headers.length ? ` (${headers.length})` : ''}`} rows={headers} empty="No headers" api={api} />
         <Pairs title="Message" rows={where} api={api} />
       </div>
     </div>

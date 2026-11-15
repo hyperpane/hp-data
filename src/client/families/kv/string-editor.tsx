@@ -72,7 +72,7 @@ export function StringEditor(p: StringEditorProps) {
               Undo
             </NodeButton>
             <NodeButton disabled={!changed || busy} onClick={() => void save()} className={changed ? 'border-[var(--node-accent)] text-[var(--node-accent)]' : undefined}>
-              {busy ? 'Saving…' : 'Save'}
+              {busy ? 'Saving' : 'Save'}
             </NodeButton>
           </div>
         )}

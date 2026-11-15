@@ -24,9 +24,9 @@ export function connectionMenu(c: Connection, open: boolean, ops: ConnectionOps,
     open ? { label: 'Disconnect', run: () => ops.disconnect(c) } : { label: 'Connect', run: () => ops.connect(c) },
     ...(family === undefined || family === 'sql' || family === 'kv' || family === 'document' ? [{ label: 'New Console', run: () => ops.newConsole(c) }] : []),
     null,
-    { label: 'Edit Connection…', run: () => ops.edit(c) },
+    { label: 'Edit Connection', run: () => ops.edit(c) },
     { label: 'Duplicate', run: () => ops.duplicate(c) },
     null,
-    { label: 'Remove…', danger: true, run: () => ops.remove(c) },
+    { label: 'Remove', danger: true, run: () => ops.remove(c) },
   ];
 }

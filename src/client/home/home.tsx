@@ -68,12 +68,12 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
           </span>
           <div className="flex min-w-0 flex-col">
             <h1 className="text-[17px] leading-tight font-semibold">{empty ? 'Welcome to Data' : 'Data'}</h1>
-            <span className="text-[11.5px] text-[var(--node-muted)]">{empty ? 'Connect a database, a key-value store, a queue or a bucket to start.' : `${connections.length} ${connections.length === 1 ? 'connection' : 'connections'}${Object.keys(state?.open ?? {}).length ? ` · ${Object.keys(state!.open).length} connected` : ''}`}</span>
+            <span className="text-[11.5px] text-[var(--node-muted)]">{empty ? 'Connect a database, a key-value store, a queue or a bucket to start' : `${connections.length} ${connections.length === 1 ? 'connection' : 'connections'}${Object.keys(state?.open ?? {}).length ? ` · ${Object.keys(state!.open).length} connected` : ''}`}</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <label className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-[var(--node-muted)]" />
-              <NodeInput value={query} onChange={(e) => setQuery(e.target.value)} placeholder={empty ? 'Find a database…' : 'Search connections and databases…'} className="w-[260px] pl-7" />
+              <NodeInput value={query} onChange={(e) => setQuery(e.target.value)} placeholder={empty ? 'Find a database' : 'Search connections and databases'} className="w-[260px] pl-7" />
             </label>
           </div>
         </header>

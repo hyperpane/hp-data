@@ -39,7 +39,7 @@ export function PublishForm({ p, caps, base, partitions, draft, onDraft, onSent 
 
   const send = async () => {
     if (readOnly || busy) return;
-    if (language === 'json' && draft.value.trim() && !pretty(draft.value).json && !(await api.confirm('Send it as text?', 'The value isn’t valid JSON.', 'Send'))) return;
+    if (language === 'json' && draft.value.trim() && !pretty(draft.value).json && !(await api.confirm('Send it as text?', 'The value isn’t valid JSON', 'Send'))) return;
     setBusy(true);
     try {
       const headers = Object.fromEntries(draft.headers.filter((h) => h.key.trim()).map((h) => [h.key.trim(), h.value]));
@@ -51,7 +51,7 @@ export function PublishForm({ p, caps, base, partitions, draft, onDraft, onSent 
         partition: caps.partitions && draft.partition !== '' ? Number(draft.partition) : undefined,
         routingKey: caps.routing ? draft.routingKey : undefined,
       });
-      api.toast(`Sent to ${caps.name || 'the default exchange'}${where(caps, res?.id)}.`);
+      api.toast(`Sent to ${caps.name || 'the default exchange'}${where(caps, res?.id)}`);
       onSent();
     } catch (e) {
       api.fail(e);
@@ -82,7 +82,7 @@ export function PublishForm({ p, caps, base, partitions, draft, onDraft, onSent 
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {readOnly && <div className="flex-none border-b border-[var(--node-border)] px-3 py-1.5 text-[11px] text-[var(--node-muted)]">This connection is read only: nothing can be published from it.</div>}
+      {readOnly && <div className="flex-none border-b border-[var(--node-border)] px-3 py-1.5 text-[11px] text-[var(--node-muted)]">This connection is read only: nothing can be published from it</div>}
       <div className="flex flex-none flex-wrap items-end gap-3 px-3 pt-2.5 pb-2">
         {caps.keyLabel && (
           <label className="flex min-w-[200px] flex-1 flex-col gap-1">
@@ -141,7 +141,7 @@ export function PublishForm({ p, caps, base, partitions, draft, onDraft, onSent 
       <div className="mt-2 flex flex-none items-center gap-2 border-t border-[var(--node-border)] px-3 py-2">
         <NodeButton disabled={readOnly || busy} onClick={() => void send()} className="border-[var(--node-accent)]">
           <Send className="size-3.5" />
-          {busy ? 'Sending…' : 'Send'}
+          {busy ? 'Sending' : 'Send'}
         </NodeButton>
         <span className="text-[10.5px] text-[var(--node-muted)]">⌘Enter</span>
         <button type="button" className="ml-auto flex items-center gap-1 text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]" onClick={() => onDraft(emptyDraft())}>

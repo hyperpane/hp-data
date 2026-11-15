@@ -28,14 +28,14 @@ export const actions: TreeActions = (c) => {
   const name = node.label ?? node.name;
   const etcd = c.kind.engine === 'etcd';
   return [
-    keys && !c.readOnly ? { label: 'New Key…', run: () => c.open({ type: 'keys', conn: c.connection.id, ref: keys.ref, title: keys.title, state: { newKey: true } }) } : null,
+    keys && !c.readOnly ? { label: 'New Key', run: () => c.open({ type: 'keys', conn: c.connection.id, ref: keys.ref, title: keys.title, state: { newKey: true } }) } : null,
     { label: 'Open Console', run: () => c.open(consoleTab(c, database)) },
     ...(c.readOnly
       ? []
       : [
           null,
           {
-            label: etcd ? 'Delete Every Key…' : 'Flush Database…',
+            label: etcd ? 'Delete Every Key' : 'Flush Database',
             danger: true,
             run: () =>
               void (async () => {
@@ -44,7 +44,7 @@ export const actions: TreeActions = (c) => {
                 try {
                   const r = await c.api.call<{ reply: KvReply }>('kvCommand', { id: c.connection.id, project: c.project ?? undefined, db: database, line: etcd ? 'del --prefix ""' : 'FLUSHDB' });
                   if (r.reply.error) throw new Error(r.reply.text.replace(/^\(error\)\s*/, ''));
-                  c.api.toast(etcd ? 'Every key is deleted.' : `${name} is empty.`);
+                  c.api.toast(etcd ? 'Every key is deleted' : `${name} is empty`);
                   c.refresh();
                 } catch (e) {
                   c.api.fail(e);

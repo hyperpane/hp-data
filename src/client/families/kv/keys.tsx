@@ -31,7 +31,7 @@ export function KeysView(p: TabProps) {
 
   const remove = async (keys: string[]) => {
     const what = keys.length === 1 ? `“${keys[0]}”` : `${keys.length} keys`;
-    if (!(await api.confirm('Delete?', `${what} and ${keys.length === 1 ? 'its value' : 'their values'} will be gone.`, 'Delete', true))) return;
+    if (!(await api.confirm('Delete?', `${what} and ${keys.length === 1 ? 'its value' : 'their values'} will be gone`, 'Delete', true))) return;
     if (await attempt(api, () => calls.call('kvRemove', { keys }))) {
       scan.drop(keys);
       if (selected && keys.includes(selected)) select(null);
@@ -90,8 +90,8 @@ export function KeysView(p: TabProps) {
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 text-[var(--node-muted)]">
               <KeyRound className="size-6 opacity-50" />
-              <span>Pick a key to see its value.</span>
-              {!readOnly && <NodeButton onClick={() => setAdding(true)}>New key…</NodeButton>}
+              <span>Pick a key to see its value</span>
+              {!readOnly && <NodeButton onClick={() => setAdding(true)}>New key</NodeButton>}
             </div>
           )
         }

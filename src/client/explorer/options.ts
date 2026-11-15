@@ -31,7 +31,7 @@ const tick = (on: boolean, label: string) => `${on ? '✓ ' : '\u2003 '}${label}
 
 export function optionsMenu(p: Prefs, a: OptionsActions): (MenuEntry | null)[] {
   return [
-    { label: 'New Connection…', run: a.newConnection },
+    { label: 'New Connection', run: a.newConnection },
     { label: 'Connect All', disabled: !a.any, run: a.connectAll },
     { label: 'Disconnect All', disabled: !a.anyOpen, run: a.disconnectAll },
     null,

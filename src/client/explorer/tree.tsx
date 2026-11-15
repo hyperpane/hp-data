@@ -148,7 +148,7 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
       rows.push(
         <div key={`${k}:loading`} className="flex items-center gap-1.5 py-1 text-[11px] text-[var(--node-muted)]" style={{ paddingLeft: 8 + depth * 14 }}>
           <LoaderCircle className="size-3.5 animate-spin" />
-          {path.length ? 'Loading…' : 'Connecting…'}
+          {path.length ? 'Loading' : 'Connecting'}
         </div>,
       );
       return;
@@ -284,7 +284,7 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
       <div role="tree" className="min-h-0 flex-1 overflow-auto py-1 text-[12px] select-none">
         {state && !connections.length ? (
           <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-[11px] text-[var(--node-muted)]">
-            No connections yet.
+            No connections yet
             <button type="button" className="text-[var(--node-accent)] hover:underline" onClick={() => ops.pickKind()}>
               Add one
             </button>

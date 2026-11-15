@@ -86,7 +86,7 @@ export function KeyList(p: KeyListProps) {
         </div>
         <ToolButton label={p.tree ? 'Show the keys flat' : 'Group the keys by “:”'} icon={p.tree ? List : FolderTree} onClick={() => p.onTree(!p.tree)} />
         <ToolButton label="Scan again" icon={RefreshCw} onClick={scan.reload} />
-        {p.onNew && <ToolButton label="New key…" icon={Plus} onClick={p.onNew} />}
+        {p.onNew && <ToolButton label="New key" icon={Plus} onClick={p.onNew} />}
       </form>
       <div
         tabIndex={0}
@@ -99,7 +99,7 @@ export function KeyList(p: KeyListProps) {
         }}
       >
         {scan.error && <Muted error>{scan.error}</Muted>}
-        {!scan.error && !scan.loading && !rows.length && <Muted>{p.pattern === '*' ? 'No keys in this database.' : `No keys match ${p.pattern}.`}</Muted>}
+        {!scan.error && !scan.loading && !rows.length && <Muted>{p.pattern === '*' ? 'No keys in this database' : `No keys match ${p.pattern}`}</Muted>}
         {rows.map((r) =>
           r.kind === 'folder' ? (
             <div
@@ -130,7 +130,7 @@ export function KeyList(p: KeyListProps) {
               onContextMenu={(e) =>
                 menu.open(e, [
                   { label: 'Copy the name', run: () => p.copy(r.entry.key, 'the key’s name') },
-                  ...(p.onRemove ? [null, { label: 'Delete…', danger: true, run: () => p.onRemove!([r.entry.key]) }] : []),
+                  ...(p.onRemove ? [null, { label: 'Delete', danger: true, run: () => p.onRemove!([r.entry.key]) }] : []),
                 ])
               }
             >
@@ -143,14 +143,14 @@ export function KeyList(p: KeyListProps) {
         {scan.more && rows.length > 0 && (
           <div className="flex justify-center py-2">
             <NodeButton disabled={scan.loading} onClick={scan.loadMore}>
-              {scan.loading ? 'Scanning…' : 'Load more'}
+              {scan.loading ? 'Scanning' : 'Load more'}
             </NodeButton>
           </div>
         )}
       </div>
       <StatusBar>
         <span>
-          {scan.loading && !scan.keys.length ? 'Scanning…' : `${scan.keys.length.toLocaleString()} ${scan.keys.length === 1 ? 'key' : 'keys'}${scan.more ? ' so far' : ''}`}
+          {scan.loading && !scan.keys.length ? 'Scanning' : `${scan.keys.length.toLocaleString()} ${scan.keys.length === 1 ? 'key' : 'keys'}${scan.more ? ' so far' : ''}`}
           {scan.total !== undefined && ` · ${scan.total.toLocaleString()} in the database`}
         </span>
       </StatusBar>

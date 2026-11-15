@@ -34,8 +34,8 @@ export function menuFor(c: MenuContext): (MenuEntry | null)[] {
       ...(readOnly
         ? []
         : [
-            { label: 'Upload Files…', run: c.upload },
-            { label: 'New Folder…', run: () => void c.run(null, () => newFolder(where, c.prefix)) },
+            { label: 'Upload Files', run: c.upload },
+            { label: 'New Folder', run: () => void c.run(null, () => newFolder(where, c.prefix)) },
             null,
           ]),
       { label: 'Refresh', run: c.reload },
@@ -45,13 +45,13 @@ export function menuFor(c: MenuContext): (MenuEntry | null)[] {
   const one = selected.length === 1 ? selected[0] : null;
   const entries: (MenuEntry | null)[] = [];
   if (one && isFolder(one)) entries.push({ label: 'Open', run: () => c.go(one) });
-  if (files.length) entries.push({ label: files.length === 1 ? 'Download…' : `Download ${count(files.length, 'File')}…`, run: () => void c.run(null, () => download(where, files), false) });
+  if (files.length) entries.push({ label: files.length === 1 ? 'Download' : `Download ${count(files.length, 'File')}…`, run: () => void c.run(null, () => download(where, files), false) });
   if (one && !isFolder(one)) entries.push(null, ...linkMenu(c, one));
   if (one && c.prefix !== parentOf(one)) entries.push({ label: 'Show in Folder', run: () => (c.go(parentOf(one)), c.setSelected(one)) });
   entries.push(null, { label: one ? 'Copy s3:// URI' : 'Copy s3:// URIs', run: () => uri(selected) }, { label: one ? 'Copy Key' : 'Copy Keys', run: () => where.api.copy(selected.join('\n'), one ? 'the key' : 'the keys') });
   if (!readOnly) {
     entries.push(null);
-    if (one) entries.push({ label: isFolder(one) ? 'Rename Folder…' : 'Rename or Move…', run: () => void c.run(null, () => rename(where, one)) });
+    if (one) entries.push({ label: isFolder(one) ? 'Rename Folder' : 'Rename or Move', run: () => void c.run(null, () => rename(where, one)) });
     entries.push({ label: one ? `Delete “${nameOf(one)}”…` : `Delete ${count(selected.length, 'Item')}…`, danger: true, run: () => void c.run(null, () => remove(where, selected)) });
   }
   return entries;

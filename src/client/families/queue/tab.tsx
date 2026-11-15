@@ -32,7 +32,7 @@ export function QueueTab(p: TabProps) {
     if (!(await api.confirm(`Purge ${caps.name}?`, `Every message in the ${caps.noun} is deleted, for every consumer. This can’t be undone.`, 'Purge', true))) return;
     try {
       await api.call('qPurge', base);
-      api.toast(`Purged ${caps.name}.`);
+      api.toast(`Purged ${caps.name}`);
       info.reload();
     } catch (e) {
       api.fail(e);
@@ -42,7 +42,7 @@ export function QueueTab(p: TabProps) {
     if (!(await api.confirm(`Delete ${caps.name}?`, `The ${caps.noun} and every message in it are deleted. This can’t be undone.`, 'Delete', true))) return;
     try {
       await api.call('qRemove', base);
-      api.toast(`Deleted ${caps.name}.`);
+      api.toast(`Deleted ${caps.name}`);
       p.retitle(`${caps.name} (deleted)`);
     } catch (e) {
       api.fail(e);
@@ -62,8 +62,8 @@ export function QueueTab(p: TabProps) {
           </span>
           <div className="ml-auto flex flex-none items-center gap-0.5">
             <ToolButton label="Refresh the figures" icon={RefreshCw} onClick={() => info.reload()} />
-            {caps.purge && <ToolButton label={readOnly ? 'Purge (the connection is read only)' : 'Purge…'} icon={Eraser} disabled={readOnly} onClick={() => void purge()} />}
-            <ToolButton label={readOnly ? 'Delete (the connection is read only)' : 'Delete…'} icon={Trash2} disabled={readOnly} onClick={() => void remove()} />
+            {caps.purge && <ToolButton label={readOnly ? 'Purge (the connection is read only)' : 'Purge'} icon={Eraser} disabled={readOnly} onClick={() => void purge()} />}
+            <ToolButton label={readOnly ? 'Delete (the connection is read only)' : 'Delete'} icon={Trash2} disabled={readOnly} onClick={() => void remove()} />
           </div>
         </div>
         <Figures info={info.value ?? null} loading={info.loading} />
@@ -104,7 +104,7 @@ export function QueueTab(p: TabProps) {
 }
 
 function Figures({ info, loading }: { info: QueueInfo | null; loading: boolean }) {
-  if (!info) return <div className="mt-1.5 h-[30px] text-[11px] text-[var(--node-muted)]">{loading ? 'Loading…' : ''}</div>;
+  if (!info) return <div className="mt-1.5 h-[30px] text-[11px] text-[var(--node-muted)]">{loading ? 'Loading' : ''}</div>;
   return (
     <div className={cn('mt-1.5 flex flex-wrap gap-x-5 gap-y-1.5', loading && 'opacity-60')}>
       {info.stats.map((s) => (

@@ -9,7 +9,7 @@ import type { QueueInfo } from '../../../shared/queue.ts';
 import type { Caps } from './caps.ts';
 
 export function DetailsView({ info, caps, loading }: { info: QueueInfo | null; caps: Caps; loading: boolean }) {
-  if (!info) return <p className="py-8 text-center text-[var(--node-muted)]">{loading ? 'Loading…' : 'Nothing to show.'}</p>;
+  if (!info) return <p className="py-8 text-center text-[var(--node-muted)]">{loading ? 'Loading' : 'Nothing to show'}</p>;
   const parts = info.partitions ?? [];
   return (
     <div className="min-h-0 flex-1 overflow-auto px-3 py-2">
@@ -33,13 +33,13 @@ export function DetailsView({ info, caps, loading }: { info: QueueInfo | null; c
               widths={caps.engine === 'kafka' ? [0, 120, 96] : [200, 0]}
               head={caps.engine === 'kafka' ? ['Group', 'State', 'Lag'] : ['Consumer', 'Detail']} right={caps.engine === 'kafka' ? [2] : []} rows={info.consumers.map((c) => (caps.engine === 'kafka' ? [c.name, c.detail, c.lag ?? ''] : [c.name, c.detail]))} />
           ) : (
-            <p className="text-[11px] text-[var(--node-muted)]">{caps.engine === 'kafka' ? 'No group has committed offsets in this topic.' : 'Nobody is consuming.'}</p>
+            <p className="text-[11px] text-[var(--node-muted)]">{caps.engine === 'kafka' ? 'No group has committed offsets in this topic' : 'Nobody is consuming'}</p>
           )}
         </Section>
       )}
       {info.bindings && (
         <Section title={`Bindings (${info.bindings.length})`}>
-          {info.bindings.length ? <Table id="data.queue.bindings" widths={[160, 160, 0]} head={['From', 'To', 'Routing key']} rows={info.bindings.map((b) => [b.source, b.destination, b.routingKey || '—'])} /> : <p className="text-[11px] text-[var(--node-muted)]">No bindings.</p>}
+          {info.bindings.length ? <Table id="data.queue.bindings" widths={[160, 160, 0]} head={['From', 'To', 'Routing key']} rows={info.bindings.map((b) => [b.source, b.destination, b.routingKey || '—'])} /> : <p className="text-[11px] text-[var(--node-muted)]">No bindings</p>}
         </Section>
       )}
       <Section title="Figures">

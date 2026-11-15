@@ -2,7 +2,7 @@
   "manifest": 1,
   "id": "data",
   "name": "Data",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "hyperpane",
   "description": "Every database on your canvas: PostgreSQL, MySQL, SQLite, ClickHouse, Redis, MongoDB, Elasticsearch, DynamoDB, Kafka, RabbitMQ, SQS and S3, with saved connections, consoles and editable tables.",
   "icon": "icon.svg",
@@ -39,7 +39,7 @@
   },
   "signature": {
     "key": "ed25519:5LgmP9NjLnpvz48igrFekSqi+4k6gzaO8sNwlsgNKFc=",
-    "sig": "QKPnsmXPzSNNUnaYFE02iarExCZvgf8JTgzQgNi8DemJ4XTW0GGTMED9vHD1Qw9E4Dnq83J2Yb7xtWfQZ4q1DA==",
-    "server": "ndzyjiBCQ7cPOwAJpS5N3N7m5So7wvnB1c9K1vUK8PFH8g2OHaAEaPRjmFJAQj9ET55sNPlGsH+TaUxWBSSWCw=="
+    "sig": "dCH76tTq/ObabruEovhOFrArIHJd0cWZXcwDKmj4AQQDhUsJd8l8rdmr14FTcSNyYKwjWTphl1mDAfGVruxQDg==",
+    "server": "czrPXSK8j9Jfnl2KBFTvpFiBMQeTKwdGgUVRtY4/QMGKKE+22k0rHhUMtGg8//A0Tu5vTsMin0YdeTmAShqDAA=="
   }
 }

@@ -36,12 +36,12 @@ function openConsole(c: TreeContext, database?: string, text?: string): MenuEntr
 function mongo(c: TreeContext): (MenuEntry | null)[] {
   const { node, path, api } = c;
   const newCollection = (db?: string): MenuEntry => ({
-    label: db ? 'New Collection…' : 'New Database…',
+    label: db ? 'New Collection' : 'New Database',
     run: async () => {
       const database = db ?? (await api.prompt('New database', 'Database', '', 'shop'))?.trim();
       if (!database) return;
       const name = (await api.prompt(db ? `New collection in ${db}` : `The first collection in ${database}`, 'Collection', '', 'users'))?.trim();
-      if (name) await exec(c, `db.getSiblingDB(${q(database)}).createCollection(${q(name)})`, `Made ${database}.${name}.`);
+      if (name) await exec(c, `db.getSiblingDB(${q(database)}).createCollection(${q(name)})`, `Made ${database}.${name}`);
     },
   });
   if (!node) return [openConsole(c), ...(c.readOnly ? [] : [null, newCollection()])];
@@ -56,10 +56,10 @@ function mongo(c: TreeContext): (MenuEntry | null)[] {
             newCollection(db),
             null,
             {
-              label: 'Drop Database…',
+              label: 'Drop Database',
               danger: true,
               run: async () => {
-                if (await api.confirm(`Drop ${db}?`, `The database ${db} and every collection in it will be deleted. This can’t be undone.`, 'Drop', true)) await exec(c, `db.getSiblingDB(${q(db)}).dropDatabase()`, `Dropped ${db}.`);
+                if (await api.confirm(`Drop ${db}?`, `The database ${db} and every collection in it will be deleted. This can’t be undone.`, 'Drop', true)) await exec(c, `db.getSiblingDB(${q(db)}).dropDatabase()`, `Dropped ${db}`);
               },
             },
           ]),
@@ -73,10 +73,10 @@ function mongo(c: TreeContext): (MenuEntry | null)[] {
       : [
           null,
           {
-            label: 'New Index…',
+            label: 'New Index',
             run: async () => {
               const keys = (await api.prompt(`New index on ${coll}`, 'Keys', '{ field: 1 }', '{ email: 1 }  ·  { name: "text" }'))?.trim();
-              if (keys) await exec(c, `db.getSiblingDB(${q(db)}).getCollection(${q(coll)}).createIndex(${keys})`, `Made the index on ${coll}.`);
+              if (keys) await exec(c, `db.getSiblingDB(${q(db)}).getCollection(${q(coll)}).createIndex(${keys})`, `Made the index on ${coll}`);
             },
           },
         ]),
@@ -85,10 +85,10 @@ function mongo(c: TreeContext): (MenuEntry | null)[] {
       : [
           null,
           {
-            label: node.type === 'view' ? 'Drop View…' : 'Drop Collection…',
+            label: node.type === 'view' ? 'Drop View' : 'Drop Collection',
             danger: true,
             run: async () => {
-              if (await api.confirm(`Drop ${coll}?`, `${db}.${coll} and every document in it will be deleted. This can’t be undone.`, 'Drop', true)) await exec(c, `db.getSiblingDB(${q(db)}).getCollection(${q(coll)}).drop()`, `Dropped ${coll}.`);
+              if (await api.confirm(`Drop ${coll}?`, `${db}.${coll} and every document in it will be deleted. This can’t be undone.`, 'Drop', true)) await exec(c, `db.getSiblingDB(${q(db)}).getCollection(${q(coll)}).drop()`, `Dropped ${coll}`);
             },
           },
         ]),
@@ -98,10 +98,10 @@ function mongo(c: TreeContext): (MenuEntry | null)[] {
 function search(c: TreeContext): (MenuEntry | null)[] {
   const { node, path, api } = c;
   const newIndex: MenuEntry = {
-    label: 'New Index…',
+    label: 'New Index',
     run: async () => {
       const name = (await api.prompt('New index', 'Name', '', 'logs-2026.11'))?.trim();
-      if (name) await exec(c, `PUT /${encodeURIComponent(name)}`, `Made ${name}.`);
+      if (name) await exec(c, `PUT /${encodeURIComponent(name)}`, `Made ${name}`);
     },
   };
   if (!node || node.type === 'folder') return [openConsole(c), ...(c.readOnly || node ? [] : [null, newIndex])];
@@ -116,10 +116,10 @@ function search(c: TreeContext): (MenuEntry | null)[] {
           newIndex,
           null,
           {
-            label: 'Delete Index…',
+            label: 'Delete Index',
             danger: true,
             run: async () => {
-              if (await api.confirm(`Delete ${index}?`, `The index ${index} and every document in it will be deleted. This can’t be undone.`, 'Delete', true)) await exec(c, `DELETE /${encodeURIComponent(index)}`, `Deleted ${index}.`);
+              if (await api.confirm(`Delete ${index}?`, `The index ${index} and every document in it will be deleted. This can’t be undone.`, 'Delete', true)) await exec(c, `DELETE /${encodeURIComponent(index)}`, `Deleted ${index}`);
             },
           },
         ]),
@@ -129,7 +129,7 @@ function search(c: TreeContext): (MenuEntry | null)[] {
 function dynamo(c: TreeContext): (MenuEntry | null)[] {
   const { node, path, api } = c;
   const newTable: MenuEntry = {
-    label: 'New Table…',
+    label: 'New Table',
     run: async () => {
       const name = (await api.prompt('New table', 'Name', '', 'orders'))?.trim();
       if (!name) return;
@@ -138,7 +138,7 @@ function dynamo(c: TreeContext): (MenuEntry | null)[] {
       const [hash, range] = key.split(',').map((s) => s.trim()).filter(Boolean);
       const attrs = [hash, range].filter(Boolean).map((a) => ({ AttributeName: a, AttributeType: 'S' }));
       const schema = [{ AttributeName: hash, KeyType: 'HASH' }, ...(range ? [{ AttributeName: range, KeyType: 'RANGE' }] : [])];
-      await exec(c, `CreateTable ${JSON.stringify({ TableName: name, AttributeDefinitions: attrs, KeySchema: schema, BillingMode: 'PAY_PER_REQUEST' })}`, `Made ${name}.`);
+      await exec(c, `CreateTable ${JSON.stringify({ TableName: name, AttributeDefinitions: attrs, KeySchema: schema, BillingMode: 'PAY_PER_REQUEST' })}`, `Made ${name}`);
     },
   };
   if (!node) return [openConsole(c), ...(c.readOnly ? [] : [null, newTable])];
@@ -152,10 +152,10 @@ function dynamo(c: TreeContext): (MenuEntry | null)[] {
           newTable,
           null,
           {
-            label: 'Delete Table…',
+            label: 'Delete Table',
             danger: true,
             run: async () => {
-              if (await api.confirm(`Delete ${table}?`, `The table ${table} and every item in it will be deleted. This can’t be undone.`, 'Delete', true)) await exec(c, `DeleteTable ${JSON.stringify({ TableName: table })}`, `Deleted ${table}.`);
+              if (await api.confirm(`Delete ${table}?`, `The table ${table} and every item in it will be deleted. This can’t be undone.`, 'Delete', true)) await exec(c, `DeleteTable ${JSON.stringify({ TableName: table })}`, `Deleted ${table}`);
             },
           },
         ]),

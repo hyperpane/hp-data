@@ -66,16 +66,16 @@ export async function download(w: Where, keys: string[]): Promise<void> {
 export async function remove(w: Where, keys: string[]): Promise<boolean> {
   const folders = keys.filter(isFolder);
   const files = keys.filter((k) => !isFolder(k));
-  let message = files.length === 1 && !folders.length ? `“${nameOf(files[0])}” will be deleted from ${w.bucket}.` : '';
+  let message = files.length === 1 && !folders.length ? `“${nameOf(files[0])}” will be deleted from ${w.bucket}` : '';
   if (folders.length) {
     const { count: n } = await w.api.call<RemoveResult>('objRemove', { ...base(w), keys: files, prefixes: folders, dryRun: true });
     const what = [folders.length === 1 ? `the folder “${nameOf(folders[0])}”` : count(folders.length, 'folder'), files.length ? count(files.length, 'file') : null].filter(Boolean).join(' and ');
-    message = `${what[0].toUpperCase()}${what.slice(1)} will be deleted: ${count(n, 'object')} in all.`;
-  } else if (!message) message = `${count(files.length, 'file')} will be deleted from ${w.bucket}.`;
+    message = `${what[0].toUpperCase()}${what.slice(1)} will be deleted: ${count(n, 'object')} in all`;
+  } else if (!message) message = `${count(files.length, 'file')} will be deleted from ${w.bucket}`;
   const title = keys.length === 1 ? `Delete “${nameOf(keys[0])}”?` : `Delete ${count(keys.length, 'item')}?`;
-  if (!(await w.api.confirm(title, `${message} This can’t be undone (unless the bucket keeps versions).`, 'Delete', true))) return false;
+  if (!(await w.api.confirm(title, `${message} This can’t be undone (unless the bucket keeps versions)`, 'Delete', true))) return false;
   const r = await w.api.call<RemoveResult>('objRemove', { ...base(w), keys: files, prefixes: folders });
-  w.api.toast(`Deleted ${count(r.count, 'object')}.`);
+  w.api.toast(`Deleted ${count(r.count, 'object')}`);
   return true;
 }
 
@@ -89,7 +89,7 @@ export async function rename(w: Where, key: string): Promise<string | null> {
   if (folder) to = to.replace(/\/*$/, '/');
   if (to === key) return null;
   const r = await w.api.call<{ count: number }>('objCopy', { ...base(w), from: key, to, move: true });
-  if (folder) w.api.toast(`Moved ${count(r.count, 'object')}.`);
+  if (folder) w.api.toast(`Moved ${count(r.count, 'object')}`);
   return to;
 }
 

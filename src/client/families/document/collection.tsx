@@ -109,7 +109,7 @@ export function CollectionView(p: TabProps) {
   };
 
   const call = (op: string, payload: Record<string, unknown>) => api.call(op, { id: p.connection.id, project: p.project, ref: tab.ref, ...payload });
-  const hint = mongo ? 'Shell literals work: ObjectId("…"), ISODate("…"), NumberLong(…).' : dynamo ? (idFields.length ? `The key: ${idFields.join(', ')}.` : undefined) : '_id is the document’s id; the rest is its _source.';
+  const hint = mongo ? 'Shell literals work: ObjectId("…"), ISODate("…"), NumberLong(…)' : dynamo ? (idFields.length ? `The key: ${idFields.join(', ')}` : undefined) : '_id is the document’s id; the rest is its _source.';
   const without = (d: unknown, fields: string[]) => Object.fromEntries(Object.entries(d as Record<string, unknown>).filter(([k]) => !fields.includes(k)));
   const actions = {
     edit: (i: number) => setEditing({ mode: 'replace', text: toText(docs[i], mongo), key: keyOf(docs[i], idFields) ?? undefined, title: readOnly ? 'Document' : 'Edit document' }),
@@ -117,11 +117,11 @@ export function CollectionView(p: TabProps) {
     copy: (i: number) => api.copy(JSON.stringify(docs[i], null, 2), 'the document'),
     remove: async (i: number) => {
       const key = keyOf(docs[i], idFields);
-      if (!key) return api.toast('That document has no id to delete it by.', true);
+      if (!key) return api.toast('That document has no id to delete it by', true);
       if (!(await api.confirm('Delete the document?', `${Object.entries(key).filter(([k]) => k !== '_index').map(([k, v]) => `${k}: ${toText(v, mongo)}`).join(', ')} will be deleted from ${tab.title}.`, 'Delete', true))) return;
       try {
         await call('docRemove', { keys: [key] });
-        api.toast('Deleted the document.');
+        api.toast('Deleted the document');
         void reload();
       } catch (e) {
         api.fail(e);
@@ -133,7 +133,7 @@ export function CollectionView(p: TabProps) {
     if (!editing) return;
     if (editing.mode === 'insert') await call('docInsert', { doc: text });
     else await call('docReplace', { key: editing.key, doc: text });
-    api.toast(editing.mode === 'insert' ? 'Inserted the document.' : 'Saved the document.');
+    api.toast(editing.mode === 'insert' ? 'Inserted the document' : 'Saved the document');
     void reload();
   };
 
@@ -225,14 +225,14 @@ export function CollectionView(p: TabProps) {
       </Toolbar>
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
       {!result && loading ? (
-        <div className="p-6 text-center text-[var(--node-muted)]">Finding…</div>
+        <div className="p-6 text-center text-[var(--node-muted)]">Finding</div>
       ) : view === 'table' && table ? (
         <Grid
           columns={table.columns}
           rows={table.rows}
           offset={start}
           copy={api.copy}
-          empty="No documents match."
+          empty="No documents match"
           onOpenValue={(r) => actions.edit(r)}
           menu={(r) => [
             { label: readOnly ? 'View the document' : 'Edit the document', run: () => actions.edit(r) },

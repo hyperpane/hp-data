@@ -68,7 +68,7 @@ export function KeyPanel(p: KeyPanelProps) {
     const typed = await api.prompt('Time to live', 'Seconds, or 15m, 2h, 7d. Empty: kept for good.', now, 'kept for good');
     if (typed === null) return;
     const n = typed.trim() ? parseTtl(typed) : null;
-    if (typed.trim() && n === null) return api.fail(`“${typed}” isn’t a time: try 90, 15m, 2h or 7d.`);
+    if (typed.trim() && n === null) return api.fail(`“${typed}” isn’t a time: try 90, 15m, 2h or 7d`);
     if (await attempt(api, () => calls.call('kvExpire', { key, ttl: n }))) await load();
   };
 
@@ -79,12 +79,12 @@ export function KeyPanel(p: KeyPanelProps) {
   };
 
   const remove = async () => {
-    if (!(await api.confirm('Delete the key?', `“${key}” and its value will be gone.`, 'Delete', true))) return;
+    if (!(await api.confirm('Delete the key?', `“${key}” and its value will be gone`, 'Delete', true))) return;
     if (await attempt(api, () => calls.call('kvRemove', { keys: [key] }))) p.onRemoved(key);
   };
 
   const removePart = async (what: string, op: KvEdit) => {
-    if (await api.confirm(`Remove ${what}?`, `From “${key}”.`, 'Remove', true)) await edit(op);
+    if (await api.confirm(`Remove ${what}?`, `From “${key}”`, 'Remove', true)) await edit(op);
   };
 
   const length = value && 'total' in value ? value.total : null;
@@ -115,8 +115,8 @@ export function KeyPanel(p: KeyPanelProps) {
             </button>
           )}
           <ToolButton label="Read it again" icon={RefreshCw} onClick={() => void load()} />
-          {!p.readOnly && <ToolButton label="Rename…" icon={Pencil} onClick={() => void rename()} />}
-          {!p.readOnly && <ToolButton label="Delete…" icon={Trash2} onClick={() => void remove()} />}
+          {!p.readOnly && <ToolButton label="Rename" icon={Pencil} onClick={() => void rename()} />}
+          {!p.readOnly && <ToolButton label="Delete" icon={Trash2} onClick={() => void remove()} />}
         </div>
       </Toolbar>
       {value?.meta && (
@@ -131,7 +131,7 @@ export function KeyPanel(p: KeyPanelProps) {
       {error ? (
         <Muted error>{error}</Muted>
       ) : !value ? (
-        <Muted>{loading ? 'Reading…' : ''}</Muted>
+        <Muted>{loading ? 'Reading' : ''}</Muted>
       ) : value.type === 'string' || value.type === 'json' ? (
         <StringEditor
           key={`${key}:${value.type}`}

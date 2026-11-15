@@ -136,7 +136,7 @@ export function Collection(p: CollectionProps) {
 
 function zscore(p: CollectionProps, member: string, text: string) {
   const score = Number(text.trim());
-  if (!Number.isFinite(score)) return p.fail('A score is a number.');
+  if (!Number.isFinite(score)) return p.fail('A score is a number');
   return p.edit({ op: 'zadd', member, score });
 }
 
@@ -148,17 +148,17 @@ function AddRow({ value: v, edit, fail }: { value: Coll; edit(op: KvEdit): Promi
   const submit = async (side?: 'lpush' | 'rpush') => {
     switch (v.type) {
       case 'hash':
-        if (!a) return fail('Give the field a name.');
+        if (!a) return fail('Give the field a name');
         return clear(await edit({ op: 'hset', field: a, value: b }));
       case 'list':
         return clear(await edit({ op: side ?? 'rpush', value: a }));
       case 'set':
-        if (!a) return fail('Type the member.');
+        if (!a) return fail('Type the member');
         return clear(await edit({ op: 'sadd', member: a }));
       case 'zset': {
         const score = Number(b.trim() || '0');
-        if (!a) return fail('Type the member.');
-        if (!Number.isFinite(score)) return fail('A score is a number.');
+        if (!a) return fail('Type the member');
+        if (!Number.isFinite(score)) return fail('A score is a number');
         return clear(await edit({ op: 'zadd', member: a, score }));
       }
       case 'stream': {
@@ -168,7 +168,7 @@ function AddRow({ value: v, edit, fail }: { value: Coll; edit(op: KvEdit): Promi
           if (!o || typeof o !== 'object' || Array.isArray(o) || !Object.keys(o).length) throw new Error('an object with a field');
           fields = Object.fromEntries(Object.entries(o).map(([k, x]) => [k, typeof x === 'string' ? x : JSON.stringify(x)]));
         } catch (e) {
-          return fail(`An entry is a JSON object: {"field": "value"} (${(e as Error).message}).`);
+          return fail(`An entry is a JSON object: {"field": "value"} (${(e as Error).message})`);
         }
         return clear(await edit({ op: 'xadd', fields }));
       }

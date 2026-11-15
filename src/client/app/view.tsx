@@ -80,7 +80,7 @@ export function DataView() {
     if (t.type === 'home') return <Home state={state} ops={ops} onAdd={(k: Kind) => setDialog({ kind: k })} />;
     const c = w.connection(t.conn);
     const kind = w.kindOf(c);
-    if (!c || !kind) return <NodeMessage>{state ? 'This connection was removed.' : 'Loading…'}</NodeMessage>;
+    if (!c || !kind) return <NodeMessage>{state ? 'This connection was removed' : 'Loading'}</NodeMessage>;
     const View = FAMILIES[kind.family].views[t.type];
     if (!View) return <NodeMessage error>{kind.name} has no “{t.type}” tab.</NodeMessage>;
     return (

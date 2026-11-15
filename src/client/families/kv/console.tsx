@@ -157,7 +157,7 @@ export function ConsoleView(p: TabProps) {
           spellCheck={false}
           autoComplete="off"
           aria-label="Command"
-          placeholder={busy ? 'Waiting for the reply…' : ''}
+          placeholder={busy ? 'Waiting for the reply' : ''}
           className="min-w-0 flex-1 bg-transparent text-[var(--node-fg)] outline-none"
         />
       </form>

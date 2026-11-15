@@ -174,7 +174,7 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
         </table>
         {!shown.length && !busy && (
           <p className="py-8 text-center text-[var(--node-muted)]">
-            {list.length ? 'No message matches the filter.' : live ? 'Waiting for new messages…' : `No messages${caps.from && q.from === 'offset' ? ' from that offset' : ''}.`}
+            {list.length ? 'No message matches the filter' : live ? 'Waiting for new messages' : `No messages${caps.from && q.from === 'offset' ? ' from that offset' : ''}`}
           </p>
         )}
       </div>

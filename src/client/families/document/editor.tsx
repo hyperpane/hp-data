@@ -52,7 +52,7 @@ export function DocEditor({ editing, readOnly, onSave, onClose, hint }: { editin
             <NodeButton onClick={onClose}>{readOnly ? 'Close' : 'Cancel'}</NodeButton>
             {!readOnly && (
               <NodeButton disabled={busy} onClick={() => void save()} className="border-[var(--node-accent)] text-[var(--node-accent)]">
-                {busy ? 'Saving…' : editing.mode === 'insert' ? 'Insert' : 'Save'}
+                {busy ? 'Saving' : editing.mode === 'insert' ? 'Insert' : 'Save'}
               </NodeButton>
             )}
           </div>

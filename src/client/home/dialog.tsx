@@ -158,7 +158,7 @@ export function ConnectionDialog({ target, api, project, onClose, onSaved }: { t
               </label>
               <label className="flex flex-col gap-1">
                 <span className="text-[11px] text-[var(--node-muted)]">Group</span>
-                <NodeInput value={group} onChange={(e) => setGroup(e.target.value)} placeholder="Local, Production…" className="h-7" />
+                <NodeInput value={group} onChange={(e) => setGroup(e.target.value)} placeholder="Local, Production" className="h-7" />
               </label>
             </div>
             )}
@@ -193,7 +193,7 @@ export function ConnectionDialog({ target, api, project, onClose, onSaved }: { t
                 className="self-start text-[11px] text-[var(--node-muted)] underline hover:text-[var(--node-fg)]"
                 onClick={() =>
                   void api.call<{ forgotten: boolean }>('forgetSshHost', { host: values.sshHost, port: values.sshPort ?? 22 }).then(
-                    (r) => api.toast(r.forgotten ? `Forgot ${values.sshHost}’s key: the next connection remembers the one it shows.` : `No key was remembered for ${values.sshHost}.`),
+                    (r) => api.toast(r.forgotten ? `Forgot ${values.sshHost}’s key: the next connection remembers the one it shows` : `No key was remembered for ${values.sshHost}`),
                     api.fail,
                   )
                 }

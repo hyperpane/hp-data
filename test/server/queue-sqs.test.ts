@@ -9,7 +9,12 @@ import type { Message } from '../../src/shared/queue.ts';
 import { sqs } from '../../src/server/drivers/queue/sqs.ts';
 import type { QueueDriver } from '../../src/server/drivers/types.ts';
 
-const up = await fetch('http://localhost:9324/', { method: 'POST', headers: { 'x-amz-target': 'AmazonSQS.ListQueues', 'content-type': 'application/x-amz-json-1.0' }, body: '{}', signal: AbortSignal.timeout(1500) }).then(
+const up = await fetch('http://localhost:9324/', {
+  method: 'POST',
+  headers: { 'x-amz-target': 'AmazonSQS.ListQueues', 'content-type': 'application/x-amz-json-1.0' },
+  body: '{}',
+  signal: AbortSignal.timeout(1500),
+}).then(
   (r) => r.ok,
   () => false,
 );
@@ -22,7 +27,13 @@ let d: QueueDriver;
 
 before(async () => {
   if (!up) return;
-  d = sqs({ kind, values: withDefaults(kind, { accessKeyId: 'x', secretAccessKey: 'x', endpoint: 'http://localhost:9324', region: 'elasticmq' }), folder: null, dataDir: '/tmp', log: () => {} }) as QueueDriver;
+  d = sqs({
+    kind,
+    values: withDefaults(kind, { accessKeyId: 'x', secretAccessKey: 'x', endpoint: 'http://localhost:9324', region: 'elasticmq' }),
+    folder: null,
+    dataDir: '/tmp',
+    log: () => {},
+  }) as QueueDriver;
   await d.create(ref, {});
   await d.create({ queue: `${queue}.fifo` }, {});
 });
@@ -60,13 +71,23 @@ test('FIFO: a group, and a key on a standard queue is refused', { skip }, async 
 test('a tail sends only what it hasn’t seen', { skip }, async () => {
   const ctl = new AbortController();
   const got: Message[] = [];
-  const done = d.tail(ref, (m) => (got.push(m), true), ctl.signal);
+  const done = d.tail(
+    ref,
+    (m) => {
+      got.push(m);
+      return true;
+    },
+    ctl.signal,
+  );
   await new Promise((r) => setTimeout(r, 1500));
   await d.publish({ ref, value: 'new one' });
   for (let i = 0; i < 40 && !got.length; i++) await new Promise((r) => setTimeout(r, 250));
   ctl.abort();
   await done;
-  assert.deepEqual(got.map((m) => m.value), ['new one']);
+  assert.deepEqual(
+    got.map((m) => m.value),
+    ['new one'],
+  );
 });
 
 test('purge, and a missing queue', { skip }, async () => {

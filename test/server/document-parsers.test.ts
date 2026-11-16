@@ -17,7 +17,11 @@ test('relaxed JSON: plain JSON as it is', () => {
 });
 
 test('relaxed JSON: unquoted keys, single quotes, trailing commas, comments', () => {
-  assert.deepEqual(parseRelaxed("{ age: { $gt: 30, }, 'name': 'Ann', address.city: 'Oslo', // why\n /* more */ }"), { age: { $gt: 30 }, name: 'Ann', 'address.city': 'Oslo' });
+  assert.deepEqual(parseRelaxed("{ age: { $gt: 30, }, 'name': 'Ann', address.city: 'Oslo', // why\n /* more */ }"), {
+    age: { $gt: 30 },
+    name: 'Ann',
+    'address.city': 'Oslo',
+  });
 });
 
 test('relaxed JSON: the shell’s literals as Extended JSON', () => {
@@ -55,7 +59,9 @@ test('mongosh: a find with its cursor’s methods', () => {
 });
 
 test('mongosh: show, use, db’s own, getCollection, several statements', () => {
-  const s = parseShell('use shop\nshow collections;\ndb.runCommand({ping: 1})\ndb.getCollection("a.b")\n  .aggregate([{$match: {}}])\ndb.system.users.findOne()\ndb');
+  const s = parseShell(
+    'use shop\nshow collections;\ndb.runCommand({ping: 1})\ndb.getCollection("a.b")\n  .aggregate([{$match: {}}])\ndb.system.users.findOne()\ndb',
+  );
   assert.deepEqual(
     s.map((x) => x.kind),
     ['use', 'show', 'db', 'collection', 'collection', 'db'],
@@ -77,7 +83,9 @@ test('mongosh: writes told from reads', () => {
 });
 
 test('Dev Tools: requests, bodies, NDJSON, comments', () => {
-  const r = parseDevTools('# indices\nGET /_cat/indices?v\n\nPOST logs/_search\n{\n  query: {match_all: {}}, // relaxed\n}\nPOST _bulk\n{"index": {"_index": "logs"}}\n{"msg": "hi"}\n');
+  const r = parseDevTools(
+    '# indices\nGET /_cat/indices?v\n\nPOST logs/_search\n{\n  query: {match_all: {}}, // relaxed\n}\nPOST _bulk\n{"index": {"_index": "logs"}}\n{"msg": "hi"}\n',
+  );
   assert.deepEqual(r[0], { method: 'GET', path: '/_cat/indices?v' });
   assert.deepEqual(r[1], { method: 'POST', path: '/logs/_search', body: '{"query":{"match_all":{}}}' });
   assert.deepEqual(r[2], { method: 'POST', path: '/_bulk', body: '{"index":{"_index":"logs"}}\n{"msg":"hi"}\n', ndjson: true });
@@ -99,17 +107,47 @@ test('Elasticsearch: the filter, the sort', () => {
 });
 
 test('DynamoDB: attribute values both ways', () => {
-  const item = { id: { S: 'p1' }, price: { N: '12.5' }, big: { N: '12345678901234567890' }, ok: { BOOL: true }, none: { NULL: true as const }, tags: { SS: ['a', 'b'] }, dims: { M: { w: { N: '2' } } }, list: { L: [{ S: 'x' }, { N: '1' }] }, raw: { B: 'AAE=' } };
+  const item = {
+    id: { S: 'p1' },
+    price: { N: '12.5' },
+    big: { N: '12345678901234567890' },
+    ok: { BOOL: true },
+    none: { NULL: true as const },
+    tags: { SS: ['a', 'b'] },
+    dims: { M: { w: { N: '2' } } },
+    list: { L: [{ S: 'x' }, { N: '1' }] },
+    raw: { B: 'AAE=' },
+  };
   const plain = unmarshall(item);
-  assert.deepEqual(plain, { id: 'p1', price: 12.5, big: '12345678901234567890', ok: true, none: null, tags: ['a', 'b'], dims: { w: 2 }, list: ['x', 1], raw: { $binary: 'AAE=' } });
-  assert.deepEqual(marshall({ id: 'p1', price: 12.5, dims: { w: 2 }, list: ['x', 1], none: null, raw: { $binary: 'AAE=' } }), { id: { S: 'p1' }, price: { N: '12.5' }, dims: { M: { w: { N: '2' } } }, list: { L: [{ S: 'x' }, { N: '1' }] }, none: { NULL: true }, raw: { B: 'AAE=' } });
+  assert.deepEqual(plain, {
+    id: 'p1',
+    price: 12.5,
+    big: '12345678901234567890',
+    ok: true,
+    none: null,
+    tags: ['a', 'b'],
+    dims: { w: 2 },
+    list: ['x', 1],
+    raw: { $binary: 'AAE=' },
+  });
+  assert.deepEqual(marshall({ id: 'p1', price: 12.5, dims: { w: 2 }, list: ['x', 1], none: null, raw: { $binary: 'AAE=' } }), {
+    id: { S: 'p1' },
+    price: { N: '12.5' },
+    dims: { M: { w: { N: '2' } } },
+    list: { L: [{ S: 'x' }, { N: '1' }] },
+    none: { NULL: true },
+    raw: { B: 'AAE=' },
+  });
 });
 
 test('DynamoDB: PartiQL', () => {
   assert.equal(selectOf('products', ''), 'SELECT * FROM "products"');
   assert.equal(selectOf('my"t', 'price > 10', 'id, name'), 'SELECT "id", "name" FROM "my""t" WHERE price > 10');
   assert.equal(selectOf('t', 'WHERE a = 1'), 'SELECT * FROM "t" WHERE a = 1');
-  assert.deepEqual(splitStatements("SELECT * FROM t WHERE a = 'x;y'; DELETE FROM t WHERE id = 1;"), ["SELECT * FROM t WHERE a = 'x;y'", 'DELETE FROM t WHERE id = 1']);
+  assert.deepEqual(splitStatements("SELECT * FROM t WHERE a = 'x;y'; DELETE FROM t WHERE id = 1;"), [
+    "SELECT * FROM t WHERE a = 'x;y'",
+    'DELETE FROM t WHERE id = 1',
+  ]);
   assert.equal(partiqlWrites('SELECT * FROM "t"'), false);
   assert.equal(partiqlWrites("UPDATE t SET a = 1 WHERE id = 'x'"), true);
   assert.equal(partiqlWrites('DescribeTable {"TableName": "t"}'), false);

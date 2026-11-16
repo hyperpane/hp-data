@@ -55,7 +55,8 @@ export async function credentialsOf(v: Values, home = os.homedir(), env = proces
   if (id && secret) return { accessKeyId: id, secretAccessKey: secret, sessionToken: v.sessionToken ? String(v.sessionToken) : undefined };
   if (id || secret) throw new PluginError(id ? 'Give the secret access key too.' : 'Give the access key ID too.');
   const profile = String(v.profile ?? '').trim() || env.AWS_PROFILE || 'default';
-  if (!v.profile && env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY) return { accessKeyId: env.AWS_ACCESS_KEY_ID, secretAccessKey: env.AWS_SECRET_ACCESS_KEY, sessionToken: env.AWS_SESSION_TOKEN || undefined };
+  if (!v.profile && env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY)
+    return { accessKeyId: env.AWS_ACCESS_KEY_ID, secretAccessKey: env.AWS_SECRET_ACCESS_KEY, sessionToken: env.AWS_SESSION_TOKEN || undefined };
   const file = env.AWS_SHARED_CREDENTIALS_FILE || path.join(home, '.aws', 'credentials');
   let text = '';
   try {
@@ -104,11 +105,23 @@ export function sign(i: SignInput): Record<string, string> {
   if (i.credentials.sessionToken) headers['x-amz-security-token'] = i.credentials.sessionToken;
   const lower = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), String(v).trim().replace(/\s+/g, ' ')]));
   const names = Object.keys(lower).sort();
-  const canonical = [i.method, i.service === 's3' ? uriEncode(decodeURIComponent(i.url.pathname), true) : i.url.pathname || '/', canonicalQuery(i.url), names.map((n) => `${n}:${lower[n]}\n`).join(''), names.join(';'), i.payloadHash].join('\n');
+  const canonical = [
+    i.method,
+    i.service === 's3' ? uriEncode(decodeURIComponent(i.url.pathname), true) : i.url.pathname || '/',
+    canonicalQuery(i.url),
+    names.map((n) => `${n}:${lower[n]}\n`).join(''),
+    names.join(';'),
+    i.payloadHash,
+  ].join('\n');
   const scope = `${day}/${i.region}/${i.service}/aws4_request`;
   const toSign = ['AWS4-HMAC-SHA256', stamp, scope, sha256hex(canonical)].join('\n');
-  const signature = createHmac('sha256', signingKey(i.credentials.secretAccessKey, day, i.region, i.service)).update(toSign).digest('hex');
-  return { ...headers, authorization: `AWS4-HMAC-SHA256 Credential=${i.credentials.accessKeyId}/${scope}, SignedHeaders=${names.join(';')}, Signature=${signature}` };
+  const signature = createHmac('sha256', signingKey(i.credentials.secretAccessKey, day, i.region, i.service))
+    .update(toSign)
+    .digest('hex');
+  return {
+    ...headers,
+    authorization: `AWS4-HMAC-SHA256 Credential=${i.credentials.accessKeyId}/${scope}, SignedHeaders=${names.join(';')}, Signature=${signature}`,
+  };
 }
 
 /** A presigned GET link (S3), good for `seconds`. */
@@ -124,9 +137,13 @@ export function presign(o: { url: URL; region: string; credentials: Credentials;
   url.searchParams.set('X-Amz-Expires', String(Math.max(1, Math.min(604800, Math.round(o.seconds)))));
   url.searchParams.set('X-Amz-SignedHeaders', 'host');
   if (o.credentials.sessionToken) url.searchParams.set('X-Amz-Security-Token', o.credentials.sessionToken);
-  const canonical = ['GET', uriEncode(decodeURIComponent(url.pathname), true), canonicalQuery(url), `host:${url.host}\n`, 'host', 'UNSIGNED-PAYLOAD'].join('\n');
+  const canonical = ['GET', uriEncode(decodeURIComponent(url.pathname), true), canonicalQuery(url), `host:${url.host}\n`, 'host', 'UNSIGNED-PAYLOAD'].join(
+    '\n',
+  );
   const toSign = ['AWS4-HMAC-SHA256', stamp, scope, sha256hex(canonical)].join('\n');
-  const signature = createHmac('sha256', signingKey(o.credentials.secretAccessKey, day, o.region, 's3')).update(toSign).digest('hex');
+  const signature = createHmac('sha256', signingKey(o.credentials.secretAccessKey, day, o.region, 's3'))
+    .update(toSign)
+    .digest('hex');
   url.searchParams.set('X-Amz-Signature', signature);
   return url.toString();
 }

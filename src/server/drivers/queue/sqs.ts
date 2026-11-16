@@ -63,7 +63,15 @@ export const sqs: Factory = (ctx) => {
     const credentials = await creds;
     const text = JSON.stringify(body);
     const url = new URL(`${endpoint}/`);
-    const headers = sign({ method: 'POST', url, headers: { 'content-type': 'application/x-amz-json-1.0', 'x-amz-target': `AmazonSQS.${op}` }, payloadHash: sha256hex(text), region, service: 'sqs', credentials });
+    const headers = sign({
+      method: 'POST',
+      url,
+      headers: { 'content-type': 'application/x-amz-json-1.0', 'x-amz-target': `AmazonSQS.${op}` },
+      payloadHash: sha256hex(text),
+      region,
+      service: 'sqs',
+      credentials,
+    });
     const res = await request({ method: 'POST', url, headers, body: text, signal, timeout: 30_000 });
     const out = res.body.toString('utf8');
     if (res.status >= 400) throw new PluginError(awsError(res.status, out));
@@ -96,7 +104,19 @@ export const sqs: Factory = (ctx) => {
   }
 
   const receive = (QueueUrl: string, max: number, wait: number, signal?: AbortSignal) =>
-    call<{ Messages?: SqsMessage[] }>('ReceiveMessage', { QueueUrl, MaxNumberOfMessages: Math.max(1, Math.min(10, max)), VisibilityTimeout: 0, WaitTimeSeconds: wait, AttributeNames: ['All'], MessageSystemAttributeNames: ['All'], MessageAttributeNames: ['All'] }, signal).then((r) => r.Messages ?? []);
+    call<{ Messages?: SqsMessage[] }>(
+      'ReceiveMessage',
+      {
+        QueueUrl,
+        MaxNumberOfMessages: Math.max(1, Math.min(10, max)),
+        VisibilityTimeout: 0,
+        WaitTimeSeconds: wait,
+        AttributeNames: ['All'],
+        MessageSystemAttributeNames: ['All'],
+        MessageAttributeNames: ['All'],
+      },
+      signal,
+    ).then((r) => r.Messages ?? []);
 
   /** Receives until `limit` different messages, or nothing new comes. */
   async function collect(QueueUrl: string, limit: number, seen: Set<string>, signal: AbortSignal): Promise<SqsMessage[]> {
@@ -130,7 +150,10 @@ export const sqs: Factory = (ctx) => {
       for (let i = 0; i < Math.min(list.length, 500); i += 8) {
         await Promise.all(
           list.slice(i, i + 8).map(async (u) => {
-            const r = await call<{ Attributes?: Record<string, string> }>('GetQueueAttributes', { QueueUrl: u, AttributeNames: ['ApproximateNumberOfMessages'] }).catch(() => null);
+            const r = await call<{ Attributes?: Record<string, string> }>('GetQueueAttributes', {
+              QueueUrl: u,
+              AttributeNames: ['ApproximateNumberOfMessages'],
+            }).catch(() => null);
             const n = r?.Attributes?.ApproximateNumberOfMessages;
             if (n !== undefined) counts.set(u, Number(n).toLocaleString('en-US'));
           }),
@@ -203,7 +226,8 @@ export const sqs: Factory = (ctx) => {
       const dedup = headers.MessageDeduplicationId;
       delete headers.MessageDeduplicationId;
       const body: Record<string, unknown> = { QueueUrl, MessageBody: r.value };
-      if (Object.keys(headers).length) body.MessageAttributes = Object.fromEntries(Object.entries(headers).map(([k, x]) => [k, { DataType: 'String', StringValue: x }]));
+      if (Object.keys(headers).length)
+        body.MessageAttributes = Object.fromEntries(Object.entries(headers).map(([k, x]) => [k, { DataType: 'String', StringValue: x }]));
       if (fifo) {
         body.MessageGroupId = r.key || 'default';
         body.MessageDeduplicationId = dedup || randomUUID();

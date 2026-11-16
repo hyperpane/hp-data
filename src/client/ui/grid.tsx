@@ -15,7 +15,6 @@ import { type GridEdits, NUM_W, ROW, type Sel, initialWidth, noEdits, rangeOf } 
 
 export { type GridEdits, ROW, hasEdits, noEdits } from './grid-model.ts';
 
-
 export interface GridProps {
   columns: Column[];
   rows: Cell[][];
@@ -39,7 +38,6 @@ export interface GridProps {
   /** Text when there are no rows. */
   empty?: string;
 }
-
 
 export function Grid(p: GridProps) {
   const { columns, rows, offset = 0 } = p;
@@ -94,7 +92,8 @@ export function Grid(p: GridProps) {
 
   const copyAs = (f: CopyFormat) => {
     const s = selected();
-    const text = f === 'tsv' && s.rows.length === 1 && s.cols.length === 1 ? (s.rows[0][0] === null ? '' : editText(s.rows[0][0])) : rowsAs(f, s.cols, s.rows, p.table);
+    const text =
+      f === 'tsv' && s.rows.length === 1 && s.cols.length === 1 ? (s.rows[0][0] === null ? '' : editText(s.rows[0][0])) : rowsAs(f, s.cols, s.rows, p.table);
     p.copy(text, f === 'tsv' ? undefined : `${s.rows.length} ${s.rows.length === 1 ? 'row' : 'rows'}`);
   };
 
@@ -147,7 +146,9 @@ export function Grid(p: GridProps) {
     p.onEdits({ ...edits, added });
     const r = rows.length + added.length - 1;
     setSel({ a: [r, 0], b: [r, 0] });
-    requestAnimationFrame(() => box.current && (box.current.scrollTop = r * ROW));
+    requestAnimationFrame(() => {
+      if (box.current) box.current.scrollTop = r * ROW;
+    });
   };
 
   const scrollTo = (r: number, c: number) => {
@@ -180,7 +181,7 @@ export function Grid(p: GridProps) {
     const move = (dr: number, dc: number) => {
       e.preventDefault();
       const nr = Math.max(0, Math.min(all.length - 1, r + dr));
-      const nc = Math.max(0, Math.min(columns.length - 1, (c < 0 ? 0 : c) + dc));
+      const nc = Math.max(0, Math.min(columns.length - 1, Math.max(c, 0) + dc));
       setSel(e.shiftKey ? { a: sel.a, b: [nr, nc] } : { a: [nr, nc], b: [nr, nc] });
       scrollTo(nr, nc);
     };
@@ -208,7 +209,7 @@ export function Grid(p: GridProps) {
 
   const cellMenu = (e: React.MouseEvent, r: number, c: number) => {
     e.preventDefault();
-    if (!inSel(r, c < 0 ? 0 : c)) setSel({ a: [r, c], b: [r, c] });
+    if (!inSel(r, Math.max(c, 0))) setSel({ a: [r, c], b: [r, c] });
     const items: (MenuEntry | null)[] = [
       { label: 'Copy', shortcut: '⌘C', run: () => copyAs('tsv') },
       { label: 'Copy as CSV', run: () => copyAs('csv') },
@@ -219,8 +220,16 @@ export function Grid(p: GridProps) {
     ];
     if (c >= 0) items.push({ label: 'Open Value', run: () => p.onOpenValue?.(r, c, valueAt(r, c)) });
     if (p.editable) {
-      if (c >= 0) items.push({ label: 'Edit', shortcut: '↵', disabled: !!columns[c]?.readOnly || edits.deleted.has(r), run: () => startEdit(r, c) }, { label: 'Set NULL', shortcut: '⌘⌫', disabled: !!columns[c]?.readOnly, run: () => setCell(r, c, null) });
-      items.push(null, { label: 'Add Row', run: addRow }, { label: edits.deleted.has(r) ? 'Keep Row' : 'Delete Row', danger: !edits.deleted.has(r), run: deleteRows });
+      if (c >= 0)
+        items.push(
+          { label: 'Edit', shortcut: '↵', disabled: !!columns[c]?.readOnly || edits.deleted.has(r), run: () => startEdit(r, c) },
+          { label: 'Set NULL', shortcut: '⌘⌫', disabled: !!columns[c]?.readOnly, run: () => setCell(r, c, null) },
+        );
+      items.push(
+        null,
+        { label: 'Add Row', run: addRow },
+        { label: edits.deleted.has(r) ? 'Keep Row' : 'Delete Row', danger: !edits.deleted.has(r), run: deleteRows },
+      );
     }
     const more = p.menu?.(r, c) ?? [];
     if (more.length) items.push(null, ...more);
@@ -229,7 +238,8 @@ export function Grid(p: GridProps) {
 
   const down = useRef<[number, number] | null>(null);
 
-  if (!columns.length) return <div className={cn('flex items-center justify-center p-6 text-[var(--node-muted)]', p.className)}>{p.empty ?? 'Nothing to show'}</div>;
+  if (!columns.length)
+    return <div className={cn('flex items-center justify-center p-6 text-[var(--node-muted)]', p.className)}>{p.empty ?? 'Nothing to show'}</div>;
 
   return (
     <div
@@ -247,9 +257,18 @@ export function Grid(p: GridProps) {
           const isNew = r >= rows.length;
           const gone = edits.deleted.has(r);
           return (
-            <div key={r} className={cn('absolute left-0 flex', r % 2 === 1 && 'bg-[color-mix(in_srgb,var(--node-fg)_2.5%,transparent)]')} style={{ top: (r + 1) * ROW, height: ROW, width: total }}>
+            <div
+              key={r}
+              className={cn('absolute left-0 flex', r % 2 === 1 && 'bg-[color-mix(in_srgb,var(--node-fg)_2.5%,transparent)]')}
+              style={{ top: (r + 1) * ROW, height: ROW, width: total }}
+            >
               <div
-                className={cn('sticky left-0 z-10 flex flex-none items-center justify-end border-r border-b border-[var(--node-border)] bg-[var(--node-bg)] pr-2 text-[10.5px] text-[var(--node-muted)]', sel && range(sel).whole && r >= range(sel).r0 && r <= range(sel).r1 && 'text-[var(--node-accent)]', isNew && 'text-[#3fb950]', gone && 'text-[#f85149] line-through')}
+                className={cn(
+                  'sticky left-0 z-10 flex flex-none items-center justify-end border-r border-b border-[var(--node-border)] bg-[var(--node-bg)] pr-2 text-[10.5px] text-[var(--node-muted)]',
+                  sel && range(sel).whole && r >= range(sel).r0 && r <= range(sel).r1 && 'text-[var(--node-accent)]',
+                  isNew && 'text-[#3fb950]',
+                  gone && 'text-[#f85149] line-through',
+                )}
                 style={{ width: NUM_W }}
                 onPointerDown={(e) => {
                   box.current?.focus();
@@ -269,7 +288,9 @@ export function Grid(p: GridProps) {
                     key={c}
                     className={cn(
                       'flex flex-none items-center overflow-hidden border-r border-b border-[color-mix(in_srgb,var(--node-border)_70%,transparent)] px-2 whitespace-pre',
-                      (typeof v === 'number' || (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v) && /int|num|dec|float|double|real/i.test(col.type ?? ''))) && 'justify-end',
+                      (typeof v === 'number' ||
+                        (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v) && /int|num|dec|float|double|real/i.test(col.type ?? ''))) &&
+                        'justify-end',
                       on && 'bg-[color-mix(in_srgb,var(--node-accent)_18%,transparent)]',
                       changed && 'bg-[color-mix(in_srgb,#d29922_22%,transparent)]',
                       isNew && 'bg-[color-mix(in_srgb,#3fb950_10%,transparent)]',

@@ -23,7 +23,7 @@ interface TableDescription {
 }
 
 /** A name in PartiQL: "name", quotes doubled. */
-export const quoteName = (s: string) => `"${s.replace(/"/g, '""')}"`;
+const quoteName = (s: string) => `"${s.replace(/"/g, '""')}"`;
 
 /** PartiQL statements by `;`, quotes taken into account. */
 export function splitStatements(text: string): string[] {
@@ -59,7 +59,8 @@ export function selectOf(table: string, filter: string, projection?: string): st
 
 const RAW = /^\s*([A-Z][A-Za-z]+)\s*(\{[\s\S]*\})?\s*$/;
 const PARTIQL = /^(SELECT|INSERT|UPDATE|DELETE|EXISTS)$/i;
-const RAW_WRITES = /^(Put|Delete|Update|Create|BatchWrite|TransactWrite|Restore|Tag|Untag|Import|Enable|Disable|ExecuteStatement|BatchExecuteStatement|ExecuteTransaction)/;
+const RAW_WRITES =
+  /^(Put|Delete|Update|Create|BatchWrite|TransactWrite|Restore|Tag|Untag|Import|Enable|Disable|ExecuteStatement|BatchExecuteStatement|ExecuteTransaction)/;
 
 /** It changes something (as far as can be told). */
 export function partiqlWrites(text: string): boolean {
@@ -68,7 +69,8 @@ export function partiqlWrites(text: string): boolean {
   return splitStatements(text).some((s) => /^\s*(insert|update|delete)\b/i.test(s));
 }
 
-const formatSize = (n: number) => (n < 1024 ? `${n} B` : n < 1024 ** 2 ? `${(n / 1024).toFixed(1)} KB` : n < 1024 ** 3 ? `${(n / 1024 ** 2).toFixed(1)} MB` : `${(n / 1024 ** 3).toFixed(1)} GB`);
+const formatSize = (n: number) =>
+  n < 1024 ? `${n} B` : n < 1024 ** 2 ? `${(n / 1024).toFixed(1)} KB` : n < 1024 ** 3 ? `${(n / 1024 ** 2).toFixed(1)} MB` : `${(n / 1024 ** 3).toFixed(1)} GB`;
 
 export const dynamodb: Factory = (ctx) => {
   const v = ctx.values;
@@ -85,7 +87,7 @@ export const dynamodb: Factory = (ctx) => {
     }));
   const keys = new Map<string, string[]>();
 
-  const api = async <T = any>(op: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<T> => {
+  const api = async <T = unknown>(op: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<T> => {
     const text = JSON.stringify(body);
     const headers = sign({
       method: 'POST',
@@ -113,10 +115,18 @@ export const dynamodb: Factory = (ctx) => {
 
   const describe = async (table: string): Promise<TableDescription> => {
     const d = (await api<{ Table: TableDescription }>('DescribeTable', { TableName: table })).Table;
-    keys.set(table, [...(d.KeySchema ?? [])].sort((a, b) => (a.KeyType === 'HASH' ? -1 : b.KeyType === 'HASH' ? 1 : 0)).map((k) => k.AttributeName));
+    keys.set(
+      table,
+      [...(d.KeySchema ?? [])].sort((a, b) => (a.KeyType === 'HASH' ? -1 : b.KeyType === 'HASH' ? 1 : 0)).map((k) => k.AttributeName),
+    );
     return d;
   };
-  const keysOf = async (table: string) => keys.get(table) ?? (await describe(table), keys.get(table)!);
+  const keysOf = async (table: string) => {
+    const known = keys.get(table);
+    if (known) return known;
+    await describe(table);
+    return keys.get(table)!;
+  };
 
   const asItem = (doc: unknown): Record<string, unknown> => {
     const parsed = typeof doc === 'string' ? parseRelaxed(doc) : doc;
@@ -139,7 +149,11 @@ export const dynamodb: Factory = (ctx) => {
     let next = token;
     for (let round = 0; round < 20; round++) {
       if (signal.aborted) throw new PluginError('Cancelled.');
-      const r = await api<{ Items?: Item[]; NextToken?: string }>('ExecuteStatement', { Statement, Limit: Math.min(1000, limit - items.length), ...(next ? { NextToken: next } : {}) }, signal);
+      const r = await api<{ Items?: Item[]; NextToken?: string }>(
+        'ExecuteStatement',
+        { Statement, Limit: Math.min(1000, limit - items.length), ...(next ? { NextToken: next } : {}) },
+        signal,
+      );
       items.push(...(r.Items ?? []).map(unmarshall));
       next = r.NextToken;
       if (!next || items.length >= limit) break;
@@ -167,7 +181,15 @@ export const dynamodb: Factory = (ctx) => {
       const described = await Promise.all(names.map((n, i) => (i < 100 ? describe(n).catch(() => null) : Promise.resolve(null))));
       return names.map((name, i): TreeNode => {
         const d = described[i];
-        const detail = d ? [d.ItemCount !== undefined ? d.ItemCount.toLocaleString('en-US') : null, d.TableSizeBytes ? formatSize(d.TableSizeBytes) : null, d.TableStatus && d.TableStatus !== 'ACTIVE' ? d.TableStatus.toLowerCase() : null].filter(Boolean).join(' · ') : undefined;
+        const detail = d
+          ? [
+              d.ItemCount !== undefined ? d.ItemCount.toLocaleString('en-US') : null,
+              d.TableSizeBytes ? formatSize(d.TableSizeBytes) : null,
+              d.TableStatus && d.TableStatus !== 'ACTIVE' ? d.TableStatus.toLowerCase() : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')
+          : undefined;
         return { name, type: 'table', detail: detail || undefined, leaf: true, open: { tab: 'collection', ref: { collection: name }, title: name } };
       });
     },
@@ -186,7 +208,12 @@ export const dynamodb: Factory = (ctx) => {
       const table = tableOf(ref);
       const item = asItem(doc);
       const key = await keyOf(table, item);
-      await api('PutItem', { TableName: table, Item: marshall(item), ConditionExpression: 'attribute_not_exists(#k)', ExpressionAttributeNames: { '#k': Object.keys(key)[0] } });
+      await api('PutItem', {
+        TableName: table,
+        Item: marshall(item),
+        ConditionExpression: 'attribute_not_exists(#k)',
+        ExpressionAttributeNames: { '#k': Object.keys(key)[0] },
+      });
       return key;
     },
 
@@ -197,7 +224,12 @@ export const dynamodb: Factory = (ctx) => {
       const was = await keyOf(table, id);
       const moved = JSON.stringify(key) !== JSON.stringify(was);
       if (moved) {
-        await api('PutItem', { TableName: table, Item: marshall(item), ConditionExpression: 'attribute_not_exists(#k)', ExpressionAttributeNames: { '#k': Object.keys(key)[0] } });
+        await api('PutItem', {
+          TableName: table,
+          Item: marshall(item),
+          ConditionExpression: 'attribute_not_exists(#k)',
+          ExpressionAttributeNames: { '#k': Object.keys(key)[0] },
+        });
         await api('DeleteItem', { TableName: table, Key: marshall(was) });
       } else await api('PutItem', { TableName: table, Item: marshall(item) });
     },

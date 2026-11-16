@@ -26,7 +26,19 @@ interface PeekState {
   limit: string;
 }
 
-export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; caps: Caps; base: Record<string, unknown>; partitions: number[]; onAgain(m: Message): void }) {
+export function Messages({
+  p,
+  caps,
+  base,
+  partitions,
+  onAgain,
+}: {
+  p: TabProps;
+  caps: Caps;
+  base: Record<string, unknown>;
+  partitions: number[];
+  onAgain(m: Message): void;
+}) {
   const { api } = p;
   const kept = (p.tab.state?.peek as Partial<PeekState>) ?? {};
   const [q, setQ] = useState<PeekState>({ from: 'latest', partition: 'all', offset: '0', limit: '50', ...kept });
@@ -57,7 +69,11 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
     try {
       const from = caps.from ? o.from : undefined;
       const partition = caps.partitions && (o.partition !== 'all' || o.from === 'offset') ? Number(o.partition === 'all' ? 0 : o.partition) : undefined;
-      const got = await api.stream<Message[]>('qPeek', { ...base, limit: Number(o.limit), from, partition, offset: o.from === 'offset' ? o.offset : undefined }, c.signal);
+      const got = await api.stream<Message[]>(
+        'qPeek',
+        { ...base, limit: Number(o.limit), from, partition, offset: o.from === 'offset' ? o.offset : undefined },
+        c.signal,
+      );
       if (c.signal.aborted) return;
       setList(got);
       setFresh(new Set());
@@ -113,7 +129,10 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
     if (next) setSel(next.i);
   };
 
-  const partitionOptions = [...(q.from === 'offset' ? [] : [{ value: 'all', label: 'All partitions' }]), ...partitions.map((n) => ({ value: String(n), label: `Partition ${n}` }))];
+  const partitionOptions = [
+    ...(q.from === 'offset' ? [] : [{ value: 'all', label: 'All partitions' }]),
+    ...partitions.map((n) => ({ value: String(n), label: `Partition ${n}` })),
+  ];
 
   const table = (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -154,7 +173,11 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
                   key={`${i}:${m.id}`}
                   onClick={() => setSel(i)}
                   onDoubleClick={() => api.copy(m.value, 'the value')}
-                  className={cn('h-[22px] cursor-default', sel === i ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]', fresh.has(m.id) && sel !== i && 'bg-[color-mix(in_srgb,#3fb950_10%,transparent)]')}
+                  className={cn(
+                    'h-[22px] cursor-default',
+                    sel === i ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
+                    fresh.has(m.id) && sel !== i && 'bg-[color-mix(in_srgb,#3fb950_10%,transparent)]',
+                  )}
                 >
                   <td className="truncate px-2 font-mono text-[var(--node-muted)] tabular-nums" title={fullTime(m.at)}>
                     {clock(m.at)}
@@ -165,7 +188,9 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
                   <td className="truncate px-2 font-mono" title={m.key ?? ''}>
                     {m.key ?? <span className="text-[var(--node-muted)]">—</span>}
                   </td>
-                  <td className={cn('truncate px-2 font-mono', m.binary && 'text-[var(--node-muted)]')}>{preview(m) || <span className="text-[var(--node-muted)]">{m.meta?.tombstone ? 'null (tombstone)' : 'empty'}</span>}</td>
+                  <td className={cn('truncate px-2 font-mono', m.binary && 'text-[var(--node-muted)]')}>
+                    {preview(m) || <span className="text-[var(--node-muted)]">{m.meta?.tombstone ? 'null (tombstone)' : 'empty'}</span>}
+                  </td>
                   <td className="px-1 text-right text-[var(--node-muted)] tabular-nums">{nh || ''}</td>
                 </tr>
               );
@@ -174,7 +199,11 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
         </table>
         {!shown.length && !busy && (
           <p className="py-8 text-center text-[var(--node-muted)]">
-            {list.length ? 'No message matches the filter' : live ? 'Waiting for new messages' : `No messages${caps.from && q.from === 'offset' ? ' from that offset' : ''}`}
+            {list.length
+              ? 'No message matches the filter'
+              : live
+                ? 'Waiting for new messages'
+                : `No messages${caps.from && q.from === 'offset' ? ' from that offset' : ''}`}
           </p>
         )}
       </div>
@@ -200,11 +229,36 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
             }}
           />
         )}
-        {caps.partitions && partitionOptions.length > 0 && <Picker label="Partition" value={q.partition} options={partitionOptions} onValueChange={(partition) => (set({ partition }), void load({ ...q, partition }))} />}
-        {caps.from && q.from === 'offset' && (
-          <NodeInput className="h-6 w-[90px] font-mono" value={q.offset} placeholder="offset" aria-label="Offset" onChange={(e) => set({ offset: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && void load()} />
+        {caps.partitions && partitionOptions.length > 0 && (
+          <Picker
+            label="Partition"
+            value={q.partition}
+            options={partitionOptions}
+            onValueChange={(partition) => {
+              set({ partition });
+              void load({ ...q, partition });
+            }}
+          />
         )}
-        <Picker label="How many" value={q.limit} options={LIMITS.map((l) => ({ value: l, label: `${l} messages` }))} onValueChange={(limit) => (set({ limit }), void load({ ...q, limit }))} />
+        {caps.from && q.from === 'offset' && (
+          <NodeInput
+            className="h-6 w-[90px] font-mono"
+            value={q.offset}
+            placeholder="offset"
+            aria-label="Offset"
+            onChange={(e) => set({ offset: e.target.value })}
+            onKeyDown={(e) => e.key === 'Enter' && void load()}
+          />
+        )}
+        <Picker
+          label="How many"
+          value={q.limit}
+          options={LIMITS.map((l) => ({ value: l, label: `${l} messages` }))}
+          onValueChange={(limit) => {
+            set({ limit });
+            void load({ ...q, limit });
+          }}
+        />
         <NodeButton disabled={busy} onClick={() => void load()}>
           <RefreshCw className={cn('size-3.5', busy && 'animate-spin')} />
           Refresh
@@ -219,11 +273,28 @@ export function Messages({ p, caps, base, partitions, onAgain }: { p: TabProps; 
             Live
           </NodeButton>
         )}
-        <NodeInput className="ml-1 h-6 min-w-[120px] flex-1" placeholder="Filter by key, value or header" value={filter} onChange={(e) => setFilter(e.target.value)} />
+        <NodeInput
+          className="ml-1 h-6 min-w-[120px] flex-1"
+          placeholder="Filter by key, value or header"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
       </Toolbar>
       {caps.peekNote && <div className="flex-none border-b border-[var(--node-border)] px-3 py-1 text-[10.5px] text-[var(--node-muted)]">{caps.peekNote}</div>}
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
-      {selected ? <SplitPane id="queue.messages" direction="row" initial={560} min={240} minOther={240} first={table} second={<MessagePane m={selected} caps={caps} api={api} readOnly={p.readOnly} onAgain={() => onAgain(selected)} onClose={() => setSel(null)} />} /> : table}
+      {selected ? (
+        <SplitPane
+          id="queue.messages"
+          direction="row"
+          initial={560}
+          min={240}
+          minOther={240}
+          first={table}
+          second={<MessagePane m={selected} caps={caps} api={api} readOnly={p.readOnly} onAgain={() => onAgain(selected)} onClose={() => setSel(null)} />}
+        />
+      ) : (
+        table
+      )}
       <StatusBar>
         <span>{filter ? `${count(shown.length, 'message')} of ${list.length.toLocaleString()}` : count(list.length, 'message')}</span>
         {took !== null && <span>looked in {ms(took)}</span>}

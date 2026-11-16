@@ -40,7 +40,11 @@ export async function pgDescribe(q: PgQuery, database: string, t: TableRef): Pro
     [schema, t.table],
     database,
   );
-  const [est] = await q<{ n: number }>(`SELECT c.reltuples::bigint::float8 AS n FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = $1 AND c.relname = $2`, [schema, t.table], database);
+  const [est] = await q<{ n: number }>(
+    `SELECT c.reltuples::bigint::float8 AS n FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = $1 AND c.relname = $2`,
+    [schema, t.table],
+    database,
+  );
   const columns = cols.map((c) => ({
     name: c.name,
     type: c.type,

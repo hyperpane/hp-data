@@ -17,7 +17,13 @@ interface FetchedPartition {
 }
 
 interface Broker {
-  fetch(o: { maxWaitTime: number; minBytes: number; maxBytes: number; isolationLevel: number; topics: { topic: string; partitions: { partition: number; fetchOffset: string; maxBytes: number }[] }[] }): Promise<{
+  fetch(o: {
+    maxWaitTime: number;
+    minBytes: number;
+    maxBytes: number;
+    isolationLevel: number;
+    topics: { topic: string; partitions: { partition: number; fetchOffset: string; maxBytes: number }[] }[];
+  }): Promise<{
     responses: { topicName: string; partitions: FetchedPartition[] }[];
   }>;
 }
@@ -47,7 +53,13 @@ export function makeCluster(kafka: Kafka): Cluster | null {
 }
 
 /** The messages in each range, as `toMessage` makes them. */
-export async function fetchRanges(cluster: Cluster, topic: string, ranges: Range[], toMessage: (p: number, m: KafkaMessage) => Message, signal: AbortSignal): Promise<Message[]> {
+export async function fetchRanges(
+  cluster: Cluster,
+  topic: string,
+  ranges: Range[],
+  toMessage: (p: number, m: KafkaMessage) => Message,
+  signal: AbortSignal,
+): Promise<Message[]> {
   await cluster.addTargetTopic(topic);
   const next = new Map(ranges.map((r) => [r.partition, r.start]));
   const ends = new Map(ranges.map((r) => [r.partition, r.end]));

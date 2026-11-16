@@ -14,7 +14,9 @@ const up = await fetch('http://127.0.0.1:9200/', { signal: AbortSignal.timeout(1
 );
 const skip = up ? false : 'no Elasticsearch or OpenSearch at localhost:9200';
 const kind = kindOf('opensearch')!;
-const driver = up ? (elasticsearch({ kind, values: withDefaults(kind, { url: 'http://127.0.0.1:9200' }), folder: null, dataDir: '/tmp', log() {} }) as DocumentDriver) : null!;
+const driver = up
+  ? (elasticsearch({ kind, values: withDefaults(kind, { url: 'http://127.0.0.1:9200' }), folder: null, dataDir: '/tmp', log() {} }) as DocumentDriver)
+  : null!;
 const signal = new AbortController().signal;
 const ref = { collection: 'hp-test-logs' };
 const run = (text: string) => driver.command({ text, signal }) as Promise<CommandResult>;
@@ -27,7 +29,9 @@ test('info, and an index in the tree', { skip }, async () => {
   assert.match((await driver.info()).version, /^(OpenSearch|Elasticsearch) \d/);
   await run('DELETE /hp-test-logs').catch(() => {});
   await run('PUT /hp-test-logs\n{mappings: {properties: {level: {type: "keyword"}, n: {type: "integer"}, msg: {type: "text"}}}}');
-  const bulk = await run('POST /_bulk?refresh=true\n{"index": {"_index": "hp-test-logs", "_id": "a"}}\n{"level": "error", "n": 1, "msg": "disk full"}\n{"index": {"_index": "hp-test-logs", "_id": "b"}}\n{"level": "info", "n": 2, "msg": "started"}\n{"index": {"_index": "hp-test-logs", "_id": "c"}}\n{"level": "error", "n": 3, "msg": "timeout"}');
+  const bulk = await run(
+    'POST /_bulk?refresh=true\n{"index": {"_index": "hp-test-logs", "_id": "a"}}\n{"level": "error", "n": 1, "msg": "disk full"}\n{"index": {"_index": "hp-test-logs", "_id": "b"}}\n{"level": "info", "n": 2, "msg": "started"}\n{"index": {"_index": "hp-test-logs", "_id": "c"}}\n{"level": "error", "n": 3, "msg": "timeout"}',
+  );
   assert.equal((bulk.result as { errors: boolean }).errors, false);
   const tree = await driver.children([]);
   const node = tree.find((n) => n.name === 'hp-test-logs')!;
@@ -39,7 +43,10 @@ test('info, and an index in the tree', { skip }, async () => {
 test('find: query string, DSL, sort, source, paging', { skip }, async () => {
   const qs = await driver.find({ ref, filter: 'level:error', sort: 'n:desc', skip: 0, limit: 10 }, signal);
   assert.equal(qs.total, 2);
-  assert.deepEqual(qs.docs.map((d) => (d as { _id: string })._id), ['c', 'a']);
+  assert.deepEqual(
+    qs.docs.map((d) => (d as { _id: string })._id),
+    ['c', 'a'],
+  );
   const dsl = await driver.find({ ref, filter: '{match: {msg: "disk"}}', projection: 'level', skip: 0, limit: 10 }, signal);
   assert.deepEqual(dsl.docs, [{ _id: 'a', level: 'error' }]);
   const page = await driver.find({ ref, filter: '', sort: '{"n": "asc"}', skip: 1, limit: 1 }, signal);

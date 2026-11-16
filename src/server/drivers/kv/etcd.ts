@@ -46,7 +46,16 @@ export function explain(status: number, text: string): string {
   return `etcd: ${said.slice(0, 400) || status}`;
 }
 
-const HELP = ['get <key>', 'get --prefix <prefix>', 'ls [prefix]', 'count [prefix]', 'put <key> <value> [--ttl <seconds>]', 'del <key>', 'del --prefix <prefix>', 'version'];
+const HELP = [
+  'get <key>',
+  'get --prefix <prefix>',
+  'ls [prefix]',
+  'count [prefix]',
+  'put <key> <value> [--ttl <seconds>]',
+  'del <key>',
+  'del --prefix <prefix>',
+  'version',
+];
 
 export const etcd: Factory = (ctx: DriverContext): KvDriver => {
   const base = String(ctx.values.url ?? 'http://localhost:2379').replace(/\/+$/, '');
@@ -58,7 +67,12 @@ export const etcd: Factory = (ctx: DriverContext): KvDriver => {
 
   async function auth(): Promise<Record<string, string>> {
     if (!user) return {};
-    token ??= (await json<{ token: string }>({ method: 'POST', url: `${base}/v3/auth/authenticate`, json: { name: user, password }, timeout: 10_000, tls: tlsOpts }, explain)).token;
+    token ??= (
+      await json<{ token: string }>(
+        { method: 'POST', url: `${base}/v3/auth/authenticate`, json: { name: user, password }, timeout: 10_000, tls: tlsOpts },
+        explain,
+      )
+    ).token;
     return { authorization: token };
   }
 
@@ -76,8 +90,15 @@ export const etcd: Factory = (ctx: DriverContext): KvDriver => {
 
   const keyOf = (s: string) => names.bytes(s);
   const range = (o: { key: Buffer; end?: Buffer; limit?: number; keysOnly?: boolean; countOnly?: boolean }) =>
-    post<RangeResponse>('/v3/kv/range', { key: b64(o.key), range_end: o.end ? b64(o.end) : undefined, limit: o.limit, keys_only: o.keysOnly, count_only: o.countOnly });
-  const count = async (prefix: Buffer = Buffer.alloc(0)) => Number((await range({ key: prefix.length ? prefix : Buffer.from([0]), end: prefixEnd(prefix), countOnly: true })).count ?? 0);
+    post<RangeResponse>('/v3/kv/range', {
+      key: b64(o.key),
+      range_end: o.end ? b64(o.end) : undefined,
+      limit: o.limit,
+      keys_only: o.keysOnly,
+      count_only: o.countOnly,
+    });
+  const count = async (prefix: Buffer = Buffer.alloc(0)) =>
+    Number((await range({ key: prefix.length ? prefix : Buffer.from([0]), end: prefixEnd(prefix), countOnly: true })).count ?? 0);
   const one = async (key: string): Promise<Kv | null> => (await range({ key: keyOf(key) })).kvs?.[0] ?? null;
 
   /** Seconds left on leases, by id. */
@@ -97,13 +118,25 @@ export const etcd: Factory = (ctx: DriverContext): KvDriver => {
     async info() {
       const r = await json<{ etcdserver?: string; etcdcluster?: string }>({ url: `${base}/version`, timeout: 10_000, tls: tlsOpts }, explain);
       await count(); // signs in, and checks the user may read
-      return { version: `etcd ${r?.etcdserver ?? ''}`.trim(), detail: [r?.etcdcluster ? `cluster ${r.etcdcluster}` : null, user ? `as ${user}` : null].filter(Boolean).join(' · ') || undefined };
+      return {
+        version: `etcd ${r?.etcdserver ?? ''}`.trim(),
+        detail: [r?.etcdcluster ? `cluster ${r.etcdcluster}` : null, user ? `as ${user}` : null].filter(Boolean).join(' · ') || undefined,
+      };
     },
 
     async children(path) {
       if (path.length) return [];
       const n = await count();
-      return [{ name: 'keyspace', label: 'Keys', type: 'keyspace', leaf: true, detail: `${n.toLocaleString('en-US')} ${n === 1 ? 'key' : 'keys'}`, open: { tab: 'keys', ref: {}, title: 'Keys' } } satisfies TreeNode];
+      return [
+        {
+          name: 'keyspace',
+          label: 'Keys',
+          type: 'keyspace',
+          leaf: true,
+          detail: `${n.toLocaleString('en-US')} ${n === 1 ? 'key' : 'keys'}`,
+          open: { tab: 'keys', ref: {}, title: 'Keys' },
+        } satisfies TreeNode,
+      ];
     },
 
     async scan({ pattern, cursor, count: limit }) {
@@ -124,7 +157,11 @@ export const etcd: Factory = (ctx: DriverContext): KvDriver => {
         kvs = kvs.filter((kv) => re.test(names.name(unb64(kv.key))));
       }
       const left = await ttls(kvs.map((kv) => kv.lease).filter((l): l is string => !!l && l !== '0'));
-      const keys: KeyEntry[] = kvs.map((kv) => ({ key: names.name(unb64(kv.key)), type: 'string', ttl: kv.lease && kv.lease !== '0' ? (left.get(kv.lease) ?? -1) : -1 }));
+      const keys: KeyEntry[] = kvs.map((kv) => ({
+        key: names.name(unb64(kv.key)),
+        type: 'string',
+        ttl: kv.lease && kv.lease !== '0' ? (left.get(kv.lease) ?? -1) : -1,
+      }));
       return { keys, cursor: next, total: await count() };
     },
 
@@ -135,7 +172,11 @@ export const etcd: Factory = (ctx: DriverContext): KvDriver => {
       const { text, binary } = show(b);
       const lease = kv.lease && kv.lease !== '0' ? kv.lease : null;
       const ttl = lease ? ((await ttls([lease])).get(lease) ?? -1) : -1;
-      const meta: Record<string, string> = { Version: kv.version ?? '1', Created: `revision ${kv.create_revision ?? '?'}`, Modified: `revision ${kv.mod_revision ?? '?'}` };
+      const meta: Record<string, string> = {
+        Version: kv.version ?? '1',
+        Created: `revision ${kv.create_revision ?? '?'}`,
+        Modified: `revision ${kv.mod_revision ?? '?'}`,
+      };
       if (lease) meta.Lease = lease;
       return { type: 'string', value: text, binary: binary || undefined, ttl, size: b.length, meta };
     },
@@ -173,7 +214,10 @@ export const etcd: Factory = (ctx: DriverContext): KvDriver => {
           { key: b64(to), target: 'CREATE', result: 'EQUAL', create_revision: '0' },
           { key: kv.key, target: 'MOD', result: 'EQUAL', mod_revision: kv.mod_revision },
         ],
-        success: [{ request_put: { key: b64(to), value: kv.value ?? '', lease: kv.lease && kv.lease !== '0' ? kv.lease : undefined } }, { request_delete_range: { key: kv.key } }],
+        success: [
+          { request_put: { key: b64(to), value: kv.value ?? '', lease: kv.lease && kv.lease !== '0' ? kv.lease : undefined } },
+          { request_delete_range: { key: kv.key } },
+        ],
       });
       if (!r.succeeded) throw new PluginError(`There’s already a key “${to}”, or “${key}” changed meanwhile.`);
     },
@@ -192,7 +236,10 @@ export const etcd: Factory = (ctx: DriverContext): KvDriver => {
       const t0 = performance.now();
       let reply: Reply;
       try {
-        reply = await runLine(args.map((a) => a.toString('utf8')), args);
+        reply = await runLine(
+          args.map((a) => a.toString('utf8')),
+          args,
+        );
       } catch (e) {
         reply = new RespError((e as Error).message);
       }
@@ -238,7 +285,10 @@ export const etcd: Factory = (ctx: DriverContext): KvDriver => {
       }
       case 'del': {
         if (!target) return new RespError('del needs a key');
-        const r = await post<{ deleted?: string }>('/v3/kv/deleterange', prefixed ? { key: b64(all(target).key), range_end: b64(all(target).end) } : { key: b64(target) });
+        const r = await post<{ deleted?: string }>(
+          '/v3/kv/deleterange',
+          prefixed ? { key: b64(all(target).key), range_end: b64(all(target).end) } : { key: b64(target) },
+        );
         return Number(r.deleted ?? 0);
       }
       default:

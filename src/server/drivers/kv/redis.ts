@@ -41,7 +41,7 @@ export function keyspace(info: Record<string, string>): Map<number, number> {
 }
 
 /** No `*`, `?` or `[` (but escaped ones): one key by its name. */
-export const isLiteral = (p: string) => !/[*?[]/.test(p.replace(/\\./g, ''));
+const isLiteral = (p: string) => !/[*?[]/.test(p.replace(/\\./g, ''));
 const plural = (n: number, one: string) => `${n.toLocaleString('en-US')} ${n === 1 ? one : `${one}s`}`;
 
 export const redis: Factory = (ctx: DriverContext): KvDriver => {
@@ -87,7 +87,13 @@ export const redis: Factory = (ctx: DriverContext): KvDriver => {
       const info = parseInfo(str(await r.one(['INFO', 'server'])));
       const product = info.dragonfly_version ? 'Dragonfly' : info.valkey_version || info.server_name === 'valkey' ? 'Valkey' : 'Redis';
       const version = info.dragonfly_version?.replace(/^df-v?/, '') ?? info.valkey_version ?? info.redis_version ?? '';
-      const detail = [info.redis_mode && info.redis_mode !== 'standalone' ? info.redis_mode : null, opts.user ? `as ${opts.user}` : null, opts.tls ? 'TLS' : null].filter(Boolean).join(' · ');
+      const detail = [
+        info.redis_mode && info.redis_mode !== 'standalone' ? info.redis_mode : null,
+        opts.user ? `as ${opts.user}` : null,
+        opts.tls ? 'TLS' : null,
+      ]
+        .filter(Boolean)
+        .join(' · ');
       return { version: `${product} ${version}`.trim(), detail: detail || undefined };
     },
 
@@ -112,7 +118,10 @@ export const redis: Factory = (ctx: DriverContext): KvDriver => {
         return rows.filter(([, x]) => x).map(([label, x]) => ({ name: label, type: 'info', detail: x, leaf: true }) satisfies TreeNode);
       }
       if (path.length) return [];
-      const [conf, ks] = await client().pipeline([['CONFIG', 'GET', 'databases'], ['INFO', 'keyspace']]);
+      const [conf, ks] = await client().pipeline([
+        ['CONFIG', 'GET', 'databases'],
+        ['INFO', 'keyspace'],
+      ]);
       const count = Array.isArray(conf) && conf.length >= 2 ? Number(str(conf[1])) || 16 : 16;
       const keys = ks instanceof RespError ? new Map<number, number>() : keyspace(parseInfo(str(ks)));
       const dbs = count <= 16 ? Array.from({ length: count }, (_, i) => i) : [...new Set([0, defaultDb, ...keys.keys()])].sort((a, b) => a - b);
@@ -145,7 +154,12 @@ export const redis: Factory = (ctx: DriverContext): KvDriver => {
           found.push(...(keys as Buffer[]));
         } while (next !== '0' && found.length < count && Date.now() - t0 < 1500);
       }
-      const meta = found.length ? await client().pipeline(found.flatMap((k) => [['TYPE', k] as Arg[], ['PTTL', k] as Arg[]]), db ?? defaultDb) : [];
+      const meta = found.length
+        ? await client().pipeline(
+            found.flatMap((k) => [['TYPE', k] as Arg[], ['PTTL', k] as Arg[]]),
+            db ?? defaultDb,
+          )
+        : [];
       const keys: KeyEntry[] = found.map((k, i) => ({ key: names.name(k), type: keyType(meta[i * 2]), ttl: ttlOf(meta[i * 2 + 1]) }));
       const size = await r.one(['DBSIZE']);
       return { keys, cursor: next, total: Number(size) } satisfies ScanResult;
@@ -190,7 +204,8 @@ export const redis: Factory = (ctx: DriverContext): KvDriver => {
       const name = args[0].toString('utf8').toUpperCase();
       const no = refused(name) ?? (name === 'HELLO' && args[1] && args[1].toString() !== '2' ? 'The console speaks RESP2: HELLO 3 isn’t for it.' : null);
       if (no) throw new PluginError(no);
-      const c = (console_ = live(console_) ?? new RespClient(opts));
+      console_ = live(console_) ?? new RespClient(opts);
+      const c = console_;
       if (db !== undefined && db !== consoleDb) consoleDb = db;
       const t0 = performance.now();
       const reply = await c.call(args, consoleDb);

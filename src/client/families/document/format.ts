@@ -121,7 +121,13 @@ export function keyOf(doc: unknown, idFields: string[]): Record<string, unknown>
 export function tableOf(docs: unknown[], idFields: string[], mongo: boolean): { columns: Column[]; rows: Cell[][] } {
   const names: string[] = [...idFields];
   const seen = new Set(names);
-  for (const d of docs) if (isObj(d)) for (const k of Object.keys(d)) if (!seen.has(k)) seen.add(k), names.push(k);
+  for (const d of docs)
+    if (isObj(d))
+      for (const k of Object.keys(d))
+        if (!seen.has(k)) {
+          seen.add(k);
+          names.push(k);
+        }
   const present = names.filter((n) => docs.some((d) => isObj(d) && d[n] !== undefined));
   const columns: Column[] = present.map((name) => ({ name, key: idFields.includes(name) }));
   const rows = docs.map((d) => present.map((n) => (isObj(d) && d[n] !== undefined ? (pretty(d[n], mongo) as Cell) : null)));
@@ -130,7 +136,15 @@ export function tableOf(docs: unknown[], idFields: string[], mongo: boolean): { 
 
 /** Every value in the list is an object of scalars (for a grid). */
 export function flatList(v: unknown): v is Record<string, unknown>[] {
-  return Array.isArray(v) && v.length > 0 && v.every((x) => isObj(x) && Object.values(x).every((y) => y === null || typeof y !== 'object' || (isObj(y) && Object.keys(y).length === 1 && Object.keys(y)[0].startsWith('$'))));
+  return (
+    Array.isArray(v) &&
+    v.length > 0 &&
+    v.every(
+      (x) =>
+        isObj(x) &&
+        Object.values(x).every((y) => y === null || typeof y !== 'object' || (isObj(y) && Object.keys(y).length === 1 && Object.keys(y)[0].startsWith('$'))),
+    )
+  );
 }
 
 /** The paragraph around `pos` (lines up to blank ones): a mongosh block. */

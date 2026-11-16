@@ -19,10 +19,32 @@ test('names, parents, crumbs', () => {
 });
 
 test('rows: folders first, then by the column', () => {
-  const rows = rowsOf([{ prefixes: ['p/z/', 'p/a/'], objects: [{ key: 'p/file10.txt', size: 5, modified: 2 }, { key: 'p/file2.txt', size: 50, modified: 1 }], next: null }], 'p/', false);
-  assert.deepEqual(sortRows(rows, { column: 'name', desc: false }).map((r) => r.name), ['a', 'z', 'file2.txt', 'file10.txt']);
-  assert.deepEqual(sortRows(rows, { column: 'name', desc: true }).map((r) => r.name), ['z', 'a', 'file10.txt', 'file2.txt']);
-  assert.deepEqual(sortRows(rows, { column: 'size', desc: true }).map((r) => r.name), ['a', 'z', 'file2.txt', 'file10.txt']);
+  const rows = rowsOf(
+    [
+      {
+        prefixes: ['p/z/', 'p/a/'],
+        objects: [
+          { key: 'p/file10.txt', size: 5, modified: 2 },
+          { key: 'p/file2.txt', size: 50, modified: 1 },
+        ],
+        next: null,
+      },
+    ],
+    'p/',
+    false,
+  );
+  assert.deepEqual(
+    sortRows(rows, { column: 'name', desc: false }).map((r) => r.name),
+    ['a', 'z', 'file2.txt', 'file10.txt'],
+  );
+  assert.deepEqual(
+    sortRows(rows, { column: 'name', desc: true }).map((r) => r.name),
+    ['z', 'a', 'file10.txt', 'file2.txt'],
+  );
+  assert.deepEqual(
+    sortRows(rows, { column: 'size', desc: true }).map((r) => r.name),
+    ['a', 'z', 'file2.txt', 'file10.txt'],
+  );
   assert.deepEqual(rowsOf([{ prefixes: [], objects: [{ key: 'p/q/r.txt', size: 1, modified: null }], next: null }], 'p/', true)[0].name, 'q/r.txt');
 });
 

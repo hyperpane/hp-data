@@ -20,7 +20,10 @@ import type { SqlDriver } from '../../src/server/drivers/types.ts';
 const up = (port: number) =>
   new Promise<boolean>((resolve) => {
     const s = net.connect(port, '127.0.0.1');
-    s.once('connect', () => (s.destroy(), resolve(true)));
+    s.once('connect', () => {
+      s.destroy();
+      resolve(true);
+    });
     s.once('error', () => resolve(false));
   });
 
@@ -51,13 +54,23 @@ describe('SQL text', () => {
     ]);
     assert.deepEqual(
       s.map((x) => x.sql),
-      ['DELETE FROM "public"."users" WHERE "id" = $1', 'UPDATE "public"."users" SET "name" = $1, "note" = $2 WHERE "id" = $3', 'INSERT INTO "public"."users" ("name") VALUES ($1)'],
+      [
+        'DELETE FROM "public"."users" WHERE "id" = $1',
+        'UPDATE "public"."users" SET "name" = $1, "note" = $2 WHERE "id" = $3',
+        'INSERT INTO "public"."users" ("name") VALUES ($1)',
+      ],
     );
     assert.deepEqual(s[1].params, ['x', null, 3]);
-    assert.equal(editStatements('mysql', { database: 'shop', table: 't' }, [{ op: 'delete', key: { a: 1, b: null } }])[0].sql, 'DELETE FROM `shop`.`t` WHERE `a` = ? AND `b` IS NULL');
+    assert.equal(
+      editStatements('mysql', { database: 'shop', table: 't' }, [{ op: 'delete', key: { a: 1, b: null } }])[0].sql,
+      'DELETE FROM `shop`.`t` WHERE `a` = ? AND `b` IS NULL',
+    );
   });
   test('a filter is one condition', () => {
-    assert.match(browseSql('sqlite', { table: { table: 't' }, offset: 10, limit: 5, where: 'a > 1', order: [{ column: 'b', desc: true }] }).select, /^SELECT \* FROM "t" WHERE a > 1 ORDER BY "b" DESC LIMIT 5 OFFSET 10$/);
+    assert.match(
+      browseSql('sqlite', { table: { table: 't' }, offset: 10, limit: 5, where: 'a > 1', order: [{ column: 'b', desc: true }] }).select,
+      /^SELECT \* FROM "t" WHERE a > 1 ORDER BY "b" DESC LIMIT 5 OFFSET 10$/,
+    );
     assert.throws(() => browseSql('sqlite', { table: { table: 't' }, offset: 0, limit: 5, where: '1=1; drop table t' }), /leave out/);
   });
 });
@@ -67,7 +80,10 @@ describe('SQLite', () => {
   after(() => rmSync(dir, { recursive: true, force: true }));
   test('runs, browses, edits by rowid and by key', async () => {
     const d = make(sqlite as never, 'sqlite', { file: 'app.db', create: true }, dir);
-    const [, , r] = await d.query("create table notes (body text, n integer); insert into notes values ('a', 1), ('b', 9007199254740993); select * from notes", { limit: 1, signal });
+    const [, , r] = await d.query(
+      "create table notes (body text, n integer); insert into notes values ('a', 1), ('b', 9007199254740993); select * from notes",
+      { limit: 1, signal },
+    );
     assert.equal(r.rows.length, 1);
     assert.ok(r.truncated);
     const page = await d.browse({ table: { table: 'notes' }, offset: 0, limit: 10 }, signal);
@@ -80,7 +96,10 @@ describe('SQLite', () => {
     await assert.rejects(d.apply({ table: 'notes' }, [{ op: 'delete', key: { _rowid_: 99 } }]), /changed or removed/);
     const tree = await d.children([]);
     assert.equal(tree[0].name, 'tables');
-    assert.deepEqual((await d.children(['tables'])).map((n) => n.name), ['notes']);
+    assert.deepEqual(
+      (await d.children(['tables'])).map((n) => n.name),
+      ['notes'],
+    );
     assert.match((await d.describe({ table: 'notes' })).ddl, /CREATE TABLE notes/);
     await d.close();
   });
@@ -113,7 +132,10 @@ describe('PostgreSQL', async () => {
     assert.ok(r.truncated);
     assert.equal(r.columns.find((c) => c.name === 'placed_at')?.type, 'timestamptz');
     const many = await d!.query("select 1 as a; select 'x'::text as b, null as c", { limit: 10, signal });
-    assert.deepEqual(many.map((m) => m.rows[0]), [[1], ['x', null]]);
+    assert.deepEqual(
+      many.map((m) => m.rows[0]),
+      [[1], ['x', null]],
+    );
     await d!.query('begin; create temp table t (a int); insert into t values (1)', { limit: 10, signal });
     const [inTx] = await d!.query('select count(*) from t', { limit: 10, signal });
     assert.equal(inTx.rows[0][0], '1');
@@ -124,14 +146,29 @@ describe('PostgreSQL', async () => {
     await assert.rejects(d!.query('select pg_sleep(5)', { limit: 10, signal: ac.signal }), /Cancelled|canceling/);
   });
   test('browse and edit in one transaction', { skip: !live && 'no PostgreSQL' }, async () => {
-    const page = await d!.browse({ table: { database: 'shop', schema: 'public', table: 'customers' }, offset: 0, limit: 20, where: "country = 'DE'", order: [{ column: 'id', desc: true }] }, signal);
+    const page = await d!.browse(
+      {
+        table: { database: 'shop', schema: 'public', table: 'customers' },
+        offset: 0,
+        limit: 20,
+        where: "country = 'DE'",
+        order: [{ column: 'id', desc: true }],
+      },
+      signal,
+    );
     assert.ok(page.editable);
     assert.ok(page.total! > 0 && page.rows.length <= 20);
     const id = page.rows[0][0];
     const old = page.rows[0][1];
     await d!.apply({ database: 'shop', schema: 'public', table: 'customers' }, [{ op: 'update', key: { id }, set: { name: 'Renamed' } }]);
     assert.equal((await d!.query(`select name from customers where id = ${id}`, { limit: 1, signal }))[0].rows[0][0], 'Renamed');
-    await assert.rejects(d!.apply({ database: 'shop', schema: 'public', table: 'customers' }, [{ op: 'update', key: { id }, set: { name: String(old) } }, { op: 'delete', key: { id: -1 } }]), /changed or removed/);
+    await assert.rejects(
+      d!.apply({ database: 'shop', schema: 'public', table: 'customers' }, [
+        { op: 'update', key: { id }, set: { name: String(old) } },
+        { op: 'delete', key: { id: -1 } },
+      ]),
+      /changed or removed/,
+    );
     assert.equal((await d!.query(`select name from customers where id = ${id}`, { limit: 1, signal }))[0].rows[0][0], 'Renamed');
     await d!.apply({ database: 'shop', schema: 'public', table: 'customers' }, [{ op: 'update', key: { id }, set: { name: String(old) } }]);
     const c = await d!.completions('shop');
@@ -146,7 +183,10 @@ describe('MySQL', async () => {
   test('info, tree, console, browse, edit', { skip: !live && 'no MySQL on :3306' }, async () => {
     assert.match((await d!.info()).version, /^MySQL 8/);
     assert.ok((await d!.children([])).some((x) => x.name === 'shop'));
-    assert.deepEqual((await d!.children(['shop', 'tables'])).map((t) => t.name), ['customers', 'orders', 'products']);
+    assert.deepEqual(
+      (await d!.children(['shop', 'tables'])).map((t) => t.name),
+      ['customers', 'orders', 'products'],
+    );
     const [r] = await d!.query('select * from orders', { limit: 50, signal });
     assert.equal(r.rows.length, 50);
     assert.ok(r.truncated);

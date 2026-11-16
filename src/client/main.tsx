@@ -5,4 +5,6 @@ import { mount } from '@hyperpane/sdk/client';
 import { NodeMessage } from '@hyperpane/ui';
 import { DataView } from './app/view.tsx';
 
-mount((host) => (host.view.type === 'node' && host.view.kind === 'data' ? <DataView /> : <NodeMessage error>Data has no “{host.view.type}” view here.</NodeMessage>));
+mount((host) =>
+  host.view.type === 'node' && host.view.kind === 'data' ? <DataView /> : <NodeMessage error>Data has no “{host.view.type}” view here.</NodeMessage>,
+);

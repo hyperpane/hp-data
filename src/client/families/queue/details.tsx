@@ -20,7 +20,15 @@ export function DetailsView({ info, caps, loading }: { info: QueueInfo | null; c
             widths={[72, 64, 104, 104, 104, 96, 0]}
             head={['Partition', 'Leader', 'Low', 'High', 'Messages', 'Replicas', 'In sync']}
             right={[0, 1, 2, 3, 4]}
-            rows={parts.map((x) => [String(x.partition), x.leader === null ? 'none' : String(x.leader), x.low, x.high, (BigInt(x.high) - BigInt(x.low)).toLocaleString(), x.replicas.join(', '), x.isr.join(', ')])}
+            rows={parts.map((x) => [
+              String(x.partition),
+              x.leader === null ? 'none' : String(x.leader),
+              x.low,
+              x.high,
+              (BigInt(x.high) - BigInt(x.low)).toLocaleString(),
+              x.replicas.join(', '),
+              x.isr.join(', '),
+            ])}
             warn={parts.map((x) => x.leader === null || x.isr.length < x.replicas.length)}
           />
         </Section>
@@ -31,15 +39,29 @@ export function DetailsView({ info, caps, loading }: { info: QueueInfo | null; c
             <Table
               id={caps.engine === 'kafka' ? 'data.queue.groups' : 'data.queue.consumers'}
               widths={caps.engine === 'kafka' ? [0, 120, 96] : [200, 0]}
-              head={caps.engine === 'kafka' ? ['Group', 'State', 'Lag'] : ['Consumer', 'Detail']} right={caps.engine === 'kafka' ? [2] : []} rows={info.consumers.map((c) => (caps.engine === 'kafka' ? [c.name, c.detail, c.lag ?? ''] : [c.name, c.detail]))} />
+              head={caps.engine === 'kafka' ? ['Group', 'State', 'Lag'] : ['Consumer', 'Detail']}
+              right={caps.engine === 'kafka' ? [2] : []}
+              rows={info.consumers.map((c) => (caps.engine === 'kafka' ? [c.name, c.detail, c.lag ?? ''] : [c.name, c.detail]))}
+            />
           ) : (
-            <p className="text-[11px] text-[var(--node-muted)]">{caps.engine === 'kafka' ? 'No group has committed offsets in this topic' : 'Nobody is consuming'}</p>
+            <p className="text-[11px] text-[var(--node-muted)]">
+              {caps.engine === 'kafka' ? 'No group has committed offsets in this topic' : 'Nobody is consuming'}
+            </p>
           )}
         </Section>
       )}
       {info.bindings && (
         <Section title={`Bindings (${info.bindings.length})`}>
-          {info.bindings.length ? <Table id="data.queue.bindings" widths={[160, 160, 0]} head={['From', 'To', 'Routing key']} rows={info.bindings.map((b) => [b.source, b.destination, b.routingKey || '—'])} /> : <p className="text-[11px] text-[var(--node-muted)]">No bindings</p>}
+          {info.bindings.length ? (
+            <Table
+              id="data.queue.bindings"
+              widths={[160, 160, 0]}
+              head={['From', 'To', 'Routing key']}
+              rows={info.bindings.map((b) => [b.source, b.destination, b.routingKey || '—'])}
+            />
+          ) : (
+            <p className="text-[11px] text-[var(--node-muted)]">No bindings</p>
+          )}
         </Section>
       )}
       <Section title="Figures">
@@ -60,7 +82,21 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /** A table; with `widths` (a column's first width, 0 for the one that takes
  * what's left), its columns resize from their headers. */
-function Table({ id, widths, head, rows, right = [], warn }: { id?: string; widths?: number[]; head: string[]; rows: string[][]; right?: number[]; warn?: boolean[] }) {
+function Table({
+  id,
+  widths,
+  head,
+  rows,
+  right = [],
+  warn,
+}: {
+  id?: string;
+  widths?: number[];
+  head: string[];
+  rows: string[][];
+  right?: number[];
+  warn?: boolean[];
+}) {
   const cols = useColumnWidths(id, Object.fromEntries((widths ?? []).map((w, i) => [String(i), w])), { min: 40, max: 600 });
   const flex = widths ? widths.indexOf(0) : -1;
   return (
@@ -88,7 +124,16 @@ function Table({ id, widths, head, rows, right = [], warn }: { id?: string; widt
         {rows.map((r, i) => (
           <tr key={i} className={cn('hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]', warn?.[i] && 'text-[#d29922]')}>
             {r.map((c, j) => (
-              <td key={j} className={cn(widths && 'truncate', 'border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] px-2 py-[3px] font-mono tabular-nums select-text', right.includes(j) && 'text-right', j === 0 && !right.includes(0) && 'font-sans')} title={widths ? c : undefined}>
+              <td
+                key={j}
+                className={cn(
+                  widths && 'truncate',
+                  'border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] px-2 py-[3px] font-mono tabular-nums select-text',
+                  right.includes(j) && 'text-right',
+                  j === 0 && !right.includes(0) && 'font-sans',
+                )}
+                title={widths ? c : undefined}
+              >
                 {c}
               </td>
             ))}

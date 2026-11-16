@@ -21,7 +21,7 @@ export interface Run {
 }
 
 /** A string's bytes sent at most. */
-export const STRING_MAX = 1 << 20;
+const STRING_MAX = 1 << 20;
 /** A hash or set this big or smaller is read whole, then paged. */
 const WHOLE_MAX = 10_000;
 
@@ -72,7 +72,8 @@ export async function getValue(run: Run, key: string, offset: number, limit: num
       const total = num(await run.one(['HLEN', k]));
       const flat = total <= WHOLE_MAX ? arr(await run.one(['HGETALL', k])) : await scanned(run, 'HSCAN', k, offset + limit, 2);
       const fields: { field: string; value: string }[] = [];
-      for (let i = offset * 2; i < Math.min(flat.length, (offset + limit) * 2); i += 2) fields.push({ field: run.name(buf(flat[i])), value: show(buf(flat[i + 1])).text });
+      for (let i = offset * 2; i < Math.min(flat.length, (offset + limit) * 2); i += 2)
+        fields.push({ field: run.name(buf(flat[i])), value: show(buf(flat[i + 1])).text });
       return { type, fields, total, ttl, offset };
     }
     case 'set': {
@@ -174,7 +175,13 @@ function writes(k: Buffer, value: KeyValue, bytes: (s: string) => Buffer): Arg[]
 const scoreArg = (n: number) => (n === Infinity ? '+inf' : n === -Infinity ? '-inf' : String(n));
 
 /** Writes a key whole. `ttl` undefined keeps the key's TTL, null drops it. */
-export async function setValue(run: Run, key: string, value: KeyValue, ttl: number | null | undefined, bytesOf: (text: string, binary?: boolean) => Buffer): Promise<void> {
+export async function setValue(
+  run: Run,
+  key: string,
+  value: KeyValue,
+  ttl: number | null | undefined,
+  bytesOf: (text: string, binary?: boolean) => Buffer,
+): Promise<void> {
   const k = run.bytes(key);
   if (ttl !== undefined && ttl !== null && !(ttl > 0)) throw new PluginError('A TTL is a number of seconds, more than 0.');
   if (value.type === 'string') {

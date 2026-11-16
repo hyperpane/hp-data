@@ -11,7 +11,7 @@ import { headerOf } from './client.ts';
 import { completeBody, text } from './xml.ts';
 
 const MIB = 1024 * 1024;
-export const STREAM_MAX = 100 * MIB;
+const STREAM_MAX = 100 * MIB;
 const PART_MIN = 16 * MIB;
 const MAX_PARTS = 10_000;
 
@@ -35,7 +35,15 @@ export async function putObject(c: S3Client, bucket: string, key: string, body: 
   }
   if (size !== undefined && size <= STREAM_MAX && c.endpoint.protocol === 'https:') {
     const piped = Readable.fromWeb(body as import('node:stream/web').ReadableStream<Uint8Array>);
-    await c.send({ method: 'PUT', bucket, key, stream: piped, headers: { 'content-type': type, 'content-length': String(size) }, signal: o.signal, timeout: 120_000 });
+    await c.send({
+      method: 'PUT',
+      bucket,
+      key,
+      stream: piped,
+      headers: { 'content-type': type, 'content-length': String(size) },
+      signal: o.signal,
+      timeout: 120_000,
+    });
     return;
   }
   await multipart(c, bucket, key, body, { ...o, contentType: type, size });
@@ -51,7 +59,16 @@ async function multipart(c: S3Client, bucket: string, key: string, body: Readabl
     for await (const part of chunks(body, partSize)) {
       const n = parts.length + 1;
       if (n > MAX_PARTS) throw new PluginError('The file is too big for one upload (10,000 parts).');
-      const res = await c.send({ method: 'PUT', bucket, key, query: { partNumber: n, uploadId }, body: part, headers: { 'content-length': String(part.length) }, signal: o.signal, timeout: 120_000 });
+      const res = await c.send({
+        method: 'PUT',
+        bucket,
+        key,
+        query: { partNumber: n, uploadId },
+        body: part,
+        headers: { 'content-length': String(part.length) },
+        signal: o.signal,
+        timeout: 120_000,
+      });
       parts.push({ n, etag: headerOf(res.headers, 'etag') });
     }
     if (!parts.length) {
@@ -60,7 +77,16 @@ async function multipart(c: S3Client, bucket: string, key: string, body: Readabl
       await c.send({ method: 'PUT', bucket, key, body: new Uint8Array(0), headers: { 'content-type': o.contentType!, 'content-length': '0' } });
       return;
     }
-    const res = await c.send({ method: 'POST', bucket, key, query: { uploadId }, body: completeBody(parts), headers: { 'content-type': 'application/xml' }, signal: o.signal, timeout: 300_000 });
+    const res = await c.send({
+      method: 'POST',
+      bucket,
+      key,
+      query: { uploadId },
+      body: completeBody(parts),
+      headers: { 'content-type': 'application/xml' },
+      signal: o.signal,
+      timeout: 300_000,
+    });
     // CompleteMultipartUpload may say 200 and still have failed.
     const said = res.body.toString('utf8');
     if (/<Error>/.test(said)) throw new PluginError(`${text(said, 'Code') ?? 'Error'}: ${text(said, 'Message') ?? 'the upload didn’t complete.'}`);

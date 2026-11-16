@@ -15,7 +15,19 @@ export interface Editing {
   title: string;
 }
 
-export function DocEditor({ editing, readOnly, onSave, onClose, hint }: { editing: Editing; readOnly: boolean; onSave(text: string): Promise<void>; onClose(): void; hint?: string }) {
+export function DocEditor({
+  editing,
+  readOnly,
+  onSave,
+  onClose,
+  hint,
+}: {
+  editing: Editing;
+  readOnly: boolean;
+  onSave(text: string): Promise<void>;
+  onClose(): void;
+  hint?: string;
+}) {
   const [text, setText] = useState(editing.text);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -58,7 +70,16 @@ export function DocEditor({ editing, readOnly, onSave, onClose, hint }: { editin
           </div>
         </div>
         {error && <ErrorBox error={error} onClose={() => setError(null)} />}
-        <CodeEditor value={text} onChange={setText} language="json" readOnly={readOnly} autoFocus onRun={() => void save()} onSave={() => void save()} className="min-h-0 flex-1" />
+        <CodeEditor
+          value={text}
+          onChange={setText}
+          language="json"
+          readOnly={readOnly}
+          autoFocus
+          onRun={() => void save()}
+          onSave={() => void save()}
+          className="min-h-0 flex-1"
+        />
       </div>
     </div>
   );

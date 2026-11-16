@@ -46,7 +46,8 @@ export class S3Driver implements ObjectDriver {
       return { version: this.#ctx.kind.name, detail: `${where} · ${buckets.length.toLocaleString('en-US')} bucket${buckets.length === 1 ? '' : 's'}` };
     } catch (e) {
       // Keys that may not list buckets may still use one: say so, don't fail.
-      if (e instanceof PluginError && /AccessDenied|may not/.test(e.message)) return { version: this.#ctx.kind.name, detail: `${where} · these keys may not list buckets` };
+      if (e instanceof PluginError && /AccessDenied|may not/.test(e.message))
+        return { version: this.#ctx.kind.name, detail: `${where} · these keys may not list buckets` };
       throw e;
     }
   }
@@ -65,12 +66,19 @@ export class S3Driver implements ObjectDriver {
 
   async children(path: string[]): Promise<TreeNode[]> {
     if (path.length) return [];
-    const node = (name: string, detail?: string): TreeNode => ({ name, type: 'bucket', leaf: true, detail, open: { tab: 'bucket', ref: { bucket: name }, title: name } });
+    const node = (name: string, detail?: string): TreeNode => ({
+      name,
+      type: 'bucket',
+      leaf: true,
+      detail,
+      open: { tab: 'bucket', ref: { bucket: name }, title: name },
+    });
     if (this.#bucket) return [node(this.#bucket)];
     try {
       return (await this.buckets()).map((b) => node(b.name, b.region));
     } catch (e) {
-      if (e instanceof PluginError && /AccessDenied|may not/.test(e.message)) throw new PluginError('These keys may not list buckets: give the bucket in the connection’s settings.');
+      if (e instanceof PluginError && /AccessDenied|may not/.test(e.message))
+        throw new PluginError('These keys may not list buckets: give the bucket in the connection’s settings.');
       throw e;
     }
   }
@@ -81,7 +89,14 @@ export class S3Driver implements ObjectDriver {
       {
         method: 'GET',
         bucket: r.bucket,
-        query: { 'list-type': 2, prefix: prefix || undefined, delimiter: r.flat ? undefined : '/', 'continuation-token': r.token || undefined, 'max-keys': 1000, 'encoding-type': 'url' },
+        query: {
+          'list-type': 2,
+          prefix: prefix || undefined,
+          delimiter: r.flat ? undefined : '/',
+          'continuation-token': r.token || undefined,
+          'max-keys': 1000,
+          'encoding-type': 'url',
+        },
         signal,
       },
       `bucket “${r.bucket}”`,
@@ -96,7 +111,8 @@ export class S3Driver implements ObjectDriver {
     const res = await this.client.send({ method: 'HEAD', bucket, key }, `object “${key}”`);
     const h = res.headers;
     const metadata: Record<string, string> = {};
-    for (const [k, v] of Object.entries(h)) if (k.startsWith('x-amz-meta-')) metadata[k.slice(11)] = decodeMeta(Array.isArray(v) ? v.join(', ') : String(v ?? ''));
+    for (const [k, v] of Object.entries(h))
+      if (k.startsWith('x-amz-meta-')) metadata[k.slice(11)] = decodeMeta(Array.isArray(v) ? v.join(', ') : String(v ?? ''));
     const storage = headerOf(h, 'x-amz-storage-class');
     const at = Date.parse(headerOf(h, 'last-modified'));
     return {
@@ -125,7 +141,12 @@ export class S3Driver implements ObjectDriver {
     return { body: Readable.toWeb(res) as unknown as ReadableStream<Uint8Array>, size, contentType };
   }
 
-  async write(bucket: string, key: string, body: ReadableStream<Uint8Array> | Uint8Array, o: { size?: number; contentType?: string; signal?: AbortSignal }): Promise<void> {
+  async write(
+    bucket: string,
+    key: string,
+    body: ReadableStream<Uint8Array> | Uint8Array,
+    o: { size?: number; contentType?: string; signal?: AbortSignal },
+  ): Promise<void> {
     await putObject(this.client, bucket, key, body, o);
   }
 
@@ -140,9 +161,15 @@ export class S3Driver implements ObjectDriver {
       }
       const body = deleteBody(batch);
       const md5 = createHash('md5').update(body).digest('base64');
-      let res;
+      let res: Awaited<ReturnType<S3Client['send']>>;
       try {
-        res = await this.client.send({ method: 'POST', bucket, query: { delete: '' }, body, headers: { 'content-md5': md5, 'content-type': 'application/xml' } });
+        res = await this.client.send({
+          method: 'POST',
+          bucket,
+          query: { delete: '' },
+          body,
+          headers: { 'content-md5': md5, 'content-type': 'application/xml' },
+        });
       } catch (e) {
         // GCS's interop has no DeleteObjects: one at a time there.
         if (e instanceof PluginError && /NotImplemented|not implemented|InvalidArgument/i.test(e.message)) {
@@ -154,13 +181,24 @@ export class S3Driver implements ObjectDriver {
       }
       const errors = parseDeleteErrors(res.body.toString('utf8'));
       done += batch.length - errors.length;
-      if (errors.length) throw new PluginError(`${done.toLocaleString('en-US')} deleted; ${errors.length.toLocaleString('en-US')} couldn’t be: “${errors[0].key}”: ${errors[0].message || errors[0].code}`);
+      if (errors.length)
+        throw new PluginError(
+          `${done.toLocaleString('en-US')} deleted; ${errors.length.toLocaleString('en-US')} couldn’t be: “${errors[0].key}”: ${errors[0].message || errors[0].code}`,
+        );
     }
     return done;
   }
 
   async copy(bucket: string, from: string, to: string): Promise<void> {
-    const res = await this.client.send({ method: 'PUT', bucket, key: to, headers: { 'x-amz-copy-source': `/${uriEncode(bucket)}/${uriEncode(from, true)}`, 'x-amz-metadata-directive': 'COPY' } }, `object “${from}”`);
+    const res = await this.client.send(
+      {
+        method: 'PUT',
+        bucket,
+        key: to,
+        headers: { 'x-amz-copy-source': `/${uriEncode(bucket)}/${uriEncode(from, true)}`, 'x-amz-metadata-directive': 'COPY' },
+      },
+      `object “${from}”`,
+    );
     // A copy may say 200 and fail in its body.
     const said = res.body.toString('utf8');
     if (/<Error>/.test(said)) throw new PluginError(`Couldn’t copy “${from}”: ${text(said, 'Message') ?? text(said, 'Code') ?? 'it failed'}`);
@@ -172,7 +210,8 @@ export class S3Driver implements ObjectDriver {
 
   async createBucket(bucket: string): Promise<void> {
     const name = bucket.trim();
-    if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(name)) throw new PluginError('A bucket’s name is 3 to 63 lowercase letters, digits, dots and hyphens, starting and ending with a letter or a digit.');
+    if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(name))
+      throw new PluginError('A bucket’s name is 3 to 63 lowercase letters, digits, dots and hyphens, starting and ending with a letter or a digit.');
     const c = this.client;
     const constraint = c.endpoint.aws && c.region !== 'us-east-1';
     const body = constraint ? createBucketBody(c.region) : undefined;
@@ -187,7 +226,9 @@ function decodeMeta(v: string): string {
   const m = /^=\?utf-8\?([bq])\?(.*)\?=$/i.exec(v);
   if (!m) return v;
   try {
-    return m[1].toLowerCase() === 'b' ? Buffer.from(m[2], 'base64').toString('utf8') : decodeURIComponent(m[2].replace(/_/g, ' ').replace(/=([0-9a-f]{2})/gi, '%$1'));
+    return m[1].toLowerCase() === 'b'
+      ? Buffer.from(m[2], 'base64').toString('utf8')
+      : decodeURIComponent(m[2].replace(/_/g, ' ').replace(/=([0-9a-f]{2})/gi, '%$1'));
   } catch {
     return v;
   }

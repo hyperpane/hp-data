@@ -9,9 +9,15 @@ import { invoke, testHost } from '@hyperpane/sdk/testing';
 import { make } from '../../src/server/plugin.ts';
 
 const up = await new Promise<boolean>((resolve) => {
-  const s = net.connect(27017, '127.0.0.1', () => (s.destroy(), resolve(true)));
+  const s = net.connect(27017, '127.0.0.1', () => {
+    s.destroy();
+    resolve(true);
+  });
   s.on('error', () => resolve(false));
-  s.setTimeout(1000, () => (s.destroy(), resolve(false)));
+  s.setTimeout(1000, () => {
+    s.destroy();
+    resolve(false);
+  });
 });
 
 describe('document calls against MongoDB', { skip: up ? false : 'no MongoDB at localhost:27017' }, () => {
@@ -21,7 +27,8 @@ describe('document calls against MongoDB', { skip: up ? false : 'no MongoDB at l
   const ref = { database: 'hp_calls', collection: 'things' };
   before(async () => {
     plugin = make()(testHost({ id: 'data' }));
-    const save = (name: string, readOnly: boolean) => invoke<{ id: string }>(plugin, { op: 'save', connection: { name, kind: 'mongodb', readOnly, values: { host: '127.0.0.1', port: 27017 } } });
+    const save = (name: string, readOnly: boolean) =>
+      invoke<{ id: string }>(plugin, { op: 'save', connection: { name, kind: 'mongodb', readOnly, values: { host: '127.0.0.1', port: 27017 } } });
     id = (await save('mongo', false)).id;
     ro = (await save('mongo (read only)', true)).id;
     await invoke(plugin, { op: 'docCommand', id, database: 'hp_calls', text: 'db.things.drop()' }).catch(() => {});

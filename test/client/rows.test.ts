@@ -7,8 +7,28 @@ import { MAX_ROWS, rowsOut } from '../../src/client/lib/rows.ts';
 
 describe('rowsOut', () => {
   test('rows by column name, with the statement and connection', () => {
-    const out = rowsOut({ statement: 'SELECT id, name FROM users', columns: [{ name: 'id' }, { name: 'name' }], rows: [[1, 'Ada'], [2, null]], ms: 3 }, 'local');
-    assert.deepEqual(out, { columns: ['id', 'name'], rows: [{ id: 1, name: 'Ada' }, { id: 2, name: null }], truncated: false, statement: 'SELECT id, name FROM users', connection: 'local' });
+    const out = rowsOut(
+      {
+        statement: 'SELECT id, name FROM users',
+        columns: [{ name: 'id' }, { name: 'name' }],
+        rows: [
+          [1, 'Ada'],
+          [2, null],
+        ],
+        ms: 3,
+      },
+      'local',
+    );
+    assert.deepEqual(out, {
+      columns: ['id', 'name'],
+      rows: [
+        { id: 1, name: 'Ada' },
+        { id: 2, name: null },
+      ],
+      truncated: false,
+      statement: 'SELECT id, name FROM users',
+      connection: 'local',
+    });
   });
 
   test('no columns gives null', () => {

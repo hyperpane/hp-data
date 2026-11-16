@@ -14,8 +14,14 @@ import type { QueueDriver } from '../../src/server/drivers/types.ts';
 
 const up = await new Promise<boolean>((res) => {
   const s = net.connect(9092, '127.0.0.1');
-  s.setTimeout(800, () => (s.destroy(), res(false)));
-  s.on('connect', () => (s.end(), res(true)));
+  s.setTimeout(800, () => {
+    s.destroy();
+    res(false);
+  });
+  s.on('connect', () => {
+    s.end();
+    res(true);
+  });
   s.on('error', () => res(false));
 });
 const skip = up ? false : 'Kafka isn’t running at localhost:9092';
@@ -54,7 +60,10 @@ test('publish, then peek oldest, newest and from an offset', { skip }, async () 
   const newest = await d.peek({ ref: { topic }, limit: 2, from: 'latest' }, ctl.signal);
   assert.deepEqual(newest.map((m) => m.key).sort(), ['k4', 'k5']);
   const at = await d.peek({ ref: { topic }, limit: 5, from: 'offset', partition: 1, offset: '1' }, ctl.signal);
-  assert.deepEqual(at.map((m) => m.id), ['1:1', '1:2']);
+  assert.deepEqual(
+    at.map((m) => m.id),
+    ['1:1', '1:2'],
+  );
 });
 
 test('the slow way, by a group of its own, reads the same', { skip }, async () => {
@@ -74,19 +83,32 @@ test('describe: partitions and watermarks', { skip }, async () => {
   const info = await d.describe({ topic });
   assert.equal(info.partitions?.length, 2);
   assert.equal(info.stats.find((s) => s.label === 'Messages')?.value, '6');
-  assert.deepEqual(info.partitions?.map((p) => p.high), ['3', '3']);
+  assert.deepEqual(
+    info.partitions?.map((p) => p.high),
+    ['3', '3'],
+  );
 });
 
 test('a tail sends what’s published after it starts', { skip }, async () => {
   const ctl = new AbortController();
   const got: Message[] = [];
-  const done = d.tail({ topic }, (m) => (got.push(m), true), ctl.signal);
+  const done = d.tail(
+    { topic },
+    (m) => {
+      got.push(m);
+      return true;
+    },
+    ctl.signal,
+  );
   await new Promise((r) => setTimeout(r, 4000));
   await d.publish({ ref: { topic }, key: 'live', value: 'now' });
   for (let i = 0; i < 40 && !got.length; i++) await new Promise((r) => setTimeout(r, 250));
   ctl.abort();
   await done;
-  assert.deepEqual(got.map((m) => [m.key, m.value]), [['live', 'now']]);
+  assert.deepEqual(
+    got.map((m) => [m.key, m.value]),
+    [['live', 'now']],
+  );
 });
 
 test('purge empties it', { skip }, async () => {

@@ -24,20 +24,18 @@ export interface MenuContext {
   setSelected(key: string): void;
 }
 
-export const linkMenu = (c: MenuContext, key: string): MenuEntry[] => LINK_TIMES.map((t) => ({ label: `Copy Link for ${t.label}`, run: () => void c.run(null, () => copyLink(c.where, key, t.seconds), false) }));
+export const linkMenu = (c: MenuContext, key: string): MenuEntry[] =>
+  LINK_TIMES.map((t) => ({ label: `Copy Link for ${t.label}`, run: () => void c.run(null, () => copyLink(c.where, key, t.seconds), false) }));
 
 export function menuFor(c: MenuContext): (MenuEntry | null)[] {
   const { where, selected, readOnly } = c;
-  const uri = (keys: string[]) => c.where.api.copy(keys.map((k) => s3Uri(where.bucket, k)).join('\n'), keys.length === 1 ? 'the s3:// URI' : `${keys.length} s3:// URIs`);
+  const uri = (keys: string[]) =>
+    c.where.api.copy(keys.map((k) => s3Uri(where.bucket, k)).join('\n'), keys.length === 1 ? 'the s3:// URI' : `${keys.length} s3:// URIs`);
   if (!selected.length)
     return [
       ...(readOnly
         ? []
-        : [
-            { label: 'Upload Files', run: c.upload },
-            { label: 'New Folder', run: () => void c.run(null, () => newFolder(where, c.prefix)) },
-            null,
-          ]),
+        : [{ label: 'Upload Files', run: c.upload }, { label: 'New Folder', run: () => void c.run(null, () => newFolder(where, c.prefix)) }, null]),
       { label: 'Refresh', run: c.reload },
       { label: 'Copy s3:// URI of This Folder', run: () => uri([c.prefix]) },
     ];
@@ -45,14 +43,33 @@ export function menuFor(c: MenuContext): (MenuEntry | null)[] {
   const one = selected.length === 1 ? selected[0] : null;
   const entries: (MenuEntry | null)[] = [];
   if (one && isFolder(one)) entries.push({ label: 'Open', run: () => c.go(one) });
-  if (files.length) entries.push({ label: files.length === 1 ? 'Download' : `Download ${count(files.length, 'File')}…`, run: () => void c.run(null, () => download(where, files), false) });
+  if (files.length)
+    entries.push({
+      label: files.length === 1 ? 'Download' : `Download ${count(files.length, 'File')}…`,
+      run: () => void c.run(null, () => download(where, files), false),
+    });
   if (one && !isFolder(one)) entries.push(null, ...linkMenu(c, one));
-  if (one && c.prefix !== parentOf(one)) entries.push({ label: 'Show in Folder', run: () => (c.go(parentOf(one)), c.setSelected(one)) });
-  entries.push(null, { label: one ? 'Copy s3:// URI' : 'Copy s3:// URIs', run: () => uri(selected) }, { label: one ? 'Copy Key' : 'Copy Keys', run: () => where.api.copy(selected.join('\n'), one ? 'the key' : 'the keys') });
+  if (one && c.prefix !== parentOf(one))
+    entries.push({
+      label: 'Show in Folder',
+      run: () => {
+        c.go(parentOf(one));
+        c.setSelected(one);
+      },
+    });
+  entries.push(
+    null,
+    { label: one ? 'Copy s3:// URI' : 'Copy s3:// URIs', run: () => uri(selected) },
+    { label: one ? 'Copy Key' : 'Copy Keys', run: () => where.api.copy(selected.join('\n'), one ? 'the key' : 'the keys') },
+  );
   if (!readOnly) {
     entries.push(null);
     if (one) entries.push({ label: isFolder(one) ? 'Rename Folder' : 'Rename or Move', run: () => void c.run(null, () => rename(where, one)) });
-    entries.push({ label: one ? `Delete “${nameOf(one)}”…` : `Delete ${count(selected.length, 'Item')}…`, danger: true, run: () => void c.run(null, () => remove(where, selected)) });
+    entries.push({
+      label: one ? `Delete “${nameOf(one)}”…` : `Delete ${count(selected.length, 'Item')}…`,
+      danger: true,
+      run: () => void c.run(null, () => remove(where, selected)),
+    });
   }
   return entries;
 }

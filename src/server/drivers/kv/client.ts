@@ -64,7 +64,9 @@ export class RespClient {
     const o = this.#o;
     const timeout = o.timeout ?? 10_000;
     const socket = await new Promise<net.Socket>((resolve, reject) => {
-      const s = o.tls ? tls.connect({ host: o.host, port: o.port, servername: net.isIP(o.host) ? undefined : o.host, ...o.tlsOptions, rejectUnauthorized: !o.insecure }) : net.connect({ host: o.host, port: o.port });
+      const s = o.tls
+        ? tls.connect({ host: o.host, port: o.port, servername: net.isIP(o.host) ? undefined : o.host, ...o.tlsOptions, rejectUnauthorized: !o.insecure })
+        : net.connect({ host: o.host, port: o.port });
       const timer = setTimeout(() => s.destroy(Object.assign(new Error('timeout'), { code: 'ETIMEDOUT' })), timeout);
       s.once(o.tls ? 'secureConnect' : 'connect', () => {
         clearTimeout(timer);
@@ -97,7 +99,12 @@ export class RespClient {
     if (o.name) hello.push(this.#send(['CLIENT', 'SETNAME', o.name]));
     const replies = await Promise.race([
       Promise.all(hello),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new PluginError(`${this.where} accepted the connection but didn’t answer: TLS where it isn’t, or the other way round?`)), timeout).unref()),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new PluginError(`${this.where} accepted the connection but didn’t answer: TLS where it isn’t, or the other way round?`)),
+          timeout,
+        ).unref(),
+      ),
     ]).catch((e: Error) => {
       this.close();
       throw e;
@@ -177,7 +184,7 @@ export class RespClient {
 }
 
 /** Why signing in failed, in words. */
-export function signInError(e: RespError): PluginError {
+function signInError(e: RespError): PluginError {
   const m = e.message;
   if (/WRONGPASS|invalid password|invalid username-password/i.test(m)) return new PluginError('Wrong user name or password.');
   if (/without any password configured|no password is set/i.test(m)) return new PluginError('This server has no password: leave the password empty.');
@@ -196,7 +203,9 @@ export function replyError(e: RespError, where: string): PluginError {
       return new PluginError(`The user may not do that: ${m.replace(/^NOPERM\s*/, '')}`);
     case 'MOVED':
     case 'ASK':
-      return new PluginError(`${where} is a node of a Redis cluster, and that key lives on another one (${m.split(' ').pop()}). Data doesn’t follow a cluster’s redirects: connect to that node, or to one without cluster mode.`);
+      return new PluginError(
+        `${where} is a node of a Redis cluster, and that key lives on another one (${m.split(' ').pop()}). Data doesn’t follow a cluster’s redirects: connect to that node, or to one without cluster mode.`,
+      );
     case 'CROSSSLOT':
       return new PluginError(`${where} is a cluster node: those keys are in different slots.`);
     case 'WRONGTYPE':

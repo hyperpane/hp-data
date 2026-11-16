@@ -58,7 +58,12 @@ export function StringEditor(p: StringEditorProps) {
             className="h-6"
             value={asJson ? 'json' : 'text'}
             onValueChange={(v) => setAsJson(v === 'json')}
-            items={(['text', 'json'] as const).map((v) => ({ value: v, label: v === 'json' ? 'JSON' : 'Text', disabled: changed && (v === 'json') !== asJson, title: changed ? 'Save or undo the change first' : undefined }))}
+            items={(['text', 'json'] as const).map((v) => ({
+              value: v,
+              label: v === 'json' ? 'JSON' : 'Text',
+              disabled: changed && (v === 'json') !== asJson,
+              title: changed ? 'Save or undo the change first' : undefined,
+            }))}
           />
         )}
         <span className="text-[var(--node-muted)]">
@@ -71,13 +76,25 @@ export function StringEditor(p: StringEditorProps) {
             <NodeButton disabled={!changed || busy} onClick={() => setDraft(shown)}>
               Undo
             </NodeButton>
-            <NodeButton disabled={!changed || busy} onClick={() => void save()} className={changed ? 'border-[var(--node-accent)] text-[var(--node-accent)]' : undefined}>
+            <NodeButton
+              disabled={!changed || busy}
+              onClick={() => void save()}
+              className={changed ? 'border-[var(--node-accent)] text-[var(--node-accent)]' : undefined}
+            >
               {busy ? 'Saving' : 'Save'}
             </NodeButton>
           </div>
         )}
       </div>
-      <CodeEditor className="min-h-0 flex-1" value={draft} onChange={setDraft} language={showJson ? 'json' : 'text'} readOnly={locked} onSave={() => void save()} lineNumbers={showJson} />
+      <CodeEditor
+        className="min-h-0 flex-1"
+        value={draft}
+        onChange={setDraft}
+        language={showJson ? 'json' : 'text'}
+        readOnly={locked}
+        onSave={() => void save()}
+        lineNumbers={showJson}
+      />
     </div>
   );
 }

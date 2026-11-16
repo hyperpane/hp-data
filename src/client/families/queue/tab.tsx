@@ -29,7 +29,8 @@ export function QueueTab(p: TabProps) {
   const partitions = info.value?.partitions?.map((x) => x.partition) ?? [];
 
   const purge = async () => {
-    if (!(await api.confirm(`Purge ${caps.name}?`, `Every message in the ${caps.noun} is deleted, for every consumer. This can’t be undone.`, 'Purge', true))) return;
+    if (!(await api.confirm(`Purge ${caps.name}?`, `Every message in the ${caps.noun} is deleted, for every consumer. This can’t be undone.`, 'Purge', true)))
+      return;
     try {
       await api.call('qPurge', base);
       api.toast(`Purged ${caps.name}`);
@@ -49,7 +50,11 @@ export function QueueTab(p: TabProps) {
     }
   };
 
-  const tabs: { id: View; name: string }[] = [...(caps.peek ? [{ id: 'messages' as const, name: 'Messages' }] : []), { id: 'publish', name: 'Publish' }, { id: 'details', name: 'Details' }];
+  const tabs: { id: View; name: string }[] = [
+    ...(caps.peek ? [{ id: 'messages' as const, name: 'Messages' }] : []),
+    { id: 'publish', name: 'Publish' },
+    { id: 'details', name: 'Details' },
+  ];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col text-[12px] text-[var(--node-fg)]">
@@ -62,7 +67,9 @@ export function QueueTab(p: TabProps) {
           </span>
           <div className="ml-auto flex flex-none items-center gap-0.5">
             <ToolButton label="Refresh the figures" icon={RefreshCw} onClick={() => info.reload()} />
-            {caps.purge && <ToolButton label={readOnly ? 'Purge (the connection is read only)' : 'Purge'} icon={Eraser} disabled={readOnly} onClick={() => void purge()} />}
+            {caps.purge && (
+              <ToolButton label={readOnly ? 'Purge (the connection is read only)' : 'Purge'} icon={Eraser} disabled={readOnly} onClick={() => void purge()} />
+            )}
             <ToolButton label={readOnly ? 'Delete (the connection is read only)' : 'Delete'} icon={Trash2} disabled={readOnly} onClick={() => void remove()} />
           </div>
         </div>
@@ -78,7 +85,13 @@ export function QueueTab(p: TabProps) {
             base={base}
             partitions={partitions}
             onAgain={(m) => {
-              setDraft({ key: m.key ?? '', value: m.value, headers: Object.entries(m.headers ?? {}).map(([key, value]) => ({ key, value })), partition: '', routingKey: '' });
+              setDraft({
+                key: m.key ?? '',
+                value: m.value,
+                headers: Object.entries(m.headers ?? {}).map(([key, value]) => ({ key, value })),
+                partition: '',
+                routingKey: '',
+              });
               setView('publish');
             }}
           />

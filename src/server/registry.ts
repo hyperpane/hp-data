@@ -95,7 +95,14 @@ export class Registry {
 
   async list(): Promise<Connection[]> {
     const [kept, secrets] = await Promise.all([this.#kept(), this.#secrets()]);
-    return kept.map((c) => ({ ...c, color: c.color ?? null, group: c.group ?? '', readOnly: !!c.readOnly, used: c.used ?? null, saved: Object.keys(secrets[c.id] ?? {}) }));
+    return kept.map((c) => ({
+      ...c,
+      color: c.color ?? null,
+      group: c.group ?? '',
+      readOnly: !!c.readOnly,
+      used: c.used ?? null,
+      saved: Object.keys(secrets[c.id] ?? {}),
+    }));
   }
 
   async get(id: string): Promise<Connection> {
@@ -127,7 +134,10 @@ export class Registry {
 
   save(input: ConnectionInput): Promise<Connection> {
     const kind = kindFor(input.kind);
-    const name = String(input.name ?? '').trim().slice(0, 120) || kind.name;
+    const name =
+      String(input.name ?? '')
+        .trim()
+        .slice(0, 120) || kind.name;
     return this.#serial(async () => {
       const [list, secrets] = await Promise.all([this.#kept(), this.#secrets()]);
       const old = input.id ? list.find((c) => c.id === input.id) : undefined;
@@ -138,7 +148,9 @@ export class Registry {
         name,
         kind: kind.id,
         color: typeof input.color === 'string' && /^#[0-9a-f]{6}$/i.test(input.color) ? input.color : null,
-        group: String(input.group ?? '').trim().slice(0, 60),
+        group: String(input.group ?? '')
+          .trim()
+          .slice(0, 60),
         values: clean(kind, input.values ?? {}),
         readOnly: !!input.readOnly,
         created: old?.created ?? Date.now(),
@@ -176,7 +188,15 @@ export class Registry {
   async duplicate(id: string): Promise<Connection> {
     const { connection } = await this.get(id).then((c) => ({ connection: c }));
     const secrets = (await this.#secrets())[id] ?? {};
-    return this.save({ name: `${connection.name} copy`, kind: connection.kind, color: connection.color, group: connection.group, readOnly: connection.readOnly, values: connection.values, secrets });
+    return this.save({
+      name: `${connection.name} copy`,
+      kind: connection.kind,
+      color: connection.color,
+      group: connection.group,
+      readOnly: connection.readOnly,
+      values: connection.values,
+      secrets,
+    });
   }
 
   /** Marks it connected now (for Recent). */

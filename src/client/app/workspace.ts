@@ -13,7 +13,7 @@ import { type Api, makeApi } from '../lib/api.ts';
 import { read } from '../lib/hooks.ts';
 import { type NewTab, type Tab, tabKey } from './tabs.ts';
 
-export const HOME: Tab = { key: 'home', type: 'home', conn: null, ref: {}, title: 'Home' };
+const HOME: Tab = { key: 'home', type: 'home', conn: null, ref: {}, title: 'Home' };
 
 const MAX_TABS = 40;
 

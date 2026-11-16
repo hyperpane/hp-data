@@ -11,16 +11,26 @@ import os from 'node:os';
 import { Readable } from 'node:stream';
 import { describe, test } from 'node:test';
 import { kindOf, withDefaults } from '../../src/shared/kinds.ts';
-import { S3Driver, s3 } from '../../src/server/drivers/object/s3.ts';
+import { type S3Driver, s3 } from '../../src/server/drivers/object/s3.ts';
 
 const up = await new Promise<boolean>((resolve) => {
   const s = net.connect(9000, '127.0.0.1');
-  s.once('connect', () => (s.destroy(), resolve(true)));
+  s.once('connect', () => {
+    s.destroy();
+    resolve(true);
+  });
   s.once('error', () => resolve(false));
 });
 
 const kind = kindOf('minio')!;
-const driver = (values: Record<string, string | boolean> = {}) => s3({ kind, values: withDefaults(kind, { accessKeyId: 'minioadmin', secretAccessKey: 'minioadmin', ...values }), folder: null, dataDir: os.tmpdir(), log: () => {} }) as S3Driver;
+const driver = (values: Record<string, string | boolean> = {}) =>
+  s3({
+    kind,
+    values: withDefaults(kind, { accessKeyId: 'minioadmin', secretAccessKey: 'minioadmin', ...values }),
+    folder: null,
+    dataDir: os.tmpdir(),
+    log: () => {},
+  }) as S3Driver;
 const signal = new AbortController().signal;
 const text = async (body: ReadableStream<Uint8Array>) => Buffer.from(await new Response(body).arrayBuffer()).toString();
 
@@ -55,12 +65,32 @@ function png(w: number, h: number, color: (x: number, y: number) => [number, num
 
 const SAMPLES: [string, string | Uint8Array, string][] = [
   ['README.md', '# Assets\n\nSample files for hyperpane’s Data plugin: images, JSON, text.\n', 'text/markdown'],
-  ['config/app.json', JSON.stringify({ name: 'shop', version: '2.4.1', features: { search: true, checkout: { provider: 'stripe', currency: 'EUR' } }, regions: ['eu-west-1', 'us-east-1'] }, null, 2), 'application/json'],
+  [
+    'config/app.json',
+    JSON.stringify(
+      { name: 'shop', version: '2.4.1', features: { search: true, checkout: { provider: 'stripe', currency: 'EUR' } }, regions: ['eu-west-1', 'us-east-1'] },
+      null,
+      2,
+    ),
+    'application/json',
+  ],
   ['config/flags.json', JSON.stringify({ newCheckout: false, darkMode: true, maxUpload: 104857600 }), 'application/json'],
   ['images/gradient.png', png(160, 100, (x, y) => [Math.round((x / 159) * 255), Math.round((y / 99) * 255), 180]), 'image/png'],
   ['images/stripes.png', png(64, 64, (x) => (Math.floor(x / 8) % 2 ? [240, 128, 32] : [30, 30, 40])), 'image/png'],
-  ['images/icons/dot.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><circle cx="32" cy="32" r="24" fill="#569a31"/></svg>', 'image/svg+xml'],
-  ['logs/2024-11-12.log', Array.from({ length: 200 }, (_, i) => `2024-11-12T10:${String(Math.floor(i / 60)).padStart(2, '0')}:${String(i % 60).padStart(2, '0')}Z INFO request ${i} GET /api/items 200 ${12 + (i % 40)}ms`).join('\n'), 'text/plain'],
+  [
+    'images/icons/dot.svg',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><circle cx="32" cy="32" r="24" fill="#569a31"/></svg>',
+    'image/svg+xml',
+  ],
+  [
+    'logs/2024-11-12.log',
+    Array.from(
+      { length: 200 },
+      (_, i) =>
+        `2024-11-12T10:${String(Math.floor(i / 60)).padStart(2, '0')}:${String(i % 60).padStart(2, '0')}Z INFO request ${i} GET /api/items 200 ${12 + (i % 40)}ms`,
+    ).join('\n'),
+    'text/plain',
+  ],
   ['logs/2024-11-13.log', 'INFO started\nWARN slow query (812 ms)\nINFO stopped\n', 'text/plain'],
   ['data/users.csv', 'id,name,email\n1,Ada,ada@example.com\n2,Grace,grace@example.com\n3,Linus,linus@example.com\n', 'text/csv'],
   ['data/archive.bin', Buffer.from(Array.from({ length: 4096 }, (_, i) => (i * 37) % 256)), 'application/octet-stream'],
@@ -112,7 +142,13 @@ describe('MinIO', { skip: !up && 'nothing answers at localhost:9000' }, () => {
   test('a streamed upload (UNSIGNED-PAYLOAD, a content-length) and multipart, then copy, delete many, link', async () => {
     const d = driver();
     const bytes = Buffer.alloc(3 * 1024 * 1024, 'x');
-    await d.client.send({ method: 'PUT', bucket: 'assets', key: 'tmp/streamed.txt', stream: Readable.from([bytes]), headers: { 'content-length': String(bytes.length), 'content-type': 'text/plain' } });
+    await d.client.send({
+      method: 'PUT',
+      bucket: 'assets',
+      key: 'tmp/streamed.txt',
+      stream: Readable.from([bytes]),
+      headers: { 'content-length': String(bytes.length), 'content-type': 'text/plain' },
+    });
     assert.equal((await d.head('assets', 'tmp/streamed.txt')).size, bytes.length);
     const big = Buffer.alloc(17 * 1024 * 1024 + 5, 'y');
     await d.write('assets', 'tmp/big.bin', new Blob([big]).stream(), { size: big.length });
@@ -130,7 +166,10 @@ describe('MinIO', { skip: !up && 'nothing answers at localhost:9000' }, () => {
   });
 
   test('one bucket only, wrong keys, no bucket', async () => {
-    assert.deepEqual((await driver({ bucket: 'assets' }).children([])).map((n) => n.name), ['assets']);
+    assert.deepEqual(
+      (await driver({ bucket: 'assets' }).children([])).map((n) => n.name),
+      ['assets'],
+    );
     await assert.rejects(driver({ secretAccessKey: 'nope' }).info(), /secret access key is wrong/);
     await assert.rejects(driver({ bucket: 'no-such-bucket-here' }).info(), /no such bucket/i);
   });

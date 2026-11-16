@@ -89,7 +89,16 @@ export function ConsoleView(p: TabProps) {
     <div ref={box} className="flex min-h-0 flex-1 flex-col">
       <Toolbar>
         <ToolButton label={running ? 'Running' : 'Run (⌘Enter)'} icon={Play} disabled={!!running} onClick={() => void run(text)} />
-        {running && <ToolButton label="Cancel" icon={Square} onClick={() => (running.abort(), setRunning(null))} />}
+        {running && (
+          <ToolButton
+            label="Cancel"
+            icon={Square}
+            onClick={() => {
+              running.abort();
+              setRunning(null);
+            }}
+          />
+        )}
         <ToolButton
           label="History"
           icon={History}
@@ -97,7 +106,10 @@ export function ConsoleView(p: TabProps) {
           onClick={(e) =>
             menu.open(
               e,
-              history.slice(0, 25).map((h) => ({ label: h.replace(/\s+/g, ' ').slice(0, 90), run: () => change(text.trim() ? `${text.replace(/\n*$/, '')}\n\n${h}\n` : `${h}\n`) })),
+              history.slice(0, 25).map((h) => ({
+                label: h.replace(/\s+/g, ' ').slice(0, 90),
+                run: () => change(text.trim() ? `${text.replace(/\n*$/, '')}\n\n${h}\n` : `${h}\n`),
+              })),
             )
           }
         />
@@ -140,7 +152,9 @@ export function ConsoleView(p: TabProps) {
       {!out ? (
         !error && <div className="p-6 text-center text-[11.5px] text-[var(--node-muted)]">{running ? 'Running' : 'Run something to see its result here'}</div>
       ) : isText ? (
-        <pre className="min-h-0 flex-1 overflow-auto p-2 font-mono text-[11.5px] whitespace-pre select-text">{typeof result === 'string' ? result : JSON.stringify(result, null, 2)}</pre>
+        <pre className="min-h-0 flex-1 overflow-auto p-2 font-mono text-[11.5px] whitespace-pre select-text">
+          {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
+        </pre>
       ) : table ? (
         <Grid columns={table.columns} rows={table.rows} copy={api.copy} empty="Nothing." className="min-h-0 flex-1" />
       ) : (
@@ -151,7 +165,11 @@ export function ConsoleView(p: TabProps) {
       <StatusBar>
         {out && <span>{ms(out.ms)}</span>}
         {out?.status !== undefined && <span className={out.status >= 400 ? 'text-[#f85149]' : undefined}>{out.status}</span>}
-        {items !== null && <span>{items.toLocaleString()} {items === 1 ? 'item' : 'items'}</span>}
+        {items !== null && (
+          <span>
+            {items.toLocaleString()} {items === 1 ? 'item' : 'items'}
+          </span>
+        )}
         {out && <span className="min-w-0 truncate font-mono">{out.ran.replace(/\s+/g, ' ').slice(0, 120)}</span>}
       </StatusBar>
     </div>

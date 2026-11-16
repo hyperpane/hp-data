@@ -23,7 +23,7 @@ import { tlsOf } from '../../net/tls.ts';
 const RAW = new Set([1082, 1083, 1114, 1184, 1266, 1700, 20, 1186]);
 const types = { getTypeParser: (oid: number, format?: string) => (RAW.has(oid) ? (v: string) => v : pg.types.getTypeParser(oid, format as 'text')) };
 
-export function pgError(e: unknown, where: string): Error {
+function pgError(e: unknown, where: string): Error {
   const err = e as Error & { code?: string; position?: string; detail?: string; hint?: string };
   const say: Record<string, string> = {
     '28P01': 'The password is wrong for that user.',
@@ -32,7 +32,8 @@ export function pgError(e: unknown, where: string): Error {
     '57P03': `${where} is starting up: try again in a moment.`,
     '53300': `${where} has no connections left.`,
   };
-  if (err.code === '57014') return new PluginError(/timeout/i.test(err.message) ? 'It ran longer than the statement timeout (Options), and was stopped.' : 'Cancelled.');
+  if (err.code === '57014')
+    return new PluginError(/timeout/i.test(err.message) ? 'It ran longer than the statement timeout (Options), and was stopped.' : 'Cancelled.');
   if (err.code && say[err.code]) return new PluginError(say[err.code]);
   if (err.code === 'ECONNREFUSED') return new PluginError(`Nothing answers at ${where}: is PostgreSQL running, on that port?`);
   if (err.code === 'ENOTFOUND') return new PluginError(`There’s no host ${where.replace(/:\d+$/, '')}.`);
@@ -53,7 +54,13 @@ export const postgres = (ctx: DriverContext): SqlDriver => {
   const typeNames = new Map<number, string>();
   const timeoutMs = Math.max(0, Math.round(Number(v.queryTimeout || 0) * 1000));
   const init = [
-    v.searchPath ? `SET search_path TO ${String(v.searchPath).split(',').map((x) => ident('postgres', x.trim())).filter((x) => x !== '""').join(', ')}` : '',
+    v.searchPath
+      ? `SET search_path TO ${String(v.searchPath)
+          .split(',')
+          .map((x) => ident('postgres', x.trim()))
+          .filter((x) => x !== '""')
+          .join(', ')}`
+      : '',
     v.timezone ? `SET TIME ZONE ${lit(String(v.timezone))}` : '',
     timeoutMs ? `SET statement_timeout = ${timeoutMs}` : '',
     String(v.initSql ?? '').trim(),
@@ -117,7 +124,8 @@ export const postgres = (ctx: DriverContext): SqlDriver => {
     for (const r of await q<{ oid: number; typname: string }>('SELECT oid::int, typname FROM pg_type', [], database)) typeNames.set(r.oid, r.typname);
   };
 
-  const columnsOf = (fields: pg.FieldDef[], keys: Set<string> = new Set()): Column[] => fields.map((f) => ({ name: f.name, type: typeNames.get(f.dataTypeID) ?? String(f.dataTypeID), key: keys.has(f.name) || undefined }));
+  const columnsOf = (fields: pg.FieldDef[], keys: Set<string> = new Set()): Column[] =>
+    fields.map((f) => ({ name: f.name, type: typeNames.get(f.dataTypeID) ?? String(f.dataTypeID), key: keys.has(f.name) || undefined }));
 
   const consoleFor = async (database: string) => {
     let c = consoles.get(database);
@@ -152,7 +160,15 @@ export const postgres = (ctx: DriverContext): SqlDriver => {
         await c.client.query('CLOSE hp_data_cursor');
         if (own) await c.client.query('COMMIT');
         const { rows, truncated } = cap(r.rows as unknown[][], limit);
-        return { statement, columns: columnsOf(r.fields), rows: rows.map((row) => row.map(toCell)), command: `SELECT ${rows.length}`, affected: null, ms: since(t0), truncated };
+        return {
+          statement,
+          columns: columnsOf(r.fields),
+          rows: rows.map((row) => row.map(toCell)),
+          command: `SELECT ${rows.length}`,
+          affected: null,
+          ms: since(t0),
+          truncated,
+        };
       } catch (e) {
         if (own) await c.client.query('ROLLBACK').catch(() => {});
         else await c.client.query('CLOSE hp_data_cursor').catch(() => {});
@@ -245,7 +261,15 @@ export const postgres = (ctx: DriverContext): SqlDriver => {
         }
         const byName = new Map(info.columns.map((c) => [c.name, c]));
         const columns = columnsOf(res.fields, keys).map((c) => ({ ...c, ...byName.get(c.name), type: byName.get(c.name)?.type ?? c.type }));
-        return { columns, rows: (res.rows as unknown[][]).map((row) => row.map(toCell)), ms, total, editable: keys.size > 0, sql: select, command: `SELECT ${res.rowCount}` };
+        return {
+          columns,
+          rows: (res.rows as unknown[][]).map((row) => row.map(toCell)),
+          ms,
+          total,
+          editable: keys.size > 0,
+          sql: select,
+          command: `SELECT ${res.rowCount}`,
+        };
       } catch (e) {
         throw pgError(e, where);
       } finally {
@@ -264,7 +288,8 @@ export const postgres = (ctx: DriverContext): SqlDriver => {
         await client.query('BEGIN');
         for (const s of statements) {
           const r = await client.query(s.sql, s.params);
-          if (!/^INSERT/.test(s.sql) && r.rowCount === 0) throw new PluginError('A row was changed or removed by someone else since it was read: refresh, and make the change again.');
+          if (!/^INSERT/.test(s.sql) && r.rowCount === 0)
+            throw new PluginError('A row was changed or removed by someone else since it was read: refresh, and make the change again.');
           affected += r.rowCount ?? 0;
         }
         await client.query('COMMIT');

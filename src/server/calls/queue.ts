@@ -29,7 +29,14 @@ export function peekOf(req: Record<string, unknown>): PeekRequest {
 
 export function publishOf(req: Record<string, unknown>): PublishRequest {
   if (typeof req.value !== 'string') throw new PluginError('Give the message a value.');
-  return { ref: refOf(req.ref), key: str(req.key), value: req.value, headers: headersOf(req.headers), partition: optInt(req.partition), routingKey: str(req.routingKey) };
+  return {
+    ref: refOf(req.ref),
+    key: str(req.key),
+    value: req.value,
+    headers: headersOf(req.headers),
+    partition: optInt(req.partition),
+    routingKey: str(req.routingKey),
+  };
 }
 
 export function queue(d: Deps): Group {
@@ -45,7 +52,12 @@ export function queue(d: Deps): Group {
       qPeek: async (req, ctx) => (await driver(req)).peek(peekOf(req), ctx.signal),
       qPublish: async (req) => (await change(req)).publish(publishOf(req)),
       qCreate: async (req) => {
-        const o = { partitions: optInt(req.partitions), replication: optInt(req.replication), durable: req.durable === undefined ? undefined : !!req.durable, type: str(req.type) };
+        const o = {
+          partitions: optInt(req.partitions),
+          replication: optInt(req.replication),
+          durable: req.durable === undefined ? undefined : !!req.durable,
+          type: str(req.type),
+        };
         await (await change(req)).create(refOf(req.ref), o);
         return null;
       },

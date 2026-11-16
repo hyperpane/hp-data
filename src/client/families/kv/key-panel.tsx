@@ -99,7 +99,8 @@ export function KeyPanel(p: KeyPanelProps) {
         <ToolButton label="Copy the name" icon={Copy} onClick={() => api.copy(key, 'the key’s name')} />
         <span className="flex-none text-[10.5px] text-[var(--node-muted)]">
           {value && TYPE_NAMES[value.type]}
-          {length !== null && ` · ${length.toLocaleString()} ${value?.type === 'hash' ? 'fields' : value?.type === 'stream' ? 'entries' : value?.type === 'list' ? 'items' : 'members'}`}
+          {length !== null &&
+            ` · ${length.toLocaleString()} ${value?.type === 'hash' ? 'fields' : value?.type === 'stream' ? 'entries' : value?.type === 'list' ? 'items' : 'members'}`}
         </span>
         <div className="ml-auto flex flex-none items-center gap-0.5">
           {value && (

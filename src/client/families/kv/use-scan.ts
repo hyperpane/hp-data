@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyEntry, ScanResult } from '../../../shared/kv.ts';
 import type { Calls } from './lib.ts';
 
-export const PAGE = 200;
+const PAGE = 200;
 
 export interface Scan {
   keys: KeyEntry[];
@@ -40,7 +40,11 @@ export function useScan(calls: Calls, pattern: string, count = PAGE): Scan {
       setLoading(true);
       setError(null);
       try {
-        const r = await callsRef.current.call<ScanResult>('kvScan', { pattern: pattern || '*', cursor: from, count: Math.max(10, Math.min(10_000, count || PAGE)) });
+        const r = await callsRef.current.call<ScanResult>('kvScan', {
+          pattern: pattern || '*',
+          cursor: from,
+          count: Math.max(10, Math.min(10_000, count || PAGE)),
+        });
         if (me !== run.current) return;
         setKeys((old) => {
           if (fresh) return r.keys;

@@ -70,7 +70,17 @@ export function open(r: HttpRequest): Promise<http.IncomingMessage> {
   const lib = url.protocol === 'https:' ? https : http;
   return new Promise((resolve, reject) => {
     if (r.signal?.aborted) return reject(new PluginError('Cancelled.'));
-    const req = lib.request(url, { method: r.method ?? 'GET', headers: r.headers, ...(url.protocol === 'https:' ? r.tls : {}), rejectUnauthorized: !r.insecure, timeout: r.timeout ?? 30_000 }, (res) => resolve(res));
+    const req = lib.request(
+      url,
+      {
+        method: r.method ?? 'GET',
+        headers: r.headers,
+        ...(url.protocol === 'https:' ? r.tls : {}),
+        rejectUnauthorized: !r.insecure,
+        timeout: r.timeout ?? 30_000,
+      },
+      (res) => resolve(res),
+    );
     const abort = () => req.destroy(new PluginError('Cancelled.'));
     r.signal?.addEventListener('abort', abort, { once: true });
     req.on('close', () => r.signal?.removeEventListener('abort', abort));
@@ -102,16 +112,24 @@ export async function json<T = unknown>(r: HttpRequest & { json?: unknown }, exp
   }
 }
 
+/** An error body's shapes: Elasticsearch's and the like. */
+interface ErrorBody {
+  reason?: string;
+  root_cause?: { reason?: string }[];
+}
+
 /** A status and a body as a sentence. */
 export function statusError(status: number, text: string): string {
   let said = text.trim();
   try {
-    const j = JSON.parse(text) as Record<string, any>;
-    said = j.error?.root_cause?.[0]?.reason ?? j.error?.reason ?? (typeof j.error === 'string' ? j.error : null) ?? j.message ?? j.reason ?? said;
+    const j = JSON.parse(text) as { error?: string | ErrorBody; message?: string; reason?: string };
+    const e = j.error as ErrorBody | undefined;
+    said = e?.root_cause?.[0]?.reason ?? e?.reason ?? (typeof j.error === 'string' ? j.error : null) ?? j.message ?? j.reason ?? said;
   } catch {}
   if (status === 401) return `Signing in failed: check the user and password.${said ? ` (${said.slice(0, 200)})` : ''}`;
   if (status === 403) return `Not allowed: ${said.slice(0, 300) || 'the user may not do that.'}`;
   return `${status}: ${said.slice(0, 500) || http.STATUS_CODES[status] || 'failed'}`;
 }
 
-export const basic = (user: unknown, password: unknown): Record<string, string> => (user || password ? { authorization: `Basic ${Buffer.from(`${user ?? ''}:${password ?? ''}`).toString('base64')}` } : {});
+export const basic = (user: unknown, password: unknown): Record<string, string> =>
+  user || password ? { authorization: `Basic ${Buffer.from(`${user ?? ''}:${password ?? ''}`).toString('base64')}` } : {};

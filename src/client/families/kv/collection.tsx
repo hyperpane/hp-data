@@ -37,18 +37,41 @@ interface Row {
 function rowsOf(v: Coll, offset: number): { head: string[]; rows: Row[] } {
   switch (v.type) {
     case 'hash':
-      return { head: ['Field', 'Value'], rows: v.fields.map((f) => ({ id: f.field, cells: [f.field, f.value], save: (t) => ({ op: 'hset', field: f.field, value: t }), del: { what: `the field “${f.field}”`, op: { op: 'hdel', field: f.field } } })) };
+      return {
+        head: ['Field', 'Value'],
+        rows: v.fields.map((f) => ({
+          id: f.field,
+          cells: [f.field, f.value],
+          save: (t) => ({ op: 'hset', field: f.field, value: t }),
+          del: { what: `the field “${f.field}”`, op: { op: 'hdel', field: f.field } },
+        })),
+      };
     case 'list':
-      return { head: ['Index', 'Value'], rows: v.items.map((it, i) => ({ id: String(offset + i), cells: [String(offset + i), it], save: (t) => ({ op: 'lset', index: offset + i, value: t }), del: { what: `item ${offset + i}`, op: { op: 'lrem', index: offset + i } } })) };
+      return {
+        head: ['Index', 'Value'],
+        rows: v.items.map((it, i) => ({
+          id: String(offset + i),
+          cells: [String(offset + i), it],
+          save: (t) => ({ op: 'lset', index: offset + i, value: t }),
+          del: { what: `item ${offset + i}`, op: { op: 'lrem', index: offset + i } },
+        })),
+      };
     case 'set':
       return { head: ['Member'], rows: v.members.map((m) => ({ id: m, cells: [m], del: { what: `“${m}”`, op: { op: 'srem', member: m } } })) };
     case 'zset':
       return {
         head: ['Score', 'Member'],
-        rows: v.members.map((m) => ({ id: m.member, cells: [String(m.score), m.member], del: { what: `“${m.member}”`, op: { op: 'zrem', member: m.member } } })),
+        rows: v.members.map((m) => ({
+          id: m.member,
+          cells: [String(m.score), m.member],
+          del: { what: `“${m.member}”`, op: { op: 'zrem', member: m.member } },
+        })),
       };
     case 'stream':
-      return { head: ['ID', 'Fields'], rows: v.entries.map((e) => ({ id: e.id, cells: [e.id, JSON.stringify(e.fields)], del: { what: `entry ${e.id}`, op: { op: 'xdel', id: e.id } } })) };
+      return {
+        head: ['ID', 'Fields'],
+        rows: v.entries.map((e) => ({ id: e.id, cells: [e.id, JSON.stringify(e.fields)], del: { what: `entry ${e.id}`, op: { op: 'xdel', id: e.id } } })),
+      };
   }
 }
 
@@ -87,7 +110,15 @@ export function Collection(p: CollectionProps) {
             {rows.map((r) => (
               <tr key={r.id} className="group h-[22px] hover:bg-[var(--node-hover)]">
                 {r.cells.map((c, i) => (
-                  <td key={i} className={cn('truncate border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] px-2', i === 0 && head.length > 1 && 'text-[var(--node-muted)]')} title={c.length > 80 ? `${c.slice(0, 500)}…` : c} onDoubleClick={() => setOpen({ row: r, col: i })}>
+                  <td
+                    key={i}
+                    className={cn(
+                      'truncate border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] px-2',
+                      i === 0 && head.length > 1 && 'text-[var(--node-muted)]',
+                    )}
+                    title={c.length > 80 ? `${c.slice(0, 500)}…` : c}
+                    onDoubleClick={() => setOpen({ row: r, col: i })}
+                  >
                     {c}
                   </td>
                 ))}
@@ -127,7 +158,13 @@ export function Collection(p: CollectionProps) {
           value={open.row.cells[open.col]}
           onClose={() => setOpen(null)}
           copy={p.copy}
-          onSave={!p.readOnly && open.col === last && open.row.save ? (t) => void p.edit(open.row.save!(t)) : !p.readOnly && v.type === 'zset' && open.col === 0 ? (t) => void zscore(p, open.row.cells[1], t) : undefined}
+          onSave={
+            !p.readOnly && open.col === last && open.row.save
+              ? (t) => void p.edit(open.row.save!(t))
+              : !p.readOnly && v.type === 'zset' && open.col === 0
+                ? (t) => void zscore(p, open.row.cells[1], t)
+                : undefined
+          }
         />
       )}
     </div>
@@ -144,7 +181,11 @@ function zscore(p: CollectionProps, member: string, text: string) {
 function AddRow({ value: v, edit, fail }: { value: Coll; edit(op: KvEdit): Promise<boolean>; fail(m: string): void }) {
   const [a, setA] = useState('');
   const [b, setB] = useState('');
-  const clear = (ok: boolean) => ok && (setA(''), setB(''));
+  const clear = (ok: boolean) => {
+    if (!ok) return false;
+    setA('');
+    setB('');
+  };
   const submit = async (side?: 'lpush' | 'rpush') => {
     switch (v.type) {
       case 'hash':
@@ -174,7 +215,13 @@ function AddRow({ value: v, edit, fail }: { value: Coll; edit(op: KvEdit): Promi
       }
     }
   };
-  const ph: Record<Coll['type'], [string, string?]> = { hash: ['New field', 'Value'], list: ['New item'], set: ['New member'], zset: ['New member', 'Score'], stream: ['{"field": "value"}'] };
+  const ph: Record<Coll['type'], [string, string?]> = {
+    hash: ['New field', 'Value'],
+    list: ['New item'],
+    set: ['New member'],
+    zset: ['New member', 'Score'],
+    stream: ['{"field": "value"}'],
+  };
   const [pa, pb] = ph[v.type];
   return (
     <form
@@ -184,8 +231,22 @@ function AddRow({ value: v, edit, fail }: { value: Coll; edit(op: KvEdit): Promi
         void submit();
       }}
     >
-      <input className={cn(inputClass, 'h-6 min-w-0 flex-1 text-[11.5px]')} placeholder={pa} value={a} onChange={(e) => setA(e.target.value)} spellCheck={false} />
-      {pb && <input className={cn(inputClass, 'h-6 min-w-0 text-[11.5px]', v.type === 'zset' ? 'w-24' : 'flex-1')} placeholder={pb} value={b} onChange={(e) => setB(e.target.value)} spellCheck={false} />}
+      <input
+        className={cn(inputClass, 'h-6 min-w-0 flex-1 text-[11.5px]')}
+        placeholder={pa}
+        value={a}
+        onChange={(e) => setA(e.target.value)}
+        spellCheck={false}
+      />
+      {pb && (
+        <input
+          className={cn(inputClass, 'h-6 min-w-0 text-[11.5px]', v.type === 'zset' ? 'w-24' : 'flex-1')}
+          placeholder={pb}
+          value={b}
+          onChange={(e) => setB(e.target.value)}
+          spellCheck={false}
+        />
+      )}
       {v.type === 'list' ? (
         <>
           <NodeButton onClick={() => void submit('lpush')}>Push to the head</NodeButton>

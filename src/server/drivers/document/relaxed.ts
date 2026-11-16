@@ -288,7 +288,14 @@ export class Reader {
       case 'UUID':
         return { $uuid: args.length ? str() : crypto.randomUUID() };
       case 'BinData':
-        return { $binary: { base64: str(1), subType: Number(args[0] ?? 0).toString(16).padStart(2, '0') } };
+        return {
+          $binary: {
+            base64: str(1),
+            subType: Number(args[0] ?? 0)
+              .toString(16)
+              .padStart(2, '0'),
+          },
+        };
       case 'MinKey':
         return { $minKey: 1 };
       case 'MaxKey':
@@ -302,7 +309,7 @@ export class Reader {
 }
 
 /** An ObjectId's hex, as the shell makes one: the time, then random. */
-export function newObjectId(): string {
+function newObjectId(): string {
   const time = Math.floor(Date.now() / 1000)
     .toString(16)
     .padStart(8, '0');

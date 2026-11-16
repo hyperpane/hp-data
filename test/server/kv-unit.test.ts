@@ -143,10 +143,13 @@ describe('INFO', () => {
   test('fields and the keyspace', () => {
     const info = parseInfo('# Server\r\nredis_version:7.2.4\r\n\r\n# Keyspace\r\ndb0:keys=12,expires=1,avg_ttl=0\r\ndb3:keys=4,expires=0,avg_ttl=0\r\n');
     assert.equal(info.redis_version, '7.2.4');
-    assert.deepEqual([...keyspace(info)], [
-      [0, 12],
-      [3, 4],
-    ]);
+    assert.deepEqual(
+      [...keyspace(info)],
+      [
+        [0, 12],
+        [3, 4],
+      ],
+    );
   });
 });
 

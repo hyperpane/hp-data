@@ -21,10 +21,10 @@ export function unescapeXml(s: string): string {
     });
 }
 
-export const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
 /** The raw insides of every `<tag>` (namespaced or not, with attributes). */
-export function blocks(xml: string, tag: string): string[] {
+function blocks(xml: string, tag: string): string[] {
   const re = new RegExp(`<(?:[\\w-]+:)?${tag}(?:\\s[^>]*)?(?:/>|>([\\s\\S]*?)</(?:[\\w-]+:)?${tag}>)`, 'g');
   return [...xml.matchAll(re)].map((m) => m[1] ?? '');
 }
@@ -90,9 +90,11 @@ export function parseError(xml: string): { code?: string; message?: string; regi
   return { code: text(xml, 'Code'), message: text(xml, 'Message'), region: text(xml, 'Region') ?? text(xml, 'BucketRegion'), endpoint: text(xml, 'Endpoint') };
 }
 
-export const deleteBody = (keys: string[]) => `<?xml version="1.0" encoding="UTF-8"?><Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Quiet>true</Quiet>${keys.map((k) => `<Object><Key>${escapeXml(k)}</Key></Object>`).join('')}</Delete>`;
+export const deleteBody = (keys: string[]) =>
+  `<?xml version="1.0" encoding="UTF-8"?><Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Quiet>true</Quiet>${keys.map((k) => `<Object><Key>${escapeXml(k)}</Key></Object>`).join('')}</Delete>`;
 
-export const createBucketBody = (region: string) => `<?xml version="1.0" encoding="UTF-8"?><CreateBucketConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><LocationConstraint>${escapeXml(region)}</LocationConstraint></CreateBucketConfiguration>`;
+export const createBucketBody = (region: string) =>
+  `<?xml version="1.0" encoding="UTF-8"?><CreateBucketConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><LocationConstraint>${escapeXml(region)}</LocationConstraint></CreateBucketConfiguration>`;
 
 export const completeBody = (parts: { n: number; etag: string }[]) =>
   `<?xml version="1.0" encoding="UTF-8"?><CompleteMultipartUpload xmlns="http://s3.amazonaws.com/doc/2006-03-01/">${parts.map((p) => `<Part><PartNumber>${p.n}</PartNumber><ETag>${escapeXml(p.etag)}</ETag></Part>`).join('')}</CompleteMultipartUpload>`;

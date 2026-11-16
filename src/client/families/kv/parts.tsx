@@ -10,7 +10,10 @@ export function TypeBadge({ type, className }: { type: KeyType; className?: stri
   const t = TYPE_INFO[type] ?? TYPE_INFO.other;
   return (
     <span
-      className={cn('inline-flex h-[15px] w-[42px] flex-none items-center justify-center rounded-[3px] font-mono text-[9px] font-semibold tracking-wide', className)}
+      className={cn(
+        'inline-flex h-[15px] w-[42px] flex-none items-center justify-center rounded-[3px] font-mono text-[9px] font-semibold tracking-wide',
+        className,
+      )}
       style={{ color: t.color, background: `color-mix(in srgb, ${t.color} 16%, transparent)` }}
     >
       {t.label}
@@ -19,11 +22,33 @@ export function TypeBadge({ type, className }: { type: KeyType; className?: stri
 }
 
 /** A dialog over the view: a title, its fields, OK and Cancel. */
-export function Dialog({ title, children, ok, onOk, onClose, busy, wide }: { title: string; children: React.ReactNode; ok: string; onOk(): void; onClose(): void; busy?: boolean; wide?: boolean }) {
+export function Dialog({
+  title,
+  children,
+  ok,
+  onOk,
+  onClose,
+  busy,
+  wide,
+}: {
+  title: string;
+  children: React.ReactNode;
+  ok: string;
+  onOk(): void;
+  onClose(): void;
+  busy?: boolean;
+  wide?: boolean;
+}) {
   return (
-    <div className="absolute inset-0 z-40 flex items-start justify-center bg-black/40 p-6 pt-[10vh]" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="absolute inset-0 z-40 flex items-start justify-center bg-black/40 p-6 pt-[10vh]"
+      onPointerDown={(e) => e.target === e.currentTarget && onClose()}
+    >
       <form
-        className={cn('flex max-h-full flex-col overflow-hidden rounded-lg border border-[var(--node-border)] bg-[var(--node-bg)] shadow-2xl', wide ? 'w-[min(620px,100%)]' : 'w-[min(440px,100%)]')}
+        className={cn(
+          'flex max-h-full flex-col overflow-hidden rounded-lg border border-[var(--node-border)] bg-[var(--node-bg)] shadow-2xl',
+          wide ? 'w-[min(620px,100%)]' : 'w-[min(440px,100%)]',
+        )}
         onSubmit={(e) => {
           e.preventDefault();
           if (!busy) onOk();
@@ -58,7 +83,8 @@ export function Field({ label, children, help }: { label: string; children: Reac
   );
 }
 
-export const inputClass = 'h-7 rounded-[5px] border border-[var(--node-border)] bg-transparent px-2 font-mono text-[12px] text-[var(--node-fg)] outline-none focus:border-[var(--node-accent)]';
+export const inputClass =
+  'h-7 rounded-[5px] border border-[var(--node-border)] bg-transparent px-2 font-mono text-[12px] text-[var(--node-fg)] outline-none focus:border-[var(--node-accent)]';
 
 export function Muted({ children, error }: { children: React.ReactNode; error?: boolean }) {
   return <div className={cn('px-3 py-3 text-[11.5px]', error ? 'text-[#f85149]' : 'text-[var(--node-muted)]')}>{children}</div>;

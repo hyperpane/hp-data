@@ -11,7 +11,21 @@ import { Dialog, Field, inputClass } from './parts.tsx';
 
 type NewType = (typeof NEW_KEY_TYPES)[number];
 
-export function NewKey({ calls, api, stringsOnly, prefix, onClose, onCreated }: { calls: Calls; api: Api; stringsOnly: boolean; prefix: string; onClose(): void; onCreated(e: KeyEntry): void }) {
+export function NewKey({
+  calls,
+  api,
+  stringsOnly,
+  prefix,
+  onClose,
+  onCreated,
+}: {
+  calls: Calls;
+  api: Api;
+  stringsOnly: boolean;
+  prefix: string;
+  onClose(): void;
+  onCreated(e: KeyEntry): void;
+}) {
   const [type, setType] = useState<NewType>('string');
   const [name, setName] = useState(prefix);
   const [a, setA] = useState('');
@@ -65,7 +79,14 @@ export function NewKey({ calls, api, stringsOnly, prefix, onClose, onCreated }: 
     <Dialog title="New key" ok={busy ? 'Adding' : 'Add'} onOk={() => void create()} onClose={onClose} busy={busy}>
       {!stringsOnly && (
         <Field label="Type">
-          <Tabs variant="pills" label="Type" className="self-start" value={type} onValueChange={setType} items={NEW_KEY_TYPES.map((t) => ({ value: t, label: TYPE_NAMES[t] }))} />
+          <Tabs
+            variant="pills"
+            label="Type"
+            className="self-start"
+            value={type}
+            onValueChange={setType}
+            items={NEW_KEY_TYPES.map((t) => ({ value: t, label: TYPE_NAMES[t] }))}
+          />
         </Field>
       )}
       <Field label="Name">

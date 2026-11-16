@@ -51,7 +51,16 @@ export function rowsOf(pages: ListResult[], prefix: string, flat: boolean): Row[
   const rows: Row[] = [];
   for (const p of pages) {
     for (const f of p.prefixes) rows.push({ key: f, folder: true, name: nameOf(f), size: null, modified: null });
-    for (const o of p.objects) rows.push({ key: o.key, folder: false, name: flat ? o.key.slice(prefix.length) : nameOf(o.key), size: o.size, modified: o.modified, storageClass: o.storageClass, etag: o.etag });
+    for (const o of p.objects)
+      rows.push({
+        key: o.key,
+        folder: false,
+        name: flat ? o.key.slice(prefix.length) : nameOf(o.key),
+        size: o.size,
+        modified: o.modified,
+        storageClass: o.storageClass,
+        etag: o.etag,
+      });
   }
   return rows;
 }
@@ -72,13 +81,61 @@ export function sortRows(rows: Row[], s: Sort): Row[] {
         return 0;
     }
   };
-  return [...rows].sort((a, b) => (a.folder !== b.folder ? (a.folder ? -1 : 1) : by(a, b) || collator.compare(a.name, b.name) * (s.column === 'name' ? dir : 1)));
+  return [...rows].sort((a, b) =>
+    a.folder !== b.folder ? (a.folder ? -1 : 1) : by(a, b) || collator.compare(a.name, b.name) * (s.column === 'name' ? dir : 1),
+  );
 }
 
 const ext = (key: string) => /\.([a-z0-9]+)$/i.exec(key)?.[1].toLowerCase() ?? '';
 
 const IMAGE = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg']);
-const TEXT = new Set(['txt', 'md', 'markdown', 'csv', 'tsv', 'log', 'xml', 'html', 'htm', 'css', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'yaml', 'yml', 'toml', 'ini', 'conf', 'cfg', 'env', 'sh', 'py', 'rb', 'go', 'rs', 'java', 'kt', 'c', 'h', 'cpp', 'sql', 'graphql', 'proto', 'tf', 'json', 'jsonl', 'ndjson', 'geojson', 'map', 'svg', 'srt', 'vtt']);
+const TEXT = new Set([
+  'txt',
+  'md',
+  'markdown',
+  'csv',
+  'tsv',
+  'log',
+  'xml',
+  'html',
+  'htm',
+  'css',
+  'js',
+  'mjs',
+  'cjs',
+  'ts',
+  'tsx',
+  'jsx',
+  'yaml',
+  'yml',
+  'toml',
+  'ini',
+  'conf',
+  'cfg',
+  'env',
+  'sh',
+  'py',
+  'rb',
+  'go',
+  'rs',
+  'java',
+  'kt',
+  'c',
+  'h',
+  'cpp',
+  'sql',
+  'graphql',
+  'proto',
+  'tf',
+  'json',
+  'jsonl',
+  'ndjson',
+  'geojson',
+  'map',
+  'svg',
+  'srt',
+  'vtt',
+]);
 
 export type Shown = 'image' | 'json' | 'text' | 'unknown';
 
@@ -108,13 +165,30 @@ export function looksLikeText(bytes: Uint8Array): boolean {
 function trimPartial(b: Uint8Array): Uint8Array {
   let i = b.length - 1;
   let back = 0;
-  while (i >= 0 && back < 4 && (b[i] & 0xc0) === 0x80) (i--, back++);
+  while (i >= 0 && back < 4 && (b[i] & 0xc0) === 0x80) {
+    i--;
+    back++;
+  }
   return i >= 0 && b[i] >= 0xc0 ? b.subarray(0, i) : b;
 }
 
 /** A content type for a file put without one, by its name. */
 export function typeFor(name: string, given: string): string {
   if (given) return given;
-  const map: Record<string, string> = { json: 'application/json', md: 'text/markdown', csv: 'text/csv', txt: 'text/plain', log: 'text/plain', yaml: 'application/yaml', yml: 'application/yaml', svg: 'image/svg+xml', webp: 'image/webp', avif: 'image/avif', wasm: 'application/wasm', gz: 'application/gzip', parquet: 'application/vnd.apache.parquet' };
+  const map: Record<string, string> = {
+    json: 'application/json',
+    md: 'text/markdown',
+    csv: 'text/csv',
+    txt: 'text/plain',
+    log: 'text/plain',
+    yaml: 'application/yaml',
+    yml: 'application/yaml',
+    svg: 'image/svg+xml',
+    webp: 'image/webp',
+    avif: 'image/avif',
+    wasm: 'application/wasm',
+    gz: 'application/gzip',
+    parquet: 'application/vnd.apache.parquet',
+  };
   return map[ext(name)] ?? '';
 }

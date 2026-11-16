@@ -40,7 +40,7 @@ export function matches(m: Message, filter: string): boolean {
   if (!filter) return true;
   const f = filter.toLowerCase();
   if (m.value.toLowerCase().includes(f)) return true;
-  if (m.key && m.key.toLowerCase().includes(f)) return true;
+  if (m.key?.toLowerCase().includes(f)) return true;
   if (m.offset && m.offset === filter) return true;
   return Object.entries(m.headers ?? {}).some(([k, v]) => k.toLowerCase().includes(f) || v.toLowerCase().includes(f));
 }

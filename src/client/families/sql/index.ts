@@ -18,7 +18,14 @@ export const actions: TreeActions = ({ node, connection, kind, open, api }) => {
   if (!node) return [];
   const ref = node.open?.ref ?? {};
   const consoleIn = (database: string | undefined, text?: string, title?: string) =>
-    open({ key: `${connection.id}:console:${Date.now().toString(36)}`, type: 'console', conn: connection.id, ref: database ? { database } : {}, title: title ?? database ?? connection.name, state: text ? { text } : undefined });
+    open({
+      key: `${connection.id}:console:${Date.now().toString(36)}`,
+      type: 'console',
+      conn: connection.id,
+      ref: database ? { database } : {},
+      title: title ?? database ?? connection.name,
+      state: text ? { text } : undefined,
+    });
   if (node.type === 'database') return [{ label: 'New Console Here', run: () => consoleIn(node.name) }];
   if (node.type === 'table' || node.type === 'view') {
     const name = qualified(dialectOf(kind.engine), { database: ref.database, schema: ref.schema, table: ref.table ?? node.name });
@@ -31,4 +38,3 @@ export const actions: TreeActions = ({ node, connection, kind, open, api }) => {
   }
   return [];
 };
-

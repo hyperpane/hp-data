@@ -28,7 +28,9 @@ export const actions: TreeActions = (c) => {
   const name = node.label ?? node.name;
   const etcd = c.kind.engine === 'etcd';
   return [
-    keys && !c.readOnly ? { label: 'New Key', run: () => c.open({ type: 'keys', conn: c.connection.id, ref: keys.ref, title: keys.title, state: { newKey: true } }) } : null,
+    keys && !c.readOnly
+      ? { label: 'New Key', run: () => c.open({ type: 'keys', conn: c.connection.id, ref: keys.ref, title: keys.title, state: { newKey: true } }) }
+      : null,
     { label: 'Open Console', run: () => c.open(consoleTab(c, database)) },
     ...(c.readOnly
       ? []
@@ -40,9 +42,22 @@ export const actions: TreeActions = (c) => {
             run: () =>
               void (async () => {
                 const what = etcd ? 'every key in this etcd' : `every key in ${name}${node.detail ? ` (${node.detail})` : ''}`;
-                if (!(await c.api.confirm(etcd ? 'Delete every key?' : `Flush ${name}?`, `This removes ${what}, on ${c.connection.name}. It can’t be undone.`, etcd ? 'Delete every key' : 'Flush', true))) return;
+                if (
+                  !(await c.api.confirm(
+                    etcd ? 'Delete every key?' : `Flush ${name}?`,
+                    `This removes ${what}, on ${c.connection.name}. It can’t be undone.`,
+                    etcd ? 'Delete every key' : 'Flush',
+                    true,
+                  ))
+                )
+                  return;
                 try {
-                  const r = await c.api.call<{ reply: KvReply }>('kvCommand', { id: c.connection.id, project: c.project ?? undefined, db: database, line: etcd ? 'del --prefix ""' : 'FLUSHDB' });
+                  const r = await c.api.call<{ reply: KvReply }>('kvCommand', {
+                    id: c.connection.id,
+                    project: c.project ?? undefined,
+                    db: database,
+                    line: etcd ? 'del --prefix ""' : 'FLUSHDB',
+                  });
                   if (r.reply.error) throw new Error(r.reply.text.replace(/^\(error\)\s*/, ''));
                   c.api.toast(etcd ? 'Every key is deleted' : `${name} is empty`);
                   c.refresh();

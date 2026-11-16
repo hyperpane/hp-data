@@ -21,7 +21,10 @@ export function withTimeout<T>(p: Promise<T>, seconds: number): Promise<T> {
   return Promise.race([
     p,
     new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new PluginError(`It didn’t answer in ${s} seconds: check the host, the port and the network (or give it longer under Options).`)), s * 1000);
+      timer = setTimeout(
+        () => reject(new PluginError(`It didn’t answer in ${s} seconds: check the host, the port and the network (or give it longer under Options).`)),
+        s * 1000,
+      );
     }),
   ]).finally(() => clearTimeout(timer));
 }
@@ -34,7 +37,8 @@ export function targetOf(kind: Kind, v: Values): { host: string; port: number } 
     const u = new URL(String(v.url ?? ''));
     return { host: u.hostname.replace(/^\[|\]$/g, ''), port: Number(u.port || (u.protocol === 'https:' ? 443 : 80)) };
   }
-  if (kind.engine === 'mongodb' && v.uri) throw new PluginError('An SSH tunnel goes to the host and port fields: clear the connection string under Options, or connect without SSH.');
+  if (kind.engine === 'mongodb' && v.uri)
+    throw new PluginError('An SSH tunnel goes to the host and port fields: clear the connection string under Options, or connect without SSH.');
   const port = Number(v.port ?? kind.fields.find((f) => f.key === 'port')?.default ?? 0);
   return { host: String(v.host || 'localhost'), port };
 }
@@ -116,7 +120,10 @@ export class Sessions {
   /** The session's driver, as its family's. */
   async family<F extends Family>(id: string, family: F, project: string | null = null): Promise<Extract<Driver, { family: F }>> {
     const d = await this.get(id, project);
-    if (d.family !== family) throw new PluginError(`That connection doesn’t have ${family === 'sql' ? 'tables' : family === 'kv' ? 'keys' : family === 'document' ? 'collections' : family === 'queue' ? 'queues' : 'buckets'}.`);
+    if (d.family !== family)
+      throw new PluginError(
+        `That connection doesn’t have ${family === 'sql' ? 'tables' : family === 'kv' ? 'keys' : family === 'document' ? 'collections' : family === 'queue' ? 'queues' : 'buckets'}.`,
+      );
     return d as Extract<Driver, { family: F }>;
   }
 
@@ -134,7 +141,12 @@ export class Sessions {
           throw e;
         }
         const minutes = values.idleMinutes === undefined || values.idleMinutes === '' ? null : Number(values.idleMinutes);
-        const open: Open = { driver, info: { ...info, at: Date.now() }, used: Date.now(), idleMs: minutes === null || !Number.isFinite(minutes) ? (this.#o.idleMs ?? 15 * 60_000) : minutes * 60_000 };
+        const open: Open = {
+          driver,
+          info: { ...info, at: Date.now() },
+          used: Date.now(),
+          idleMs: minutes === null || !Number.isFinite(minutes) ? (this.#o.idleMs ?? 15 * 60_000) : minutes * 60_000,
+        };
         this.#open.set(id, open);
         this.#o.log(`connected: ${connection.name} (${info.version})`);
         void this.#registry.touch(id).catch(() => {});

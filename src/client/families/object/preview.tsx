@@ -20,9 +20,25 @@ interface Read {
   truncated: boolean;
 }
 
-type Content = { kind: 'image'; url: string } | { kind: 'json'; value: unknown; text: string } | { kind: 'text'; text: string; truncated: boolean } | { kind: 'none'; why: string };
+type Content =
+  | { kind: 'image'; url: string }
+  | { kind: 'json'; value: unknown; text: string }
+  | { kind: 'text'; text: string; truncated: boolean }
+  | { kind: 'none'; why: string };
 
-export function Preview({ where, objectKey, onDownload, onLink, className }: { where: Where; objectKey: string; onDownload(): void; onLink(e: React.MouseEvent): void; className?: string }) {
+export function Preview({
+  where,
+  objectKey,
+  onDownload,
+  onLink,
+  className,
+}: {
+  where: Where;
+  objectKey: string;
+  onDownload(): void;
+  onLink(e: React.MouseEvent): void;
+  className?: string;
+}) {
   const [head, setHead] = useState<ObjectDetails | null>(null);
   const [content, setContent] = useState<Content | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +61,11 @@ export function Preview({ where, objectKey, onDownload, onLink, className }: { w
       const r = await api.call<Read>('objRead', { ...base, limit: shown === 'image' ? IMAGE_MAX : PREVIEW_BYTES });
       if (!live) return;
       if (shown === 'image') {
-        blobUrl = URL.createObjectURL(new Blob([r.bytes as Uint8Array<ArrayBuffer>], { type: h.contentType?.startsWith('image/') ? h.contentType : objectKey.toLowerCase().endsWith('.svg') ? 'image/svg+xml' : '' }));
+        blobUrl = URL.createObjectURL(
+          new Blob([r.bytes as Uint8Array<ArrayBuffer>], {
+            type: h.contentType?.startsWith('image/') ? h.contentType : objectKey.toLowerCase().endsWith('.svg') ? 'image/svg+xml' : '',
+          }),
+        );
         return setContent({ kind: 'image', url: blobUrl });
       }
       if (shown === 'unknown' && !looksLikeText(r.bytes)) return setContent({ kind: 'none', why: 'No preview' });

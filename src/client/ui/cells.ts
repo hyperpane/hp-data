@@ -3,7 +3,8 @@
 
 import type { Cell, Column } from '../../shared/types.ts';
 
-export const isBytes = (c: Cell): c is { $bytes: string; size: number } => !!c && typeof c === 'object' && !Array.isArray(c) && typeof (c as { $bytes?: unknown }).$bytes === 'string';
+export const isBytes = (c: Cell): c is { $bytes: string; size: number } =>
+  !!c && typeof c === 'object' && !Array.isArray(c) && typeof (c as { $bytes?: unknown }).$bytes === 'string';
 
 export function formatSize(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -51,7 +52,10 @@ export function editable(c: Cell): string {
  * column, JSON for a json one, text else. */
 export function parseInput(text: string, col: Column | undefined, was: Cell): Cell {
   const t = (col?.type ?? '').toLowerCase();
-  if (typeof was === 'number' || /^(int|integer|smallint|bigint|tinyint|mediumint|serial|bigserial|smallserial|int[248]|float[48]?|double|real|decimal|numeric|number)/.test(t)) {
+  if (
+    typeof was === 'number' ||
+    /^(int|integer|smallint|bigint|tinyint|mediumint|serial|bigserial|smallserial|int[248]|float[48]?|double|real|decimal|numeric|number)/.test(t)
+  ) {
     const n = Number(text.trim());
     if (text.trim() !== '' && Number.isFinite(n) && (!/bigint|int8|numeric|decimal/.test(t) || Number.isSafeInteger(n))) return n;
     return text;
@@ -87,7 +91,11 @@ export function rowsAs(format: CopyFormat, columns: Column[], rows: Cell[][], ta
       );
     case 'markdown': {
       const esc = (s: string) => s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
-      return [`| ${columns.map((c) => esc(c.name)).join(' | ')} |`, `| ${columns.map(() => '---').join(' | ')} |`, ...rows.map((r) => `| ${r.map((c) => esc(plain(c))).join(' | ')} |`)].join('\n');
+      return [
+        `| ${columns.map((c) => esc(c.name)).join(' | ')} |`,
+        `| ${columns.map(() => '---').join(' | ')} |`,
+        ...rows.map((r) => `| ${r.map((c) => esc(plain(c))).join(' | ')} |`),
+      ].join('\n');
     }
     case 'insert':
       return rows.map((r) => `INSERT INTO ${table} (${columns.map((c) => c.name).join(', ')}) VALUES (${r.map(sqlLiteral).join(', ')});`).join('\n');
@@ -96,7 +104,7 @@ export function rowsAs(format: CopyFormat, columns: Column[], rows: Cell[][], ta
   }
 }
 
-export function sqlLiteral(c: Cell): string {
+function sqlLiteral(c: Cell): string {
   if (c === null) return 'NULL';
   if (typeof c === 'number') return String(c);
   if (typeof c === 'boolean') return c ? 'TRUE' : 'FALSE';

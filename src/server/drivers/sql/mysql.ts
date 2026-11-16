@@ -22,7 +22,7 @@ const TYPE_NAMES = new Map<number, string>(
     .map(([k, v]) => [Number(k), String(v).toLowerCase()]),
 );
 
-export function myError(e: unknown, where: string): Error {
+function myError(e: unknown, where: string): Error {
   const err = e as Error & { code?: string; errno?: number; sqlMessage?: string };
   const say: Record<string, string> = {
     ER_ACCESS_DENIED_ERROR: 'The user or password is wrong (or that user may not sign in from here).',
@@ -41,7 +41,7 @@ export function myError(e: unknown, where: string): Error {
 type Row = Record<string, unknown>;
 export type MyQuery = <R = Row>(sql: string, params?: unknown[]) => Promise<R[]>;
 
-export const mysqlDriver = (ctx: DriverContext): SqlDriver => {
+const mysqlDriver = (ctx: DriverContext): SqlDriver => {
   const v = ctx.values;
   const where = `${v.host}:${v.port ?? 3306}`;
   const home = String(v.database ?? '');
@@ -66,9 +66,13 @@ export const mysqlDriver = (ctx: DriverContext): SqlDriver => {
     ...(Number(v.queryTimeout) > 0 ? [`SET SESSION max_execution_time = ${Math.round(Number(v.queryTimeout) * 1000)}`] : []),
     ...splitStatements(String(v.initSql ?? '')),
   ];
-  if (init.length) (pool as unknown as { pool: { on(e: string, f: (c: { query(sql: string, cb: (e: Error | null) => void): void }) => void): void } }).pool.on('connection', (c) => {
-    for (const s of init) c.query(s, (e) => e && ctx.log(`run on connect: ${e.message}`));
-  });
+  if (init.length)
+    (pool as unknown as { pool: { on(e: string, f: (c: { query(sql: string, cb: (e: Error | null) => void): void }) => void): void } }).pool.on(
+      'connection',
+      (c) => {
+        for (const s of init) c.query(s, (e) => e && ctx.log(`run on connect: ${e.message}`));
+      },
+    );
   let own: { conn: mysql.Connection; busy: Promise<unknown>; db: string } | null = null;
 
   const q: MyQuery = async <R = Row>(sql: string, params: unknown[] = []) => {
@@ -81,7 +85,11 @@ export const mysqlDriver = (ctx: DriverContext): SqlDriver => {
   };
 
   const columnsOf = (fields: mysql.FieldPacket[] | undefined): Column[] =>
-    (fields ?? []).map((f) => ({ name: f.name, type: TYPE_NAMES.get(f.columnType ?? f.type ?? -1) ?? undefined, key: ((f.flags as number) & 2) !== 0 || undefined }));
+    (fields ?? []).map((f) => ({
+      name: f.name,
+      type: TYPE_NAMES.get(f.columnType ?? f.type ?? -1) ?? undefined,
+      key: ((f.flags as number) & 2) !== 0 || undefined,
+    }));
 
   async function consoleConn(database: string) {
     if (!own) {
@@ -106,10 +114,17 @@ export const mysqlDriver = (ctx: DriverContext): SqlDriver => {
 
   async function runOne(conn: mysql.Connection, statement: string, limit: number): Promise<QueryResult> {
     const t0 = performance.now();
-    const wrap = readsOnly(statement) && ['SELECT', 'WITH'].includes(verb(statement)) && !/\blimit\s+\d+(\s*,\s*\d+|\s+offset\s+\d+)?\s*$/i.test(statement) && !/\binto\s+(outfile|dumpfile|@)/i.test(statement);
+    const wrap =
+      readsOnly(statement) &&
+      ['SELECT', 'WITH'].includes(verb(statement)) &&
+      !/\blimit\s+\d+(\s*,\s*\d+|\s+offset\s+\d+)?\s*$/i.test(statement) &&
+      !/\binto\s+(outfile|dumpfile|@)/i.test(statement);
     let res: [unknown, mysql.FieldPacket[] | undefined];
     try {
-      res = (await conn.query({ sql: wrap ? `SELECT * FROM (${statement}) AS hp_data LIMIT ${limit + 1}` : statement, rowsAsArray: true })) as [unknown, mysql.FieldPacket[]];
+      res = (await conn.query({ sql: wrap ? `SELECT * FROM (${statement}) AS hp_data LIMIT ${limit + 1}` : statement, rowsAsArray: true })) as [
+        unknown,
+        mysql.FieldPacket[],
+      ];
     } catch (e) {
       if (!wrap || (e as { code?: string }).code === 'ER_QUERY_INTERRUPTED') throw e;
       res = (await conn.query({ sql: statement, rowsAsArray: true })) as [unknown, mysql.FieldPacket[]];
@@ -117,10 +132,26 @@ export const mysqlDriver = (ctx: DriverContext): SqlDriver => {
     const [rows, fields] = res;
     if (Array.isArray(rows) && fields) {
       const c = cap(rows as unknown[][], limit);
-      return { statement, columns: columnsOf(fields), rows: c.rows.map((r) => r.map(toCell)), command: `${verb(statement)} ${c.rows.length}`, affected: null, ms: since(t0), truncated: c.truncated };
+      return {
+        statement,
+        columns: columnsOf(fields),
+        rows: c.rows.map((r) => r.map(toCell)),
+        command: `${verb(statement)} ${c.rows.length}`,
+        affected: null,
+        ms: since(t0),
+        truncated: c.truncated,
+      };
     }
     const h = rows as mysql.ResultSetHeader;
-    return { statement, columns: [], rows: [], command: `${verb(statement)} ${h.affectedRows ?? ''}`.trim(), affected: h.affectedRows ?? null, ms: since(t0), notices: h.info ? [h.info] : undefined };
+    return {
+      statement,
+      columns: [],
+      rows: [],
+      command: `${verb(statement)} ${h.affectedRows ?? ''}`.trim(),
+      affected: h.affectedRows ?? null,
+      ms: since(t0),
+      notices: h.info ? [h.info] : undefined,
+    };
   }
 
   const cancel = async (conn: mysql.Connection) => {
@@ -210,7 +241,8 @@ export const mysqlDriver = (ctx: DriverContext): SqlDriver => {
           const [h] = (await conn.query(s.sql, s.params)) as [mysql.ResultSetHeader, unknown];
           // MySQL counts an UPDATE to the same value as 0 changed: matched rows are what count.
           const matched = /^UPDATE/.test(s.sql) ? Number(/Rows matched: (\d+)/.exec(h.info ?? '')?.[1] ?? h.affectedRows) : h.affectedRows;
-          if (!/^INSERT/.test(s.sql) && matched === 0) throw new PluginError('A row was changed or removed by someone else since it was read: refresh, and make the change again.');
+          if (!/^INSERT/.test(s.sql) && matched === 0)
+            throw new PluginError('A row was changed or removed by someone else since it was read: refresh, and make the change again.');
           affected += h.affectedRows;
         }
         await conn.commit();

@@ -40,7 +40,12 @@ function isLight(hex: string): boolean {
 
 export function ErrorBox({ error, onClose, className }: { error: string; onClose?(): void; className?: string }) {
   return (
-    <div className={cn('flex items-start gap-2 border-l-2 border-[#f85149] bg-[color-mix(in_srgb,#f85149_10%,transparent)] px-3 py-2 font-mono text-[11.5px] whitespace-pre-wrap text-[var(--node-fg)] select-text', className)}>
+    <div
+      className={cn(
+        'flex items-start gap-2 border-l-2 border-[#f85149] bg-[color-mix(in_srgb,#f85149_10%,transparent)] px-3 py-2 font-mono text-[11.5px] whitespace-pre-wrap text-[var(--node-fg)] select-text',
+        className,
+      )}
+    >
       <span className="min-w-0 flex-1">{error}</span>
       {onClose && (
         <button type="button" aria-label="Dismiss" className="text-[var(--node-muted)] hover:text-[var(--node-fg)]" onClick={onClose}>
@@ -52,7 +57,19 @@ export function ErrorBox({ error, onClose, className }: { error: string; onClose
 }
 
 /** A cell's whole value, over the view: text, pretty JSON, or bytes. */
-export function ValueViewer({ title, value, onClose, copy, onSave }: { title: string; value: Cell; onClose(): void; copy(text: string, what?: string): void; onSave?(text: string): void }) {
+export function ValueViewer({
+  title,
+  value,
+  onClose,
+  copy,
+  onSave,
+}: {
+  title: string;
+  value: Cell;
+  onClose(): void;
+  copy(text: string, what?: string): void;
+  onSave?(text: string): void;
+}) {
   const text = value === null ? '' : editable(value);
   const [draft, setDraft] = useState(text);
   useEffect(() => setDraft(text), [text]);
@@ -61,11 +78,19 @@ export function ValueViewer({ title, value, onClose, copy, onSave }: { title: st
       <div className="flex max-h-full w-[min(720px,100%)] flex-col overflow-hidden rounded-lg border border-[var(--node-border)] bg-[var(--node-bg)] shadow-2xl">
         <div className="flex h-9 flex-none items-center gap-2 border-b border-[var(--node-border)] px-3">
           <span className="truncate font-medium">{title}</span>
-          <span className="text-[10.5px] text-[var(--node-muted)]">{value === null ? 'NULL' : isBytes(value) ? formatSize(value.size) : `${text.length.toLocaleString()} characters`}</span>
+          <span className="text-[10.5px] text-[var(--node-muted)]">
+            {value === null ? 'NULL' : isBytes(value) ? formatSize(value.size) : `${text.length.toLocaleString()} characters`}
+          </span>
           <div className="ml-auto flex gap-1">
             <NodeButton onClick={() => copy(draft, 'the value')}>Copy</NodeButton>
             {onSave && (
-              <NodeButton disabled={draft === text} onClick={() => (onSave(draft), onClose())}>
+              <NodeButton
+                disabled={draft === text}
+                onClick={() => {
+                  onSave(draft);
+                  onClose();
+                }}
+              >
                 Apply
               </NodeButton>
             )}

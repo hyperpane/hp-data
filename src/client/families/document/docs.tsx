@@ -14,7 +14,21 @@ export interface DocActions {
   remove(i: number): void;
 }
 
-export function DocList({ docs, mongo, readOnly, actions, offset, expandAll }: { docs: unknown[]; mongo: boolean; readOnly: boolean; actions: DocActions; offset: number; expandAll: number }) {
+export function DocList({
+  docs,
+  mongo,
+  readOnly,
+  actions,
+  offset,
+  expandAll,
+}: {
+  docs: unknown[];
+  mongo: boolean;
+  readOnly: boolean;
+  actions: DocActions;
+  offset: number;
+  expandAll: number;
+}) {
   const [open, setOpen] = useState<Set<number>>(new Set());
   const menu = useMenu();
   useEffect(() => setOpen(new Set()), [docs]);
@@ -38,7 +52,10 @@ export function DocList({ docs, mongo, readOnly, actions, offset, expandAll }: {
         return (
           <div key={i} className="border-b border-[var(--node-border)]" onContextMenu={(e) => menu.open(e, items(i))}>
             <div
-              className={cn('group flex h-[26px] cursor-default items-center gap-1 pr-1 pl-1 font-mono text-[11.5px] hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]', isOpen && 'bg-[color-mix(in_srgb,var(--node-fg)_3%,transparent)]')}
+              className={cn(
+                'group flex h-[26px] cursor-default items-center gap-1 pr-1 pl-1 font-mono text-[11.5px] hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
+                isOpen && 'bg-[color-mix(in_srgb,var(--node-fg)_3%,transparent)]',
+              )}
               onClick={() =>
                 setOpen((s) => {
                   const n = new Set(s);

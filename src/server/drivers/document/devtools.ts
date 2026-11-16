@@ -50,7 +50,8 @@ export function parseDevTools(text: string): DevRequest[] {
   });
 }
 
-const READS = /\/_(search|count|msearch|mget|analyze|explain|validate|field_caps|sql|ppl|render|termvectors|mtermvectors|search_shards|rank_eval|knn_search|eql\/search)\b/;
+const READS =
+  /\/_(search|count|msearch|mget|analyze|explain|validate|field_caps|sql|ppl|render|termvectors|mtermvectors|search_shards|rank_eval|knn_search|eql\/search)\b/;
 
 /** One of them changes something (as far as can be told). */
 export function devToolsWrites(text: string): boolean {

@@ -33,6 +33,13 @@ export const actions: TreeActions = (c) => {
   const bucket = c.node.name;
   return [
     { label: 'Copy s3:// URL', run: () => c.api.copy(s3Uri(bucket), 'the s3:// URL') },
-    ...(c.kind.id === 's3' ? [{ label: 'Copy AWS Console Link', run: () => c.api.copy(`https://s3.console.aws.amazon.com/s3/buckets/${encodeURIComponent(bucket)}`, 'the console link') }] : []),
+    ...(c.kind.id === 's3'
+      ? [
+          {
+            label: 'Copy AWS Console Link',
+            run: () => c.api.copy(`https://s3.console.aws.amazon.com/s3/buckets/${encodeURIComponent(bucket)}`, 'the console link'),
+          },
+        ]
+      : []),
   ];
 };

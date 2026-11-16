@@ -25,13 +25,20 @@ interface CatIndex {
   status?: string;
 }
 
-const formatSize = (n: number) => (n < 1024 ? `${n} B` : n < 1024 ** 2 ? `${(n / 1024).toFixed(1)} KB` : n < 1024 ** 3 ? `${(n / 1024 ** 2).toFixed(1)} MB` : `${(n / 1024 ** 3).toFixed(1)} GB`);
+const formatSize = (n: number) =>
+  n < 1024 ? `${n} B` : n < 1024 ** 2 ? `${(n / 1024).toFixed(1)} KB` : n < 1024 ** 3 ? `${(n / 1024 ** 2).toFixed(1)} MB` : `${(n / 1024 ** 3).toFixed(1)} GB`;
 
 function indexNode(i: CatIndex): TreeNode {
   const docs = i['docs.count'] ? Number(i['docs.count']).toLocaleString('en-US') : null;
   const size = i['store.size'] ? formatSize(Number(i['store.size'])) : null;
   const detail = [i.status === 'close' ? 'closed' : docs, size, i.health && i.health !== 'green' ? i.health : null].filter(Boolean).join(' · ');
-  return { name: i.index, type: 'collection', detail: detail || undefined, leaf: true, open: { tab: 'collection', ref: { collection: i.index }, title: i.index } };
+  return {
+    name: i.index,
+    type: 'collection',
+    detail: detail || undefined,
+    leaf: true,
+    open: { tab: 'collection', ref: { collection: i.index }, title: i.index },
+  };
 }
 
 /** The sort as typed: JSON (`{"@timestamp": "desc"}`, `[…]`) or
@@ -47,11 +54,14 @@ export function parseSort(text: string | undefined): unknown {
 }
 
 /** The fields to return as typed: JSON, or names by commas. */
-export function parseSource(text: string | undefined): unknown {
+function parseSource(text: string | undefined): unknown {
   const t = (text ?? '').trim();
   if (!t) return undefined;
   if (/^[[{]/.test(t)) return parseRelaxed(t);
-  return t.split(',').map((s) => s.trim()).filter(Boolean);
+  return t
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 /** The search's body from the filter: a whole body ({query, aggs…}), a
@@ -80,7 +90,8 @@ export const elasticsearch: Factory = (ctx) => {
   const headers: Record<string, string> = v.apiKey ? { authorization: `ApiKey ${v.apiKey}` } : basic(v.user, v.password);
   const insecure = !!v.insecure;
   const tlsOpts = tlsOf(v);
-  const call = <T = any>(method: string, path: string, body?: unknown, signal?: AbortSignal) => json<T>({ method, url: base + path, headers, json: body, insecure, tls: tlsOpts, signal, timeout: 60_000 });
+  const call = <T = unknown>(method: string, path: string, body?: unknown, signal?: AbortSignal) =>
+    json<T>({ method, url: base + path, headers, json: body, insecure, tls: tlsOpts, signal, timeout: 60_000 });
   const idx = (ref: Ref) => {
     if (!ref.collection) throw new PluginError('Pick an index.');
     return encodeURIComponent(ref.collection);
@@ -115,7 +126,13 @@ export const elasticsearch: Factory = (ctx) => {
         for (const a of aliases) if (!a.alias.startsWith('.')) by.set(a.alias, [...(by.get(a.alias) ?? []), a.index]);
         return [...by]
           .sort(([a], [b]) => a.localeCompare(b))
-          .map(([alias, indices]) => ({ name: alias, type: 'collection' as const, detail: `→ ${indices.join(', ')}`, leaf: true, open: { tab: 'collection' as const, ref: { collection: alias }, title: alias } }));
+          .map(([alias, indices]) => ({
+            name: alias,
+            type: 'collection' as const,
+            detail: `→ ${indices.join(', ')}`,
+            leaf: true,
+            open: { tab: 'collection' as const, ref: { collection: alias }, title: alias },
+          }));
       }
       return [];
     },
@@ -127,21 +144,35 @@ export const elasticsearch: Factory = (ctx) => {
       if (sort !== undefined) body.sort = sort;
       const source = parseSource(r.projection);
       if (source !== undefined) body._source = source;
-      const res = await call<{ hits: { total?: { value: number } | number; hits: { _id: string; _index: string; _source?: Record<string, unknown>; fields?: Record<string, unknown> }[] }; aggregations?: unknown }>(
-        'POST',
-        `/${idx(r.ref)}/_search`,
-        body,
-        signal,
-      );
+      const res = await call<{
+        hits: {
+          total?: { value: number } | number;
+          hits: { _id: string; _index: string; _source?: Record<string, unknown>; fields?: Record<string, unknown> }[];
+        };
+        aggregations?: unknown;
+      }>('POST', `/${idx(r.ref)}/_search`, body, signal);
       const total = typeof res.hits.total === 'number' ? res.hits.total : (res.hits.total?.value ?? null);
-      const docs = res.hits.hits.map((h) => ({ _id: h._id, ...(h._index !== r.ref.collection ? { _index: h._index } : {}), ...(h._source ?? {}), ...(h.fields && !h._source ? { fields: h.fields } : {}) }));
-      const result: DocFindResult = { docs, total, ms: since(t0), idFields: ['_id'], query: `POST /${r.ref.collection}/_search\n${JSON.stringify(body, null, 2)}` };
+      const docs = res.hits.hits.map((h) => ({
+        _id: h._id,
+        ...(h._index !== r.ref.collection ? { _index: h._index } : {}),
+        ...(h._source ?? {}),
+        ...(h.fields && !h._source ? { fields: h.fields } : {}),
+      }));
+      const result: DocFindResult = {
+        docs,
+        total,
+        ms: since(t0),
+        idFields: ['_id'],
+        query: `POST /${r.ref.collection}/_search\n${JSON.stringify(body, null, 2)}`,
+      };
       return result;
     },
 
     async insert(ref, doc) {
       const { id, source } = strip(doc);
-      const r = id ? await call<{ _id: string }>('PUT', `/${idx(ref)}/_create/${encodeURIComponent(id)}?refresh=true`, source) : await call<{ _id: string }>('POST', `/${idx(ref)}/_doc?refresh=true`, source);
+      const r = id
+        ? await call<{ _id: string }>('PUT', `/${idx(ref)}/_create/${encodeURIComponent(id)}?refresh=true`, source)
+        : await call<{ _id: string }>('POST', `/${idx(ref)}/_doc?refresh=true`, source);
       return { _id: r._id };
     },
 
@@ -156,8 +187,15 @@ export const elasticsearch: Factory = (ctx) => {
 
     async remove(ref, ids) {
       if (!ids.length) return 0;
-      const lines = ids.map((i) => JSON.stringify({ delete: { _index: typeof i._index === 'string' ? i._index : ref.collection, _id: String(i._id) } })).join('\n') + '\n';
-      const res = await request({ method: 'POST', url: `${base}/_bulk?refresh=true`, headers: { ...headers, 'content-type': 'application/x-ndjson', accept: 'application/json' }, body: lines, insecure, tls: tlsOpts });
+      const lines = `${ids.map((i) => JSON.stringify({ delete: { _index: typeof i._index === 'string' ? i._index : ref.collection, _id: String(i._id) } })).join('\n')}\n`;
+      const res = await request({
+        method: 'POST',
+        url: `${base}/_bulk?refresh=true`,
+        headers: { ...headers, 'content-type': 'application/x-ndjson', accept: 'application/json' },
+        body: lines,
+        insecure,
+        tls: tlsOpts,
+      });
       const text = res.body.toString('utf8');
       if (res.status >= 400) throw new PluginError(statusError(res.status, text));
       const r = JSON.parse(text) as { items: { delete: { result?: string; status: number } }[] };
@@ -171,7 +209,11 @@ export const elasticsearch: Factory = (ctx) => {
         const res = await request({
           method: req.method,
           url: base + req.path,
-          headers: { ...headers, accept: 'application/json, text/plain;q=0.9', ...(req.body ? { 'content-type': req.ndjson ? 'application/x-ndjson' : 'application/json' } : {}) },
+          headers: {
+            ...headers,
+            accept: 'application/json, text/plain;q=0.9',
+            ...(req.body ? { 'content-type': req.ndjson ? 'application/x-ndjson' : 'application/json' } : {}),
+          },
           body: req.body ?? null,
           insecure,
           tls: tlsOpts,

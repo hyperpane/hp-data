@@ -33,7 +33,8 @@ export function toCell(v: unknown): Cell {
 
 /** A cell as a value to bind: bytes back to a Buffer. */
 export function fromCell(c: Cell): unknown {
-  if (c && typeof c === 'object' && !Array.isArray(c) && typeof (c as { $bytes?: unknown }).$bytes === 'string') return Buffer.from((c as { $bytes: string }).$bytes, 'base64');
+  if (c && typeof c === 'object' && !Array.isArray(c) && typeof (c as { $bytes?: unknown }).$bytes === 'string')
+    return Buffer.from((c as { $bytes: string }).$bytes, 'base64');
   if (c && typeof c === 'object') return JSON.stringify(c);
   return c;
 }

@@ -49,12 +49,12 @@ export function oldest(all: Message[], limit: number): Message[] {
   return sortByTime(all).slice(0, limit);
 }
 
-export function sortByTime(all: Message[]): Message[] {
+function sortByTime(all: Message[]): Message[] {
   return [...all].sort((a, b) => (a.at ?? 0) - (b.at ?? 0) || (a.partition ?? 0) - (b.partition ?? 0) || cmpOffset(a.offset, b.offset));
 }
 
 /** Offsets are 64-bit: compared as big integers. */
-export function cmpOffset(a: string | undefined, b: string | undefined): number {
+function cmpOffset(a: string | undefined, b: string | undefined): number {
   if (a === b) return 0;
   if (a === undefined) return -1;
   if (b === undefined) return 1;

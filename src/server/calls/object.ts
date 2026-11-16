@@ -49,7 +49,15 @@ export function object(d: Deps): Group {
     calls: {
       objList: async (req: Req & Partial<ListRequest>, ctx) => {
         const o = await driver(req);
-        return o.list({ bucket: str(req.bucket, 'bucket'), prefix: typeof req.prefix === 'string' ? req.prefix : '', token: typeof req.token === 'string' ? req.token : undefined, flat: req.flat === true }, ctx.signal);
+        return o.list(
+          {
+            bucket: str(req.bucket, 'bucket'),
+            prefix: typeof req.prefix === 'string' ? req.prefix : '',
+            token: typeof req.token === 'string' ? req.token : undefined,
+            flat: req.flat === true,
+          },
+          ctx.signal,
+        );
       },
       objHead: async (req: Req) => (await driver(req)).head(str(req.bucket, 'bucket'), str(req.key, 'object')),
       /** The first bytes (1 MB unless `limit` says), as bytes. */
@@ -65,7 +73,12 @@ export function object(d: Deps): Group {
           if (length >= limit) break;
         }
         const bytes = Buffer.concat(chunks).subarray(0, limit);
-        return { bytes: new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.length), size: r.size, contentType: r.contentType, truncated: r.size > bytes.length };
+        return {
+          bytes: new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.length),
+          size: r.size,
+          contentType: r.contentType,
+          truncated: r.size > bytes.length,
+        };
       },
       /** The whole object, as a stream to save. */
       objDownload: async (req: Req, ctx) => {
@@ -116,7 +129,12 @@ export function object(d: Deps): Group {
         if (folder && to.startsWith(from)) throw new PluginError('A folder can’t go inside itself.');
         const keys = folder ? await keysUnder(o, bucket, from, ctx.signal) : [from];
         // A folder's own marker (an empty "name/" object), if it has one.
-        const marker = folder && (await o.head(bucket, from).then(() => true, () => false));
+        const marker =
+          folder &&
+          (await o.head(bucket, from).then(
+            () => true,
+            () => false,
+          ));
         if (marker) await o.write(bucket, to, new Uint8Array(0), {});
         for (const k of keys) await o.copy(bucket, k, to + k.slice(from.length));
         if (req.move === true) await o.remove(bucket, marker ? [...keys, from] : keys);

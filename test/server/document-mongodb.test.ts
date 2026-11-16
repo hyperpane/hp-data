@@ -10,9 +10,15 @@ import type { CommandResult } from '../../src/shared/document.ts';
 import type { DocumentDriver } from '../../src/server/drivers/types.ts';
 
 const up = await new Promise<boolean>((resolve) => {
-  const s = net.connect(27017, '127.0.0.1', () => (s.destroy(), resolve(true)));
+  const s = net.connect(27017, '127.0.0.1', () => {
+    s.destroy();
+    resolve(true);
+  });
   s.on('error', () => resolve(false));
-  s.setTimeout(1000, () => (s.destroy(), resolve(false)));
+  s.setTimeout(1000, () => {
+    s.destroy();
+    resolve(false);
+  });
 });
 const skip = up ? false : 'no MongoDB at localhost:27017';
 const kind = kindOf('mongodb')!;
@@ -30,7 +36,9 @@ after(async () => {
 test('info and the tree', { skip }, async () => {
   assert.match((await driver.info()).version, /^MongoDB \d/);
   await run('db.people.deleteMany({})');
-  await run('db.people.insertMany([{_id: 1, name: "Ann", age: 41, at: ISODate("2024-01-02T00:00:00Z")}, {_id: 2, name: "Bob", age: 25}, {name: "Cy", age: 33}])');
+  await run(
+    'db.people.insertMany([{_id: 1, name: "Ann", age: 41, at: ISODate("2024-01-02T00:00:00Z")}, {_id: 2, name: "Bob", age: 25}, {name: "Cy", age: 33}])',
+  );
   const dbs = await driver.children([]);
   assert.ok(dbs.some((d) => d.name === 'hp_test' && d.type === 'database'));
   const colls = await driver.children(['hp_test']);
@@ -40,8 +48,11 @@ test('info and the tree', { skip }, async () => {
 });
 
 test('find with a shell filter, sort, projection, paging', { skip }, async () => {
-  const r = await driver.find({ ref, filter: '{age: {$gt: 30}}', sort: '{age: -1}', projection: "{name: 1}", skip: 0, limit: 10 }, signal);
-  assert.deepEqual(r.docs, [{ _id: 1, name: 'Ann' }, { _id: (r.docs[1] as { _id: unknown })._id, name: 'Cy' }]);
+  const r = await driver.find({ ref, filter: '{age: {$gt: 30}}', sort: '{age: -1}', projection: '{name: 1}', skip: 0, limit: 10 }, signal);
+  assert.deepEqual(r.docs, [
+    { _id: 1, name: 'Ann' },
+    { _id: (r.docs[1] as { _id: unknown })._id, name: 'Cy' },
+  ]);
   assert.equal(r.total, 2);
   assert.deepEqual(r.idFields, ['_id']);
   assert.match(JSON.stringify((r.docs[1] as { _id: unknown })._id), /\$oid/);

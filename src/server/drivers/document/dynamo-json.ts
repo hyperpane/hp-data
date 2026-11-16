@@ -24,7 +24,7 @@ function number(n: string): number | string {
   return Number.isFinite(v) && (!Number.isInteger(v) || Number.isSafeInteger(v)) && (String(v) === n || !/^-?\d+$/.test(n)) ? v : n;
 }
 
-export function unmarshallValue(a: AttributeValue): unknown {
+function unmarshallValue(a: AttributeValue): unknown {
   if ('S' in a) return a.S;
   if ('N' in a) return number(a.N);
   if ('BOOL' in a) return a.BOOL;
@@ -40,7 +40,7 @@ export function unmarshallValue(a: AttributeValue): unknown {
 
 export const unmarshall = (item: Item): Record<string, unknown> => Object.fromEntries(Object.entries(item).map(([k, v]) => [k, unmarshallValue(v)]));
 
-export function marshallValue(v: unknown, path = 'value'): AttributeValue {
+function marshallValue(v: unknown, path = 'value'): AttributeValue {
   if (v === null || v === undefined) return { NULL: true };
   if (typeof v === 'string') return { S: v };
   if (typeof v === 'boolean') return { BOOL: v };

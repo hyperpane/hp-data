@@ -11,13 +11,27 @@ import type { DocFindResult } from '../../src/shared/document.ts';
 import type { DocumentDriver } from '../../src/server/drivers/types.ts';
 
 const up = await new Promise<boolean>((resolve) => {
-  const s = net.connect(8000, '127.0.0.1', () => (s.destroy(), resolve(true)));
+  const s = net.connect(8000, '127.0.0.1', () => {
+    s.destroy();
+    resolve(true);
+  });
   s.on('error', () => resolve(false));
-  s.setTimeout(1000, () => (s.destroy(), resolve(false)));
+  s.setTimeout(1000, () => {
+    s.destroy();
+    resolve(false);
+  });
 });
 const skip = up ? false : 'no DynamoDB Local at localhost:8000';
 const kind = kindOf('dynamodb')!;
-const driver = up ? (dynamodb({ kind, values: withDefaults(kind, { endpoint: 'http://localhost:8000', accessKeyId: 'test', secretAccessKey: 'test' }), folder: null, dataDir: '/tmp', log() {} }) as DocumentDriver) : null!;
+const driver = up
+  ? (dynamodb({
+      kind,
+      values: withDefaults(kind, { endpoint: 'http://localhost:8000', accessKeyId: 'test', secretAccessKey: 'test' }),
+      folder: null,
+      dataDir: '/tmp',
+      log() {},
+    }) as DocumentDriver)
+  : null!;
 const signal = new AbortController().signal;
 const ref = { collection: 'hp_test_orders' };
 const run = (text: string) => driver.command({ text, signal });
@@ -29,7 +43,9 @@ after(async () => {
 test('info, a table made, the tree', { skip }, async () => {
   assert.equal((await driver.info()).version, 'DynamoDB Local');
   await run('DeleteTable {TableName: "hp_test_orders"}').catch(() => {});
-  await run('CreateTable {TableName: "hp_test_orders", AttributeDefinitions: [{AttributeName: "customer", AttributeType: "S"}, {AttributeName: "n", AttributeType: "N"}], KeySchema: [{AttributeName: "customer", KeyType: "HASH"}, {AttributeName: "n", KeyType: "RANGE"}], BillingMode: "PAY_PER_REQUEST"}');
+  await run(
+    'CreateTable {TableName: "hp_test_orders", AttributeDefinitions: [{AttributeName: "customer", AttributeType: "S"}, {AttributeName: "n", AttributeType: "N"}], KeySchema: [{AttributeName: "customer", KeyType: "HASH"}, {AttributeName: "n", KeyType: "RANGE"}], BillingMode: "PAY_PER_REQUEST"}',
+  );
   for (let i = 1; i <= 5; i++) await driver.insert(ref, { customer: i % 2 ? 'ann' : 'bob', n: i, total: i * 10.5, items: [{ sku: `s${i}` }] });
   const node = (await driver.children([])).find((n) => n.name === 'hp_test_orders')!;
   assert.equal(node.open?.tab, 'collection');
@@ -51,7 +67,14 @@ test('insert refuses a key that’s there, replace, remove', { skip }, async () 
   await driver.replace(ref, { customer: 'ann', n: 1 }, '{customer: "ann", n: 1, total: 99}');
   await driver.replace(ref, { customer: 'ann', n: 3 }, { customer: 'ann', n: 33, total: 1 });
   const r = await driver.find({ ref, filter: "customer = 'ann'", skip: 0, limit: 10 }, signal);
-  assert.deepEqual(r.docs.map((d) => [(d as { n: number }).n, (d as { total: number }).total]), [[1, 99], [5, 52.5], [33, 1]]);
+  assert.deepEqual(
+    r.docs.map((d) => [(d as { n: number }).n, (d as { total: number }).total]),
+    [
+      [1, 99],
+      [5, 52.5],
+      [33, 1],
+    ],
+  );
   assert.equal(await driver.remove(ref, [{ customer: 'ann', n: 33 }]), 1);
 });
 

@@ -20,7 +20,13 @@ describe('object calls against an S3 in memory', () => {
   before(async () => {
     s3 = await fakeS3({ pageSize: 3 });
     plugin = make()(testHost({ id: 'data' }));
-    const connection = (name: string, readOnly: boolean) => ({ name, kind: 'minio', readOnly, values: { endpoint: s3.endpoint, accessKeyId: KEYS.accessKeyId, region: 'us-east-1' }, secrets: { secretAccessKey: KEYS.secretAccessKey } });
+    const connection = (name: string, readOnly: boolean) => ({
+      name,
+      kind: 'minio',
+      readOnly,
+      values: { endpoint: s3.endpoint, accessKeyId: KEYS.accessKeyId, region: 'us-east-1' },
+      secrets: { secretAccessKey: KEYS.secretAccessKey },
+    });
     id = (await invoke<{ id: string }>(plugin, { op: 'save', connection: connection('fake', false) })).id;
     readOnlyId = (await invoke<{ id: string }>(plugin, { op: 'save', connection: connection('fake (read only)', true) })).id;
   });
@@ -40,7 +46,8 @@ describe('object calls against an S3 in memory', () => {
   });
 
   test('uploads: small, empty folders, odd names', async () => {
-    const put = (key: string, text: string, contentType = 'text/plain') => call('objUpload', { bucket: 'assets', key, size: Buffer.byteLength(text), contentType, data: new Blob([text]).stream() });
+    const put = (key: string, text: string, contentType = 'text/plain') =>
+      call('objUpload', { bucket: 'assets', key, size: Buffer.byteLength(text), contentType, data: new Blob([text]).stream() });
     await put('readme.txt', 'hello, world\n');
     await put('data/one.json', '{"a":1}', 'application/json');
     await put('data/two.json', '{"b":2}', 'application/json');
@@ -67,13 +74,19 @@ describe('object calls against an S3 in memory', () => {
     assert.deepEqual(all.keys, ['empty.txt', 'readme.txt']);
     const data = await call('objList', { bucket: 'assets', prefix: 'data/' });
     assert.deepEqual(data.prefixes, ['data/deep/']);
-    assert.deepEqual(data.objects.map((o: any) => o.key), ['data/one.json', 'data/two.json']);
+    assert.deepEqual(
+      data.objects.map((o: any) => o.key),
+      ['data/one.json', 'data/two.json'],
+    );
     assert.equal(data.objects[0].size, 7);
     assert.equal(typeof data.objects[0].modified, 'number');
     const photos = await call('objList', { bucket: 'assets', prefix: 'photos/' });
     assert.deepEqual(photos, { prefixes: [], objects: [], next: null });
     const flat = await call('objList', { bucket: 'assets', prefix: 'data/', flat: true });
-    assert.deepEqual(flat.objects.map((o: any) => o.key), ['data/deep/x y+ü&.txt', 'data/one.json', 'data/two.json']);
+    assert.deepEqual(
+      flat.objects.map((o: any) => o.key),
+      ['data/deep/x y+ü&.txt', 'data/one.json', 'data/two.json'],
+    );
   });
 
   test('head, preview (a range), empty objects, download', async () => {
@@ -112,7 +125,11 @@ describe('object calls against an S3 in memory', () => {
     const b = s3.buckets.get('assets')!;
     assert.ok(b.has('README.md') && !b.has('readme.txt'));
     await call('objCopy', { bucket: 'assets', from: 'data/', to: 'archive/data/', move: true });
-    assert.deepEqual([...b.keys()].filter((k) => k.startsWith('archive/')).sort(), ['archive/data/deep/x y+ü&.txt', 'archive/data/one.json', 'archive/data/two.json']);
+    assert.deepEqual([...b.keys()].filter((k) => k.startsWith('archive/')).sort(), [
+      'archive/data/deep/x y+ü&.txt',
+      'archive/data/one.json',
+      'archive/data/two.json',
+    ]);
     assert.ok(![...b.keys()].some((k) => k.startsWith('data/')));
     const r = await call('objCopy', { bucket: 'assets', from: 'photos/', to: 'pictures/' });
     assert.equal(r.count, 0);
@@ -155,7 +172,12 @@ describe('object calls against an S3 in memory', () => {
   });
 
   test('wrong keys are said so', async () => {
-    const bad = (await invoke<{ id: string }>(plugin, { op: 'save', connection: { name: 'bad', kind: 'minio', values: { endpoint: s3.endpoint, accessKeyId: KEYS.accessKeyId }, secrets: { secretAccessKey: 'wrong' } } })).id;
+    const bad = (
+      await invoke<{ id: string }>(plugin, {
+        op: 'save',
+        connection: { name: 'bad', kind: 'minio', values: { endpoint: s3.endpoint, accessKeyId: KEYS.accessKeyId }, secrets: { secretAccessKey: 'wrong' } },
+      })
+    ).id;
     await assert.rejects(invoke(plugin, { op: 'connect', id: bad }), /secret access key is wrong/);
   });
 });

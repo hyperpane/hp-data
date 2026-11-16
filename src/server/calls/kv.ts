@@ -14,7 +14,7 @@ import { type Deps, type Group, idOf, int, projectOf, writable } from './context
 type Req = { id?: unknown; project?: unknown; db?: unknown; [k: string]: unknown };
 
 /** A database's number, or undefined for the connection's own. */
-export function dbOf(req: Req): number | undefined {
+function dbOf(req: Req): number | undefined {
   if (req.db === undefined || req.db === null || req.db === '') return undefined;
   const n = Number(req.db);
   if (!Number.isInteger(n) || n < 0) throw new PluginError(`“${String(req.db)}” isn’t a database number.`);
@@ -52,10 +52,21 @@ export function kv(d: Deps): Group {
     calls: {
       /** `{ pattern = '*', cursor = '0', count = 200 }` → ScanResult. */
       kvScan: async (req: Req) =>
-        (await driver(req)).scan({ db: dbOf(req), pattern: typeof req.pattern === 'string' && req.pattern ? req.pattern : '*', cursor: typeof req.cursor === 'string' ? req.cursor : '0', count: int(req.count, 200, 1, 5000) }),
+        (await driver(req)).scan({
+          db: dbOf(req),
+          pattern: typeof req.pattern === 'string' && req.pattern ? req.pattern : '*',
+          cursor: typeof req.cursor === 'string' ? req.cursor : '0',
+          count: int(req.count, 200, 1, 5000),
+        }),
 
       /** `{ key, offset = 0, limit = 200 }` → KvValue. */
-      kvGet: async (req: Req) => (await driver(req)).get({ db: dbOf(req), key: keyOf(req.key), offset: int(req.offset, 0, 0, Number.MAX_SAFE_INTEGER), limit: int(req.limit, 200, 1, 10_000) }),
+      kvGet: async (req: Req) =>
+        (await driver(req)).get({
+          db: dbOf(req),
+          key: keyOf(req.key),
+          offset: int(req.offset, 0, 0, Number.MAX_SAFE_INTEGER),
+          limit: int(req.limit, 200, 1, 10_000),
+        }),
 
       /** `{ key, value: KeyValue, ttl?, create? }`: writes the key whole;
        * `create` refuses when it's there already. */

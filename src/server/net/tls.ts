@@ -33,7 +33,9 @@ async function pem(value: unknown, what: string, folder: string | null): Promise
     return text;
   } catch (e) {
     if (e instanceof PluginError) throw e;
-    throw new PluginError(`Couldn’t read the ${what} ${s} on the server: ${(e as NodeJS.ErrnoException).code === 'ENOENT' ? 'there’s no such file' : (e as Error).message}.`);
+    throw new PluginError(
+      `Couldn’t read the ${what} ${s} on the server: ${(e as NodeJS.ErrnoException).code === 'ENOENT' ? 'there’s no such file' : (e as Error).message}.`,
+    );
   }
 }
 

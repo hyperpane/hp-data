@@ -30,7 +30,13 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
   const s = tab.state ?? {};
   const [text, setText] = useState<string>(typeof s.text === 'string' ? s.text : starter(kind.engine, tab.ref.database));
   const [database, setDatabase] = useState<string>(typeof s.database === 'string' ? s.database : (tab.ref.database ?? ''));
-  const [limit, setLimit] = useState<(typeof LIMITS)[number]>((LIMITS as readonly string[]).includes(String(s.limit)) ? (String(s.limit) as (typeof LIMITS)[number]) : (LIMITS as readonly string[]).includes(String(connection.values.rowLimit)) ? (String(connection.values.rowLimit) as (typeof LIMITS)[number]) : '500');
+  const [limit, setLimit] = useState<(typeof LIMITS)[number]>(
+    (LIMITS as readonly string[]).includes(String(s.limit))
+      ? (String(s.limit) as (typeof LIMITS)[number])
+      : (LIMITS as readonly string[]).includes(String(connection.values.rowLimit))
+        ? (String(connection.values.rowLimit) as (typeof LIMITS)[number])
+        : '500',
+  );
   const [databases, setDatabases] = useState<string[]>([]);
   const [schema, setSchema] = useState<Record<string, string[]>>({});
   const [results, setResults] = useState<QueryResult[]>([]);
@@ -57,24 +63,34 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
 
   useEffect(() => {
     if (!visible) return;
-    void api.call<{ tables: { schema?: string; name: string; columns: string[] }[] }>('completions', { id: connection.id, project, database: database || undefined }).then(
-      (c) => {
-        const out: Record<string, string[]> = {};
-        for (const t of c.tables) {
-          out[t.schema ? `${t.schema}.${t.name}` : t.name] = t.columns;
-          if (!out[t.name]) out[t.name] = t.columns;
-        }
-        setSchema(out);
-      },
-      () => {},
-    );
+    void api
+      .call<{ tables: { schema?: string; name: string; columns: string[] }[] }>('completions', { id: connection.id, project, database: database || undefined })
+      .then(
+        (c) => {
+          const out: Record<string, string[]> = {};
+          for (const t of c.tables) {
+            out[t.schema ? `${t.schema}.${t.name}` : t.name] = t.columns;
+            if (!out[t.name]) out[t.name] = t.columns;
+          }
+          setSchema(out);
+        },
+        () => {},
+      );
   }, [connection.id, database, visible]);
 
   const run = async (sql: string) => {
     if (!sql.trim() || running) return;
     if (connection.values.confirmWrites && !splitStatements(sql).every(readsOnly)) {
       const first = splitStatements(sql).find((x) => !readsOnly(x)) ?? sql;
-      if (!(await api.confirm(`Run this on ${connection.name}?`, `It looks like it changes data:\n\n${first.length > 300 ? `${first.slice(0, 300)}…` : first}`, 'Run', true))) return;
+      if (
+        !(await api.confirm(
+          `Run this on ${connection.name}?`,
+          `It looks like it changes data:\n\n${first.length > 300 ? `${first.slice(0, 300)}…` : first}`,
+          'Run',
+          true,
+        ))
+      )
+        return;
     }
     const ac = new AbortController();
     setRunning(ac);
@@ -85,7 +101,19 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
       setResults(r);
       // The last with rows, the one shown first.
       sendRows(r.findLast((x) => x.columns.length > 0));
-      setLog((l) => [...l, ...r.map((x) => ({ n: ++n.current, at, statement: x.statement ?? sql, ok: true, said: x.command || (x.columns.length ? `${x.rows.length} rows` : 'Done'), ms: x.ms }))].slice(-300));
+      setLog((l) =>
+        [
+          ...l,
+          ...r.map((x) => ({
+            n: ++n.current,
+            at,
+            statement: x.statement ?? sql,
+            ok: true,
+            said: x.command || (x.columns.length ? `${x.rows.length} rows` : 'Done'),
+            ms: x.ms,
+          })),
+        ].slice(-300),
+      );
     } catch (e) {
       const message = ac.signal.aborted ? 'Cancelled.' : (e as Error).message;
       setError(message);
@@ -98,7 +126,12 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Toolbar>
-        <NodeButton disabled={!!running} onClick={() => editor.current?.run()} title="Run the statement at the cursor, or the selection (⌘Enter)" className="text-[#3fb950]">
+        <NodeButton
+          disabled={!!running}
+          onClick={() => editor.current?.run()}
+          title="Run the statement at the cursor, or the selection (⌘Enter)"
+          className="text-[#3fb950]"
+        >
           <Play className="size-3.5" />
           Run
         </NodeButton>
@@ -113,9 +146,27 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
           </NodeButton>
         )}
         <ToolbarSeparator />
-        {databases.length > 0 && <Picker label="The database statements run in" value={database} options={[...(database && !databases.includes(database) ? [{ value: database, label: database }] : []), ...(!database ? [{ value: '', label: 'Default database' }] : []), ...databases.map((d) => ({ value: d, label: d }))]} onValueChange={setDatabase} />}
-        <Picker label="The most rows a statement gives" value={limit} options={LIMITS.map((l) => ({ value: l, label: `${Number(l).toLocaleString()} rows` }))} onValueChange={(v) => setLimit(v as typeof limit)} />
-        {connection.readOnly && <span className="ml-1 rounded-[3px] border border-[var(--node-border)] px-1 text-[10px] text-[var(--node-muted)]">read only</span>}
+        {databases.length > 0 && (
+          <Picker
+            label="The database statements run in"
+            value={database}
+            options={[
+              ...(database && !databases.includes(database) ? [{ value: database, label: database }] : []),
+              ...(!database ? [{ value: '', label: 'Default database' }] : []),
+              ...databases.map((d) => ({ value: d, label: d })),
+            ]}
+            onValueChange={setDatabase}
+          />
+        )}
+        <Picker
+          label="The most rows a statement gives"
+          value={limit}
+          options={LIMITS.map((l) => ({ value: l, label: `${Number(l).toLocaleString()} rows` }))}
+          onValueChange={(v) => setLimit(v as typeof limit)}
+        />
+        {connection.readOnly && (
+          <span className="ml-1 rounded-[3px] border border-[var(--node-border)] px-1 text-[10px] text-[var(--node-muted)]">read only</span>
+        )}
         <span className="ml-auto truncate text-[10.5px] text-[var(--node-muted)]">⌘Enter runs the statement at the cursor</span>
       </Toolbar>
       <SplitPane
@@ -132,7 +183,21 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
 }
 
 /** The editor; Run in the toolbar runs as ⌘Enter does (it knows the cursor). */
-function EditorRunner({ text, setText, dialect, schema, onRun, handle }: { text: string; setText(t: string): void; dialect: string; schema: Record<string, string[]>; onRun(sql: string): void; handle: { current: { run(): void; focus(): void } | null } }) {
+function EditorRunner({
+  text,
+  setText,
+  dialect,
+  schema,
+  onRun,
+  handle,
+}: {
+  text: string;
+  setText(t: string): void;
+  dialect: string;
+  schema: Record<string, string[]>;
+  onRun(sql: string): void;
+  handle: { current: { run(): void; focus(): void } | null };
+}) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <CodeEditor value={text} onChange={setText} language="sql" dialect={dialect} schema={schema} onRun={onRun} handle={handle} className="flex-1" autoFocus />

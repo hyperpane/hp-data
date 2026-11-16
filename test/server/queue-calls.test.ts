@@ -15,10 +15,15 @@ const answers = (url: string, init?: RequestInit) =>
     () => false,
   );
 const rabbitUp = await answers('http://localhost:15672/api/overview', { headers: { authorization: `Basic ${btoa('guest:guest')}` } });
-const sqsUp = await answers('http://localhost:9324/', { method: 'POST', headers: { 'x-amz-target': 'AmazonSQS.ListQueues', 'content-type': 'application/x-amz-json-1.0' }, body: '{}' });
+const sqsUp = await answers('http://localhost:9324/', {
+  method: 'POST',
+  headers: { 'x-amz-target': 'AmazonSQS.ListQueues', 'content-type': 'application/x-amz-json-1.0' },
+  body: '{}',
+});
 
 let plugin: ReturnType<ReturnType<typeof make>>;
-const save = (name: string, kind: string, values: Record<string, unknown>, readOnly = false, secrets?: Record<string, string>) => invoke<{ id: string }>(plugin, { op: 'save', connection: { name, kind, readOnly, values, secrets } }).then((c) => c.id);
+const save = (name: string, kind: string, values: Record<string, unknown>, readOnly = false, secrets?: Record<string, string>) =>
+  invoke<{ id: string }>(plugin, { op: 'save', connection: { name, kind, readOnly, values, secrets } }).then((c) => c.id);
 
 before(() => {
   plugin = make()(testHost({ id: 'data' }));
@@ -43,7 +48,10 @@ describe('RabbitMQ through the calls', { skip: rabbitUp ? false : 'no RabbitMQ a
   test('publish, peek, describe, purge', async () => {
     await invoke(plugin, { op: 'qPublish', id, ref, value: '{"a":1}', headers: { h: 'v' } });
     const got = await invoke<Message[]>(plugin, { op: 'qPeek', id, ref, limit: 10 });
-    assert.deepEqual(got.map((m) => [m.value, m.headers?.h]), [['{"a":1}', 'v']]);
+    assert.deepEqual(
+      got.map((m) => [m.value, m.headers?.h]),
+      [['{"a":1}', 'v']],
+    );
     const info = await invoke<QueueInfo>(plugin, { op: 'qDescribe', id, ref });
     assert.ok(info.stats.length > 3);
     await invoke(plugin, { op: 'qPurge', id, ref });

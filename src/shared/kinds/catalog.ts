@@ -21,7 +21,14 @@ const PLAIN: Kind[] = [
     glyph: 'Sq',
     tagline: 'A database in a file',
     fields: [
-      { key: 'file', label: 'File', type: 'text', placeholder: 'data/app.db', required: true, help: 'A path on the server; relative ones are in the project’s folder.' },
+      {
+        key: 'file',
+        label: 'File',
+        type: 'text',
+        placeholder: 'data/app.db',
+        required: true,
+        help: 'A path on the server; relative ones are in the project’s folder.',
+      },
       { key: 'readonly', label: 'Read only', type: 'boolean', default: false },
       { key: 'create', label: 'Create the file if it isn’t there', type: 'boolean', default: false, advanced: true },
     ],
@@ -40,9 +47,19 @@ const PLAIN: Kind[] = [
   },
   pg('cockroachdb', 'CockroachDB', '#6933ff', 'Cr', 'Distributed SQL, PostgreSQL’s protocol', { port: 26257, user: 'root', database: 'defaultdb' }),
   pg('timescaledb', 'TimescaleDB', '#fdb515', 'Ts', 'PostgreSQL for time series'),
-  pg('supabase', 'Supabase', '#3ecf8e', 'Sb', 'A project’s PostgreSQL', { host: 'db.<project>.supabase.co', ssl: 'require', note: 'The host and password are in the project’s Database settings.' }),
+  pg('supabase', 'Supabase', '#3ecf8e', 'Sb', 'A project’s PostgreSQL', {
+    host: 'db.<project>.supabase.co',
+    ssl: 'require',
+    note: 'The host and password are in the project’s Database settings.',
+  }),
   pg('neon', 'Neon', '#00e599', 'Ne', 'Serverless PostgreSQL', { host: 'ep-….neon.tech', user: '', database: 'neondb', ssl: 'require' }),
-  pg('redshift', 'Amazon Redshift', '#8c4fff', 'Rs', 'AWS’s warehouse, PostgreSQL’s protocol', { host: '….redshift.amazonaws.com', port: 5439, user: 'awsuser', database: 'dev', ssl: 'require' }),
+  pg('redshift', 'Amazon Redshift', '#8c4fff', 'Rs', 'AWS’s warehouse, PostgreSQL’s protocol', {
+    host: '….redshift.amazonaws.com',
+    port: 5439,
+    user: 'awsuser',
+    database: 'dev',
+    ssl: 'require',
+  }),
   my('tidb', 'TiDB', '#e30c34', 'Ti', 'Distributed SQL, MySQL’s protocol', { port: 4000 }),
   my('planetscale', 'PlanetScale', '#a3a3a3', 'Ps', 'Serverless MySQL', { host: 'aws.connect.psdb.cloud', ssl: 'verify' }),
 
@@ -59,11 +76,7 @@ const PLAIN: Kind[] = [
     color: '#419eda',
     glyph: 'Et',
     tagline: 'A cluster’s configuration, over HTTP',
-    fields: [
-      { key: 'url', label: 'Endpoint', type: 'text', default: 'http://localhost:2379', required: true },
-      user(''),
-      password,
-    ],
+    fields: [{ key: 'url', label: 'Endpoint', type: 'text', default: 'http://localhost:2379', required: true }, user(''), password],
   },
 
   // Document & search
@@ -85,7 +98,15 @@ const PLAIN: Kind[] = [
       { key: 'database', label: 'Database', type: 'text', placeholder: 'all of them', half: true },
       { key: 'authSource', label: 'Auth database', type: 'text', placeholder: 'admin', half: true },
       { key: 'tls', label: 'TLS', type: 'boolean', default: false },
-      { key: 'uri', label: 'Connection string', type: 'password', secret: true, advanced: true, placeholder: 'mongodb+srv://…', help: 'Used instead of the fields above when given.' },
+      {
+        key: 'uri',
+        label: 'Connection string',
+        type: 'password',
+        secret: true,
+        advanced: true,
+        placeholder: 'mongodb+srv://…',
+        help: 'Used instead of the fields above when given.',
+      },
     ],
   },
   {
@@ -226,7 +247,11 @@ const PLAIN: Kind[] = [
   s3('r2', 'Cloudflare R2', '#f38020', 'R2', 'S3 without egress fees', { endpoint: 'https://<account>.r2.cloudflarestorage.com', region: 'auto' }),
   s3('spaces', 'DigitalOcean Spaces', '#0080ff', 'Do', 'S3 on DigitalOcean', { endpoint: 'https://nyc3.digitaloceanspaces.com', region: 'nyc3' }),
   s3('b2', 'Backblaze B2', '#e21e29', 'B2', 'S3-compatible cloud storage', { endpoint: 'https://s3.us-west-004.backblazeb2.com', region: 'us-west-004' }),
-  s3('gcs', 'Google Cloud Storage', '#4285f4', 'Gc', 'Buckets on Google Cloud, by S3 interop', { endpoint: 'https://storage.googleapis.com', region: 'auto', note: 'Use an HMAC key (Cloud Storage › Settings › Interoperability).' }),
+  s3('gcs', 'Google Cloud Storage', '#4285f4', 'Gc', 'Buckets on Google Cloud, by S3 interop', {
+    endpoint: 'https://storage.googleapis.com',
+    region: 'auto',
+    note: 'Use an HMAC key (Cloud Storage › Settings › Interoperability).',
+  }),
 ];
 
 export const KINDS: Kind[] = PLAIN.map(withSections);

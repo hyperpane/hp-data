@@ -31,7 +31,7 @@ export interface S3Request {
 
 /** What a failed request means, for the user: the body's code and
  * message, else the status. */
-export function s3Error(status: number, body: string, what?: string): PluginError {
+function s3Error(status: number, body: string, what?: string): PluginError {
   if (body.trim()) return new PluginError(awsError(status, body));
   const say: Record<number, string> = {
     301: 'The bucket is in another region, at another endpoint.',
@@ -78,7 +78,15 @@ export class S3Client {
 
   async #find(bucket: string): Promise<string> {
     const url = urlFor(this.endpoint, { bucket, region: this.region, pathStyle: this.pathStyle });
-    const headers = sign({ method: 'HEAD', url, headers: {}, payloadHash: sha256hex(''), region: this.region, service: 's3', credentials: await this.credentials() });
+    const headers = sign({
+      method: 'HEAD',
+      url,
+      headers: {},
+      payloadHash: sha256hex(''),
+      region: this.region,
+      service: 's3',
+      credentials: await this.credentials(),
+    });
     const res = await request({ method: 'HEAD', url, headers, timeout: 15_000 });
     return headerOf(res.headers, 'x-amz-bucket-region') || this.region;
   }
@@ -146,14 +154,16 @@ export class S3Client {
   }
 }
 
-const isWrongRegion = (status: number, body: string) => status === 301 || status === 307 || (status === 400 && /AuthorizationHeaderMalformed|IllegalLocationConstraintException/.test(body));
+const isWrongRegion = (status: number, body: string) =>
+  status === 301 || status === 307 || (status === 400 && /AuthorizationHeaderMalformed|IllegalLocationConstraintException/.test(body));
 
 export function headerOf(h: IncomingHttpHeaders, name: string): string {
   const v = h[name];
   return Array.isArray(v) ? v.join(', ') : (v ?? '');
 }
 
-const toNode = (s: ReadableStream<Uint8Array> | Readable): Readable => (s instanceof Readable ? s : Readable.fromWeb(s as import('node:stream/web').ReadableStream<Uint8Array>));
+const toNode = (s: ReadableStream<Uint8Array> | Readable): Readable =>
+  s instanceof Readable ? s : Readable.fromWeb(s as import('node:stream/web').ReadableStream<Uint8Array>);
 
 async function readText(res: IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];

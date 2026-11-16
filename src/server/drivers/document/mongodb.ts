@@ -20,7 +20,7 @@ const { EJSON } = BSON;
 const COUNT_MS = 3000;
 
 /** The URI the fields make, when there isn't one. */
-export function uriOf(v: Values): string {
+function uriOf(v: Values): string {
   if (v.uri) return String(v.uri);
   const host = String(v.host || 'localhost');
   const port = v.port ? `:${v.port}` : '';
@@ -33,7 +33,7 @@ export function uriOf(v: Values): string {
 }
 
 /** A driver's error, for the user. */
-export function mongoError(e: unknown, where: string): Error {
+function mongoError(e: unknown, where: string): Error {
   if (e instanceof PluginError) return e;
   const err = e as Error & { code?: number; codeName?: string };
   const name = err?.name ?? '';
@@ -42,7 +42,8 @@ export function mongoError(e: unknown, where: string): Error {
     if (/ENOTFOUND|EAI_AGAIN/.test(err.message)) return new PluginError(`There’s no host ${where.replace(/:\d+$/, '')}: check the name.`);
     return new PluginError(`${where} can’t be reached: ${err.message}`);
   }
-  if (err?.code === 18 || /Authentication failed/i.test(err?.message ?? '')) return new PluginError('Signing in failed: check the user, the password and the auth database.');
+  if (err?.code === 18 || /Authentication failed/i.test(err?.message ?? ''))
+    return new PluginError('Signing in failed: check the user, the password and the auth database.');
   if (err?.code === 13) return new PluginError(`Not allowed: ${err.message}`);
   if (name === 'MongoParseError' || name === 'MongoInvalidArgumentError') return new PluginError(`The connection string isn’t right: ${err.message}`);
   if (name.startsWith('Mongo') || name === 'BSONError') return new PluginError(err.message);
@@ -50,19 +51,20 @@ export function mongoError(e: unknown, where: string): Error {
 }
 
 /** Typed text as BSON-ready values: relaxed JSON, then EJSON. */
-export const fromText = (text: string, what: string): Document => EJSON.deserialize(parseObject(text, what), { relaxed: false }) as Document;
+const fromText = (text: string, what: string): Document => EJSON.deserialize(parseObject(text, what), { relaxed: false }) as Document;
 
 /** A value from a window (text as typed, or EJSON) as BSON-ready values. */
-export function fromValue(v: unknown, what = 'document'): Document {
+function fromValue(v: unknown, what = 'document'): Document {
   const parsed = typeof v === 'string' ? parseRelaxed(v) : v;
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new PluginError(`The ${what} has to be an object: { … }.`);
   return EJSON.deserialize(parsed as Document, { relaxed: false }) as Document;
 }
 
 /** BSON as relaxed EJSON, which JSON carries. */
-export const toJson = (v: unknown): any => EJSON.serialize(v, { relaxed: true });
+const toJson = (v: unknown): unknown => EJSON.serialize(v, { relaxed: true });
 
-const formatSize = (n: number) => (n < 1024 ? `${n} B` : n < 1024 ** 2 ? `${(n / 1024).toFixed(1)} KB` : n < 1024 ** 3 ? `${(n / 1024 ** 2).toFixed(1)} MB` : `${(n / 1024 ** 3).toFixed(1)} GB`);
+const formatSize = (n: number) =>
+  n < 1024 ? `${n} B` : n < 1024 ** 2 ? `${(n / 1024).toFixed(1)} KB` : n < 1024 ** 3 ? `${(n / 1024 ** 2).toFixed(1)} MB` : `${(n / 1024 ** 3).toFixed(1)} GB`;
 
 export const mongodb: Factory = (ctx) => {
   const v = ctx.values;
@@ -74,7 +76,14 @@ export const mongodb: Factory = (ctx) => {
     } catch {}
   }
   const own = tlsOf(v);
-  const options: MongoClientOptions = { serverSelectionTimeoutMS: 10_000, connectTimeoutMS: 10_000, appName: 'hyperpane-data', ...(own.ca ? { ca: own.ca } : {}), ...(own.cert ? { cert: own.cert, key: own.key, passphrase: own.passphrase } : {}), ...(own.servername ? { servername: own.servername } : {}) };
+  const options: MongoClientOptions = {
+    serverSelectionTimeoutMS: 10_000,
+    connectTimeoutMS: 10_000,
+    appName: 'hyperpane-data',
+    ...(own.ca ? { ca: own.ca } : {}),
+    ...(own.cert ? { cert: own.cert, key: own.key, passphrase: own.passphrase } : {}),
+    ...(own.servername ? { servername: own.servername } : {}),
+  };
   if (v.tls && !v.uri) options.tls = true;
   let client: MongoClient | null = null;
   let connecting: Promise<MongoClient> | null = null;
@@ -186,14 +195,18 @@ export const mongodb: Factory = (ctx) => {
         try {
           const [docs, total] = await Promise.all([
             cursor.toArray(),
-            (Object.keys(filter).length ? coll.countDocuments(filter, { maxTimeMS: COUNT_MS }) : coll.estimatedDocumentCount({ maxTimeMS: COUNT_MS })).catch(() => null),
+            (Object.keys(filter).length ? coll.countDocuments(filter, { maxTimeMS: COUNT_MS }) : coll.estimatedDocumentCount({ maxTimeMS: COUNT_MS })).catch(
+              () => null,
+            ),
           ]);
           if (signal.aborted) throw new PluginError('Cancelled.');
-          const parts = [`db.getCollection(${JSON.stringify(coll.collectionName)}).find(${r.filter.trim() || '{}'}${r.projection?.trim() ? `, ${r.projection.trim()}` : ''})`];
+          const parts = [
+            `db.getCollection(${JSON.stringify(coll.collectionName)}).find(${r.filter.trim() || '{}'}${r.projection?.trim() ? `, ${r.projection.trim()}` : ''})`,
+          ];
           if (r.sort?.trim()) parts.push(`.sort(${r.sort.trim()})`);
           if (r.skip) parts.push(`.skip(${r.skip})`);
           parts.push(`.limit(${r.limit})`);
-          const result: DocFindResult = { docs: toJson(docs), total, ms: since(t0), idFields: ['_id'], query: parts.join('') };
+          const result: DocFindResult = { docs: toJson(docs) as unknown[], total, ms: since(t0), idFields: ['_id'], query: parts.join('') };
           return result;
         } finally {
           signal.removeEventListener('abort', abort);
@@ -212,7 +225,8 @@ export const mongodb: Factory = (ctx) => {
       return guard(async (c) => {
         const d = fromValue(doc);
         const filter = idFilter(id);
-        if ('_id' in d && EJSON.stringify(d._id) !== EJSON.stringify(filter._id)) throw new PluginError('A document’s _id can’t change: duplicate it, then delete this one.');
+        if ('_id' in d && EJSON.stringify(d._id) !== EJSON.stringify(filter._id))
+          throw new PluginError('A document’s _id can’t change: duplicate it, then delete this one.');
         delete d._id;
         const r = await collectionOf(c, ref).replaceOne(filter, d);
         if (!r.matchedCount) throw new PluginError('That document isn’t there anymore: refresh.');

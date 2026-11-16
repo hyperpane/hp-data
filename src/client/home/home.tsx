@@ -56,7 +56,17 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
   const card = (c: Connection, compact?: boolean) => {
     const kind = kindOf(c.kind);
     if (!kind) return null;
-    return <ConnectionCard key={c.id} c={c} kind={kind} compact={compact} open={state?.open[c.id]} onOpen={() => ops.openConnection(c)} onMenu={(e) => menu.open(e, connectionMenu(c, !!state?.open[c.id], ops))} />;
+    return (
+      <ConnectionCard
+        key={c.id}
+        c={c}
+        kind={kind}
+        compact={compact}
+        open={state?.open[c.id]}
+        onOpen={() => ops.openConnection(c)}
+        onMenu={(e) => menu.open(e, connectionMenu(c, !!state?.open[c.id], ops))}
+      />
+    );
   };
 
   return (
@@ -68,12 +78,21 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
           </span>
           <div className="flex min-w-0 flex-col">
             <h1 className="text-[17px] leading-tight font-semibold">{empty ? 'Welcome to Data' : 'Data'}</h1>
-            <span className="text-[11.5px] text-[var(--node-muted)]">{empty ? 'Connect a database, a key-value store, a queue or a bucket to start' : `${connections.length} ${connections.length === 1 ? 'connection' : 'connections'}${Object.keys(state?.open ?? {}).length ? ` · ${Object.keys(state!.open).length} connected` : ''}`}</span>
+            <span className="text-[11.5px] text-[var(--node-muted)]">
+              {empty
+                ? 'Connect a database, a key-value store, a queue or a bucket to start'
+                : `${connections.length} ${connections.length === 1 ? 'connection' : 'connections'}${Object.keys(state?.open ?? {}).length ? ` · ${Object.keys(state!.open).length} connected` : ''}`}
+            </span>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <label className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-[var(--node-muted)]" />
-              <NodeInput value={query} onChange={(e) => setQuery(e.target.value)} placeholder={empty ? 'Find a database' : 'Search connections and databases'} className="w-[260px] pl-7" />
+              <NodeInput
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={empty ? 'Find a database' : 'Search connections and databases'}
+                className="w-[260px] pl-7"
+              />
             </label>
           </div>
         </header>
@@ -96,12 +115,16 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
             }
           >
             {mine.length === 0 ? (
-              <div className="rounded-[9px] border border-dashed border-[var(--node-border)] px-4 py-6 text-center text-[var(--node-muted)]">No connection matches “{query}”.</div>
+              <div className="rounded-[9px] border border-dashed border-[var(--node-border)] px-4 py-6 text-center text-[var(--node-muted)]">
+                No connection matches “{query}”.
+              </div>
             ) : (
               <div className="flex flex-col gap-4">
                 {groups.map(([group, list]) => (
                   <div key={group} className="flex flex-col gap-2">
-                    {(groups.length > 1 || group) && <div className="text-[10.5px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">{group || 'Other'}</div>}
+                    {(groups.length > 1 || group) && (
+                      <div className="text-[10.5px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">{group || 'Other'}</div>
+                    )}
                     <div style={grid(250)}>{list.map((c) => card(c))}</div>
                   </div>
                 ))}

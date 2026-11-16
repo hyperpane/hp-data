@@ -26,9 +26,22 @@ export interface Caps {
 }
 
 export function capsOf(engine: Engine, ref: Ref): Caps {
-  if (engine === 'kafka') return { engine, noun: 'topic', name: ref.topic ?? '', partitions: true, from: true, peek: true, live: true, purge: true, keyLabel: 'Key', routing: false };
+  if (engine === 'kafka')
+    return { engine, noun: 'topic', name: ref.topic ?? '', partitions: true, from: true, peek: true, live: true, purge: true, keyLabel: 'Key', routing: false };
   if (engine === 'rabbitmq') {
-    if (ref.exchange !== undefined) return { engine, noun: 'exchange', name: ref.exchange, partitions: false, from: false, peek: false, live: false, purge: false, keyLabel: null, routing: true };
+    if (ref.exchange !== undefined)
+      return {
+        engine,
+        noun: 'exchange',
+        name: ref.exchange,
+        partitions: false,
+        from: false,
+        peek: false,
+        live: false,
+        purge: false,
+        keyLabel: null,
+        routing: true,
+      };
     return {
       engine,
       noun: 'queue',
@@ -55,6 +68,7 @@ export function capsOf(engine: Engine, ref: Ref): Caps {
     purge: true,
     keyLabel: fifo ? 'Message group' : null,
     routing: false,
-    peekNote: 'Looking receives the messages with a visibility timeout of 0, so they stay; each look counts as a receive, which can move them to a dead-letter queue. SQS returns them in no set order, and may leave some out.',
+    peekNote:
+      'Looking receives the messages with a visibility timeout of 0, so they stay; each look counts as a receive, which can move them to a dead-letter queue. SQS returns them in no set order, and may leave some out.',
   };
 }

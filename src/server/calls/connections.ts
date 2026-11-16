@@ -6,7 +6,6 @@ import { forgetHost } from '../net/ssh.ts';
 import { withTimeout } from '../sessions.ts';
 import { type Deps, type Group, idOf, projectOf } from './context.ts';
 
-
 export function connections(d: Deps): Group {
   const { registry, sessions } = d;
   const state = async (): Promise<State> => ({ connections: await registry.list(), open: sessions.infos() });
@@ -43,7 +42,9 @@ export function connections(d: Deps): Group {
         return sessions.infos()[id];
       },
       /** Forgets an SSH host's key, so the next connection takes the new one. */
-      forgetSshHost: async (req: { host?: string; port?: number }) => ({ forgotten: await forgetHost(d.host.dataDir, String(req.host ?? '').trim(), Number(req.port || 22)) }),
+      forgetSshHost: async (req: { host?: string; port?: number }) => ({
+        forgotten: await forgetHost(d.host.dataDir, String(req.host ?? '').trim(), Number(req.port || 22)),
+      }),
       disconnect: (req) => sessions.close(idOf(req)).then(() => null),
       /** What's under a path of the connection's tree. */
       children: async (req: { id: string; path?: unknown; project?: string }) => {
@@ -68,7 +69,13 @@ export function connections(d: Deps): Group {
           });
         };
         const offs = [registry.onChange(send), sessions.onChange(send)];
-        out.signal.addEventListener('abort', () => offs.forEach((f) => f()), { once: true });
+        out.signal.addEventListener(
+          'abort',
+          () => {
+            for (const f of offs) f();
+          },
+          { once: true },
+        );
         send();
       },
     },

@@ -4,7 +4,20 @@
 export type Family = 'sql' | 'kv' | 'document' | 'queue' | 'object';
 
 /** What speaks to the server: one driver each, on the server part. */
-export type Engine = 'postgres' | 'mysql' | 'sqlite' | 'clickhouse' | 'redis' | 'etcd' | 'mongodb' | 'elasticsearch' | 'dynamodb' | 'kafka' | 'rabbitmq' | 'sqs' | 's3';
+export type Engine =
+  | 'postgres'
+  | 'mysql'
+  | 'sqlite'
+  | 'clickhouse'
+  | 'redis'
+  | 'etcd'
+  | 'mongodb'
+  | 'elasticsearch'
+  | 'dynamodb'
+  | 'kafka'
+  | 'rabbitmq'
+  | 'sqs'
+  | 's3';
 
 /** Where a kind is listed under Add connection. */
 export type Category = 'relational' | 'keyvalue' | 'document' | 'queue' | 'object';

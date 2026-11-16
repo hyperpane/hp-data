@@ -43,12 +43,16 @@ test('ListObjectsV2 not encoded, and the last page', () => {
 
 test('DeleteObjects: its body, and the errors in its answer', () => {
   assert.match(deleteBody(['a<b', 'c']), /<Quiet>true<\/Quiet><Object><Key>a&lt;b<\/Key><\/Object><Object><Key>c<\/Key><\/Object><\/Delete>$/);
-  const errs = parseDeleteErrors('<DeleteResult><Deleted><Key>x</Key></Deleted><Error><Key>y</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>');
+  const errs = parseDeleteErrors(
+    '<DeleteResult><Deleted><Key>x</Key></Deleted><Error><Key>y</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>',
+  );
   assert.deepEqual(errs, [{ key: 'y', code: 'AccessDenied', message: 'Access Denied' }]);
 });
 
 test('an error names its region', () => {
-  const e = parseError('<Error><Code>AuthorizationHeaderMalformed</Code><Message>the region &apos;us-east-1&apos; is wrong; expecting &apos;eu-west-1&apos;</Message><Region>eu-west-1</Region></Error>');
+  const e = parseError(
+    '<Error><Code>AuthorizationHeaderMalformed</Code><Message>the region &apos;us-east-1&apos; is wrong; expecting &apos;eu-west-1&apos;</Message><Region>eu-west-1</Region></Error>',
+  );
   assert.equal(e.code, 'AuthorizationHeaderMalformed');
   assert.equal(e.region, 'eu-west-1');
   assert.match(e.message!, /'eu-west-1'/);
@@ -70,7 +74,10 @@ test('endpoints: AWS by region, schemes filled in, placeholders refused', () => 
 
 test('addressing: virtual-hosted on AWS, path-style for MinIO, dots, IPs', () => {
   const aws = endpointOf('', 'us-east-1');
-  assert.equal(urlFor(aws, { bucket: 'assets', key: 'a b/ü.txt', region: 'eu-central-1' }).href, 'https://assets.s3.eu-central-1.amazonaws.com/a%20b/%C3%BC.txt');
+  assert.equal(
+    urlFor(aws, { bucket: 'assets', key: 'a b/ü.txt', region: 'eu-central-1' }).href,
+    'https://assets.s3.eu-central-1.amazonaws.com/a%20b/%C3%BC.txt',
+  );
   assert.equal(urlFor(aws, { bucket: 'my.site', key: 'x', region: 'us-east-1' }).href, 'https://s3.us-east-1.amazonaws.com/my.site/x');
   assert.equal(urlFor(aws, {}).href, 'https://s3.us-east-1.amazonaws.com/');
   const minio = endpointOf('http://localhost:9000', 'us-east-1');
@@ -82,7 +89,10 @@ test('addressing: virtual-hosted on AWS, path-style for MinIO, dots, IPs', () =>
 });
 
 test('query strings are encoded as they are signed', () => {
-  assert.equal(queryString({ 'list-type': 2, prefix: 'a b/+', delimiter: '/', token: undefined, delete: '' }), 'list-type=2&prefix=a%20b%2F%2B&delimiter=%2F&delete=');
+  assert.equal(
+    queryString({ 'list-type': 2, prefix: 'a b/+', delimiter: '/', token: undefined, delete: '' }),
+    'list-type=2&prefix=a%20b%2F%2B&delimiter=%2F&delete=',
+  );
   const u = urlFor(endpointOf('', 'us-east-1'), { bucket: 'b', query: { prefix: 'a b' } });
   assert.equal(u.search, '?prefix=a%20b');
 });

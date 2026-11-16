@@ -8,7 +8,21 @@ import { type Kind, address } from '../../shared/kinds.ts';
 import type { Connection, SessionInfo } from '../../shared/types.ts';
 import { KindTile } from '../ui/parts.tsx';
 
-export function ConnectionCard({ c, kind, open, onOpen, onMenu, compact }: { c: Connection; kind: Kind; open?: SessionInfo; onOpen(): void; onMenu(e: React.MouseEvent): void; compact?: boolean }) {
+export function ConnectionCard({
+  c,
+  kind,
+  open,
+  onOpen,
+  onMenu,
+  compact,
+}: {
+  c: Connection;
+  kind: Kind;
+  open?: SessionInfo;
+  onOpen(): void;
+  onMenu(e: React.MouseEvent): void;
+  compact?: boolean;
+}) {
   return (
     <div
       role="button"
@@ -28,12 +42,19 @@ export function ConnectionCard({ c, kind, open, onOpen, onMenu, compact }: { c: 
       {(c.color || open) && <span className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r" style={{ background: c.color ?? 'transparent' }} />}
       <span className="relative">
         <KindTile kind={kind} size={compact ? 28 : 34} />
-        {open && <span title={`Connected: ${open.version}`} className="absolute -right-1 -bottom-1 size-2.5 rounded-full border-2 border-[var(--node-bg)] bg-[#3fb950]" />}
+        {open && (
+          <span
+            title={`Connected: ${open.version}`}
+            className="absolute -right-1 -bottom-1 size-2.5 rounded-full border-2 border-[var(--node-bg)] bg-[#3fb950]"
+          />
+        )}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 items-center gap-1.5">
           <span className="truncate text-[12.5px] font-medium">{c.name}</span>
-          {c.readOnly && <span className="flex-none rounded-[3px] border border-[var(--node-border)] px-1 text-[9.5px] text-[var(--node-muted)]">read only</span>}
+          {c.readOnly && (
+            <span className="flex-none rounded-[3px] border border-[var(--node-border)] px-1 text-[9.5px] text-[var(--node-muted)]">read only</span>
+          )}
         </span>
         <span className="truncate font-mono text-[10.5px] text-[var(--node-muted)]">{address(kind, c.values) || kind.name}</span>
         {!compact && c.values.notes ? (

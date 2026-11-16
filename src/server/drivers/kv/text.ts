@@ -6,7 +6,7 @@
 import { isUtf8 as utf8 } from 'node:buffer';
 
 /** True when the bytes are UTF-8 (and so a string can carry them). */
-export const isUtf8 = (b: Buffer): boolean => utf8(b);
+const isUtf8 = (b: Buffer): boolean => utf8(b);
 
 /** Bytes as redis-cli quotes them, without the quotes: `\"`, `\\`, `\n`,
  * `\xNN` for what isn't printable. UTF-8 is kept as it is when `utf8`. */

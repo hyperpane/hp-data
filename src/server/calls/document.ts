@@ -19,7 +19,7 @@ const refOf = (v: unknown): Ref => {
 const text = (v: unknown) => (typeof v === 'string' ? v : '');
 
 /** Console text that changes something, by the connection's engine. */
-export function consoleWrites(engine: string, t: string): boolean {
+function consoleWrites(engine: string, t: string): boolean {
   if (engine === 'mongodb') return shellWrites(t);
   if (engine === 'elasticsearch') return devToolsWrites(t);
   if (engine === 'dynamodb') return partiqlWrites(t);
@@ -75,7 +75,11 @@ export function document(d: Deps): Group {
         const engine = kindOf(c.kind)?.engine ?? '';
         if (consoleWrites(engine, t)) await writable(d, id);
         const drv = await driver(req);
-        return (await drv.command({ database: typeof req.database === 'string' && req.database ? req.database : undefined, text: t, signal: ctx.signal })) as CommandResult;
+        return (await drv.command({
+          database: typeof req.database === 'string' && req.database ? req.database : undefined,
+          text: t,
+          signal: ctx.signal,
+        })) as CommandResult;
       },
     },
   };

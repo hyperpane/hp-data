@@ -39,7 +39,16 @@ export const TYPE_INFO: Record<KeyType, { label: string; color: string }> = {
   other: { label: '?', color: '#8b949e' },
 };
 
-export const TYPE_NAMES: Record<KeyType, string> = { string: 'String', hash: 'Hash', list: 'List', set: 'Set', zset: 'Sorted set', stream: 'Stream', json: 'JSON', other: 'Other' };
+export const TYPE_NAMES: Record<KeyType, string> = {
+  string: 'String',
+  hash: 'Hash',
+  list: 'List',
+  set: 'Set',
+  zset: 'Sorted set',
+  stream: 'Stream',
+  json: 'JSON',
+  other: 'Other',
+};
 
 /** Seconds left as "45 s", "12 min", "3 h", "9 d"; '' for none. */
 export function ttlText(ttl: number): string {

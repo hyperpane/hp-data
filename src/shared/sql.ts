@@ -111,4 +111,7 @@ export interface TableInfo {
   rows: number | null;
 }
 
-export type RowEdit = { op: 'update'; key: Record<string, Cell>; set: Record<string, Cell> } | { op: 'insert'; values: Record<string, Cell> } | { op: 'delete'; key: Record<string, Cell> };
+export type RowEdit =
+  | { op: 'update'; key: Record<string, Cell>; set: Record<string, Cell> }
+  | { op: 'insert'; values: Record<string, Cell> }
+  | { op: 'delete'; key: Record<string, Cell> };

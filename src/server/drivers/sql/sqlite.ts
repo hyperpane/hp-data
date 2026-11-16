@@ -17,7 +17,7 @@ import { browseSql, editStatements } from './common.ts';
 
 type Row = Record<string, unknown>;
 
-export function sqliteFile(file: string, folder: string | null): string {
+function sqliteFile(file: string, folder: string | null): string {
   const f = file.trim().replace(/^~(?=\/|$)/, os.homedir());
   if (path.isAbsolute(f)) return f;
   if (!folder) throw new PluginError('A relative path is in a project’s folder: open Data in a project, or give the whole path.');
@@ -50,7 +50,8 @@ export const sqlite = (ctx: DriverContext): SqlDriver => {
     }
   };
 
-  const columnsOf = (s: StatementSync): Column[] => (s as unknown as { columns(): { name: string; type: string | null }[] }).columns().map((c) => ({ name: c.name, type: c.type?.toLowerCase() || undefined }));
+  const columnsOf = (s: StatementSync): Column[] =>
+    (s as unknown as { columns(): { name: string; type: string | null }[] }).columns().map((c) => ({ name: c.name, type: c.type?.toLowerCase() || undefined }));
 
   function run(statement: string, limit: number): QueryResult {
     const t0 = performance.now();
@@ -91,13 +92,25 @@ export const sqlite = (ctx: DriverContext): SqlDriver => {
       fkMap.set(id, k);
     }
     const [m] = all("SELECT sql FROM sqlite_master WHERE name = ? AND type IN ('table','view')", t.table);
-    const ddl = [m?.sql ? `${m.sql};` : '', ...all("SELECT sql FROM sqlite_master WHERE tbl_name = ? AND type = 'index' AND sql IS NOT NULL", t.table).map((r) => `${r.sql};`)].filter(Boolean).join('\n');
+    const ddl = [
+      m?.sql ? `${m.sql};` : '',
+      ...all("SELECT sql FROM sqlite_master WHERE tbl_name = ? AND type = 'index' AND sql IS NOT NULL", t.table).map((r) => `${r.sql};`),
+    ]
+      .filter(Boolean)
+      .join('\n');
     let rows: number | null = null;
     try {
       rows = Number(all(`SELECT COUNT(*) AS n FROM ${ident('sqlite', t.table)}`)[0].n);
     } catch {}
     return {
-      columns: cols.map((c) => ({ name: String(c.name), type: String(c.type || '').toLowerCase() || undefined, key: Number(c.pk) > 0 || undefined, nullable: Number(c.notnull) === 0, hasDefault: c.dflt_value !== null || (Number(c.pk) > 0 && /^integer$/i.test(String(c.type))), readOnly: Number(c.hidden) > 1 || undefined })),
+      columns: cols.map((c) => ({
+        name: String(c.name),
+        type: String(c.type || '').toLowerCase() || undefined,
+        key: Number(c.pk) > 0 || undefined,
+        nullable: Number(c.notnull) === 0,
+        hasDefault: c.dflt_value !== null || (Number(c.pk) > 0 && /^integer$/i.test(String(c.type))),
+        readOnly: Number(c.hidden) > 1 || undefined,
+      })),
       indexes,
       foreignKeys: [...fkMap.values()],
       ddl,
@@ -105,8 +118,8 @@ export const sqlite = (ctx: DriverContext): SqlDriver => {
     };
   };
 
-  const isView = (name: string) => all("SELECT type FROM sqlite_master WHERE name = ?", name)[0]?.type === 'view';
-  const withoutRowid = (name: string) => /without\s+rowid/i.test(String(all("SELECT sql FROM sqlite_master WHERE name = ?", name)[0]?.sql ?? ''));
+  const isView = (name: string) => all('SELECT type FROM sqlite_master WHERE name = ?', name)[0]?.type === 'view';
+  const withoutRowid = (name: string) => /without\s+rowid/i.test(String(all('SELECT sql FROM sqlite_master WHERE name = ?', name)[0]?.sql ?? ''));
 
   return {
     family: 'sql',
@@ -138,8 +151,12 @@ export const sqlite = (ctx: DriverContext): SqlDriver => {
       if (p.length === 2) {
         const info = describe({ table: p[1] });
         return [
-          ...info.columns.map((c): TreeNode => ({ name: c.name, type: c.key ? 'key' : 'column', detail: `${c.type ?? 'any'}${c.nullable ? '?' : ''}`, leaf: true })),
-          ...info.indexes.filter((i) => !i.primary).map((i): TreeNode => ({ name: `index:${i.name}`, label: i.name, type: 'index', detail: i.columns.join(', '), leaf: true })),
+          ...info.columns.map(
+            (c): TreeNode => ({ name: c.name, type: c.key ? 'key' : 'column', detail: `${c.type ?? 'any'}${c.nullable ? '?' : ''}`, leaf: true }),
+          ),
+          ...info.indexes
+            .filter((i) => !i.primary)
+            .map((i): TreeNode => ({ name: `index:${i.name}`, label: i.name, type: 'index', detail: i.columns.join(', '), leaf: true })),
         ];
       }
       return [];
@@ -176,7 +193,9 @@ export const sqlite = (ctx: DriverContext): SqlDriver => {
         throw sqlErr(e);
       }
       const byName = new Map(info.columns.map((c) => [c.name, c]));
-      const columns = res.columns.map((c, i) => (byRowid && i === 0 ? { name: '_rowid_', type: 'rowid', key: true, readOnly: true } : { ...c, ...byName.get(c.name) }));
+      const columns = res.columns.map((c, i) =>
+        byRowid && i === 0 ? { name: '_rowid_', type: 'rowid', key: true, readOnly: true } : { ...c, ...byName.get(c.name) },
+      );
       let total: number | null = null;
       try {
         total = Number(all(count)[0].n);
@@ -195,7 +214,8 @@ export const sqlite = (ctx: DriverContext): SqlDriver => {
         for (const s of editStatements('sqlite', t, edits)) {
           const st = d.prepare(s.sql);
           const r = st.run(...(s.params.map((x) => (typeof x === 'boolean' ? Number(x) : x)) as never[]));
-          if (!/^INSERT/.test(s.sql) && Number(r.changes) === 0) throw new PluginError('A row was changed or removed since it was read: refresh, and make the change again.');
+          if (!/^INSERT/.test(s.sql) && Number(r.changes) === 0)
+            throw new PluginError('A row was changed or removed since it was read: refresh, and make the change again.');
           affected += Number(r.changes);
         }
         d.exec('COMMIT');
@@ -210,7 +230,9 @@ export const sqlite = (ctx: DriverContext): SqlDriver => {
 
     async completions() {
       const tables = all("SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%' ORDER BY name");
-      return { tables: tables.map((t) => ({ name: String(t.name), columns: all(`PRAGMA table_info(${ident('sqlite', String(t.name))})`).map((c) => String(c.name)) })) };
+      return {
+        tables: tables.map((t) => ({ name: String(t.name), columns: all(`PRAGMA table_info(${ident('sqlite', String(t.name))})`).map((c) => String(c.name)) })),
+      };
     },
 
     async close() {

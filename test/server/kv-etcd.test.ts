@@ -53,9 +53,18 @@ describe('etcd', { skip: !reachable && `nothing answers at ${URL_}` }, () => {
       assert.ok(r.total! >= 4);
       cursor = r.cursor;
     } while (cursor !== '0');
-    assert.deepEqual(seen, ['a/1', 'a/2', 'a/3'].map((k) => P + k));
-    assert.deepEqual((await d.scan({ pattern: `${P}*/1`, cursor: '0', count: 100 })).keys.map((k) => k.key), [`${P}a/1`, `${P}b/1`]);
-    assert.deepEqual((await d.scan({ pattern: `${P}b/1`, cursor: '0', count: 100 })).keys.map((k) => k.key), [`${P}b/1`]);
+    assert.deepEqual(
+      seen,
+      ['a/1', 'a/2', 'a/3'].map((k) => P + k),
+    );
+    assert.deepEqual(
+      (await d.scan({ pattern: `${P}*/1`, cursor: '0', count: 100 })).keys.map((k) => k.key),
+      [`${P}a/1`, `${P}b/1`],
+    );
+    assert.deepEqual(
+      (await d.scan({ pattern: `${P}b/1`, cursor: '0', count: 100 })).keys.map((k) => k.key),
+      [`${P}b/1`],
+    );
     const v = await d.get({ key: `${P}a/2` });
     assert.equal(v.type === 'string' && v.value, 'v-a/2');
     assert.equal(v.ttl, -1);

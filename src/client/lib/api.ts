@@ -2,8 +2,7 @@
 // and saving a stream to a file, all to Data's server part; and the app's
 // toasts, menus and dialogs.
 
-import { useMemo } from 'react';
-import { useHost } from '@hyperpane/sdk/client';
+import type { useHost } from '@hyperpane/sdk/client';
 import { ID } from '../../shared/types.ts';
 
 export type Host = ReturnType<typeof useHost>;
@@ -45,9 +44,4 @@ export function makeApi(host: Host): Api {
     },
   };
   return api;
-}
-
-export function useApi(): Api {
-  const host = useHost();
-  return useMemo(() => makeApi(host), [host]);
 }

@@ -129,7 +129,10 @@ export function List(p: ListProps) {
               data-key={row.key}
               role="option"
               aria-selected={on}
-              className={cn('flex h-[22px] cursor-default items-center gap-2 px-2 text-[11.5px] select-none', on ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]')}
+              className={cn(
+                'flex h-[22px] cursor-default items-center gap-2 px-2 text-[11.5px] select-none',
+                on ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
+              )}
               onMouseDown={(e) => e.button === 0 && click(e, row)}
               onDoubleClick={() => p.onOpen(row)}
               onContextMenu={(e) => {

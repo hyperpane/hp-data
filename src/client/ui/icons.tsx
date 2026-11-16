@@ -1,6 +1,29 @@
 // An icon for each kind of tree item and tab.
 
-import { Archive, Braces, Columns3, Database, Eye, Folder, House, Inbox, Info, KeyRound, KeySquare, Layers, ListOrdered, ListTree, Radio, Shuffle, SquareFunction, SquareTerminal, Table2, Users, Zap, type LucideIcon } from 'lucide-react';
+import {
+  Archive,
+  Braces,
+  Columns3,
+  Database,
+  Eye,
+  Folder,
+  House,
+  Inbox,
+  Info,
+  KeyRound,
+  KeySquare,
+  Layers,
+  ListOrdered,
+  ListTree,
+  Radio,
+  Shuffle,
+  SquareFunction,
+  SquareTerminal,
+  Table2,
+  Users,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
 import type { NodeType, TabType } from '../../shared/types.ts';
 
 export const NODE_ICONS: Record<NodeType, LucideIcon> = {

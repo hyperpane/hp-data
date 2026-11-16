@@ -22,9 +22,24 @@ interface Query {
 }
 
 const PLACEHOLDERS: Record<string, Query & { projectionLabel: string }> = {
-  mongodb: { filter: '{ status: "paid", total: { $gt: 20 } }   ·   { _id: ObjectId("…") }', sort: '{ placed: -1 }', projection: '{ name: 1, email: 1 }', projectionLabel: 'Project' },
-  elasticsearch: { filter: 'A query string (level:error AND service:api) or a query: { "match": { "message": "timeout" } }', sort: '@timestamp:desc   or   [{ "@timestamp": "desc" }]', projection: 'message, level   or   ["http.*"]', projectionLabel: 'Fields' },
-  dynamodb: { filter: 'A PartiQL condition: category = \'books\' AND price > 10   (empty: the whole table, scanned)', sort: '', projection: 'sku, name, price', projectionLabel: 'Attributes' },
+  mongodb: {
+    filter: '{ status: "paid", total: { $gt: 20 } }   ·   { _id: ObjectId("…") }',
+    sort: '{ placed: -1 }',
+    projection: '{ name: 1, email: 1 }',
+    projectionLabel: 'Project',
+  },
+  elasticsearch: {
+    filter: 'A query string (level:error AND service:api) or a query: { "match": { "message": "timeout" } }',
+    sort: '@timestamp:desc   or   [{ "@timestamp": "desc" }]',
+    projection: 'message, level   or   ["http.*"]',
+    projectionLabel: 'Fields',
+  },
+  dynamodb: {
+    filter: "A PartiQL condition: category = 'books' AND price > 10   (empty: the whole table, scanned)",
+    sort: '',
+    projection: 'sku, name, price',
+    projectionLabel: 'Attributes',
+  },
 };
 
 const LIMITS = ['20', '50', '100', '200', '500'].map((v) => ({ value: v, label: `${v} a page` }));
@@ -57,7 +72,11 @@ export function CollectionView(p: TabProps) {
     setLoading(true);
     setError(null);
     try {
-      const r = await api.stream<DocFindResult>('docFind', { id: p.connection.id, project: p.project, ref: tab.ref, ...query, skip: o.skip, limit: o.limit, token: o.token }, ac.signal);
+      const r = await api.stream<DocFindResult>(
+        'docFind',
+        { id: p.connection.id, project: p.project, ref: tab.ref, ...query, skip: o.skip, limit: o.limit, token: o.token },
+        ac.signal,
+      );
       if (running.current === ac) setResult(r);
     } catch (e) {
       if (running.current === ac && !ac.signal.aborted) setError(e instanceof Error ? e.message : String(e));
@@ -109,16 +128,35 @@ export function CollectionView(p: TabProps) {
   };
 
   const call = (op: string, payload: Record<string, unknown>) => api.call(op, { id: p.connection.id, project: p.project, ref: tab.ref, ...payload });
-  const hint = mongo ? 'Shell literals work: ObjectId("…"), ISODate("…"), NumberLong(…)' : dynamo ? (idFields.length ? `The key: ${idFields.join(', ')}` : undefined) : '_id is the document’s id; the rest is its _source.';
+  const hint = mongo
+    ? 'Shell literals work: ObjectId("…"), ISODate("…"), NumberLong(…)'
+    : dynamo
+      ? idFields.length
+        ? `The key: ${idFields.join(', ')}`
+        : undefined
+      : '_id is the document’s id; the rest is its _source.';
   const without = (d: unknown, fields: string[]) => Object.fromEntries(Object.entries(d as Record<string, unknown>).filter(([k]) => !fields.includes(k)));
   const actions = {
-    edit: (i: number) => setEditing({ mode: 'replace', text: toText(docs[i], mongo), key: keyOf(docs[i], idFields) ?? undefined, title: readOnly ? 'Document' : 'Edit document' }),
-    duplicate: (i: number) => setEditing({ mode: 'insert', text: toText(dynamo ? docs[i] : without(docs[i], ['_id', '_index']), mongo), title: 'Insert a copy' }),
+    edit: (i: number) =>
+      setEditing({ mode: 'replace', text: toText(docs[i], mongo), key: keyOf(docs[i], idFields) ?? undefined, title: readOnly ? 'Document' : 'Edit document' }),
+    duplicate: (i: number) =>
+      setEditing({ mode: 'insert', text: toText(dynamo ? docs[i] : without(docs[i], ['_id', '_index']), mongo), title: 'Insert a copy' }),
     copy: (i: number) => api.copy(JSON.stringify(docs[i], null, 2), 'the document'),
     remove: async (i: number) => {
       const key = keyOf(docs[i], idFields);
       if (!key) return api.toast('That document has no id to delete it by', true);
-      if (!(await api.confirm('Delete the document?', `${Object.entries(key).filter(([k]) => k !== '_index').map(([k, v]) => `${k}: ${toText(v, mongo)}`).join(', ')} will be deleted from ${tab.title}.`, 'Delete', true))) return;
+      if (
+        !(await api.confirm(
+          'Delete the document?',
+          `${Object.entries(key)
+            .filter(([k]) => k !== '_index')
+            .map(([k, v]) => `${k}: ${toText(v, mongo)}`)
+            .join(', ')} will be deleted from ${tab.title}.`,
+          'Delete',
+          true,
+        ))
+      )
+        return;
       try {
         await call('docRemove', { keys: [key] });
         api.toast('Deleted the document');
@@ -128,7 +166,12 @@ export function CollectionView(p: TabProps) {
       }
     },
   };
-  const newDoc = () => setEditing({ mode: 'insert', text: dynamo && idFields.length ? `{\n${idFields.map((f) => `  ${JSON.stringify(f)}: ""`).join(',\n')}\n}` : '{\n  \n}', title: 'Insert a document' });
+  const newDoc = () =>
+    setEditing({
+      mode: 'insert',
+      text: dynamo && idFields.length ? `{\n${idFields.map((f) => `  ${JSON.stringify(f)}: ""`).join(',\n')}\n}` : '{\n  \n}',
+      title: 'Insert a document',
+    });
   const save = async (text: string) => {
     if (!editing) return;
     if (editing.mode === 'insert') await call('docInsert', { doc: text });
@@ -156,7 +199,10 @@ export function CollectionView(p: TabProps) {
     </label>
   );
 
-  const pageText = result ? (docs.length ? `${(start + 1).toLocaleString()}–${(start + docs.length).toLocaleString()}` : '0') + (result.total !== null ? ` of ${dynamo && !applied.filter ? '~' : ''}${result.total.toLocaleString()}` : '') : '';
+  const pageText = result
+    ? (docs.length ? `${(start + 1).toLocaleString()}–${(start + docs.length).toLocaleString()}` : '0') +
+      (result.total !== null ? ` of ${dynamo && !applied.filter ? '~' : ''}${result.total.toLocaleString()}` : '')
+    : '';
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col text-[11.5px]">
@@ -187,7 +233,10 @@ export function CollectionView(p: TabProps) {
           variant="pills"
           label="Show as"
           value={view}
-          onValueChange={(v) => (setView(v), p.setState({ view: v }))}
+          onValueChange={(v) => {
+            setView(v);
+            p.setState({ view: v });
+          }}
           items={[
             { value: 'json', label: 'JSON' },
             { value: 'table', label: 'Table' },
@@ -205,7 +254,16 @@ export function CollectionView(p: TabProps) {
           <ToolButton
             label="Open the query in a console"
             icon={SquareTerminal}
-            onClick={() => p.open({ type: 'console', conn: p.connection.id, ref: { database: tab.ref.database }, title: `Console · ${tab.title}`, key: `${p.connection.id}:console:${Date.now()}`, state: { text: result.query } })}
+            onClick={() =>
+              p.open({
+                type: 'console',
+                conn: p.connection.id,
+                ref: { database: tab.ref.database },
+                title: `Console · ${tab.title}`,
+                key: `${p.connection.id}:console:${Date.now()}`,
+                state: { text: result.query },
+              })
+            }
           />
         )}
         <div className="ml-auto flex items-center gap-1">
@@ -252,7 +310,14 @@ export function CollectionView(p: TabProps) {
         {result && <span>{ms(result.ms)}</span>}
         {readOnly && <span>Read only</span>}
         {loading && (
-          <button type="button" className="ml-auto hover:text-[var(--node-fg)]" onClick={() => (running.current?.abort(), setLoading(false))}>
+          <button
+            type="button"
+            className="ml-auto hover:text-[var(--node-fg)]"
+            onClick={() => {
+              running.current?.abort();
+              setLoading(false);
+            }}
+          >
             Cancel
           </button>
         )}

@@ -18,7 +18,10 @@ import type { KvDriver, SqlDriver } from '../../src/server/drivers/types.ts';
 const up = (port: number) =>
   new Promise<boolean>((resolve) => {
     const s = net.connect(port, '127.0.0.1');
-    s.once('connect', () => (s.destroy(), resolve(true)));
+    s.once('connect', () => {
+      s.destroy();
+      resolve(true);
+    });
     s.once('error', () => resolve(false));
   });
 
@@ -76,7 +79,11 @@ describe('through SSH, live', async () => {
   const skip = !live && 'set HP_DATA_SSH_KEY, and run the SSH server on :2222 (README)';
 
   test('PostgreSQL by a password; the host key is remembered', { skip }, async () => {
-    const d = (await sessions.make('postgresql', { host: 'hp-data-postgres', database: 'shop', password: 'postgres', ...ssh, sshAuth: 'password', sshPassword: 'tunnel' }, null)) as SqlDriver;
+    const d = (await sessions.make(
+      'postgresql',
+      { host: 'hp-data-postgres', database: 'shop', password: 'postgres', ...ssh, sshAuth: 'password', sshPassword: 'tunnel' },
+      null,
+    )) as SqlDriver;
     try {
       assert.match((await d.info()).version, /^PostgreSQL/);
       const [r] = await d.query('select count(*) from customers', { limit: 5, signal: new AbortController().signal });
@@ -91,13 +98,20 @@ describe('through SSH, live', async () => {
     const d = (await sessions.make('redis', { host: 'hp-data-redis', ...ssh, sshAuth: 'key', sshKeyFile: key! }, null)) as KvDriver;
     assert.match((await d.info()).version, /^Redis/);
     await d.close();
-    const pp = (await sessions.make('redis', { host: 'hp-data-redis', ...ssh, sshAuth: 'pasted', sshKey: readFileSync(`${key}_pp`, 'utf8'), sshPassphrase: 'secret' }, null)) as KvDriver;
+    const pp = (await sessions.make(
+      'redis',
+      { host: 'hp-data-redis', ...ssh, sshAuth: 'pasted', sshKey: readFileSync(`${key}_pp`, 'utf8'), sshPassphrase: 'secret' },
+      null,
+    )) as KvDriver;
     assert.match((await pp.info()).version, /^Redis/);
     await pp.close();
   });
   test('says why not: a wrong password, a target it can’t reach, a changed host key', { skip }, async () => {
     await assert.rejects(sessions.make('redis', { host: 'hp-data-redis', ...ssh, sshAuth: 'password', sshPassword: 'wrong' }, null), /didn’t take the sign-in/);
-    await assert.rejects(sessions.make('redis', { host: 'hp-data-redis', port: 1, ...ssh, sshAuth: 'key', sshKeyFile: key! }, null), /couldn’t reach hp-data-redis:1/);
+    await assert.rejects(
+      sessions.make('redis', { host: 'hp-data-redis', port: 1, ...ssh, sshAuth: 'key', sshKeyFile: key! }, null),
+      /couldn’t reach hp-data-redis:1/,
+    );
     writeFileSync(path.join(dataDir, 'ssh_known_hosts.json'), JSON.stringify({ '127.0.0.1:2222': 'SHA256:someoneelse' }));
     await assert.rejects(sessions.make('redis', { host: 'hp-data-redis', ...ssh, sshAuth: 'key', sshKeyFile: key! }, null), /key has changed/);
   });

@@ -18,7 +18,12 @@ export const throwawayGroup = () => `${GROUP_PREFIX}${randomUUID()}`;
 export function brokersOf(v: unknown): string[] {
   const list = String(v ?? '')
     .split(/[\s,]+/)
-    .map((b) => b.trim().replace(/^[a-z+]+:\/\//i, '').replace(/\/+$/, ''))
+    .map((b) =>
+      b
+        .trim()
+        .replace(/^[a-z+]+:\/\//i, '')
+        .replace(/\/+$/, ''),
+    )
     .filter(Boolean);
   if (!list.length) throw new PluginError('Give at least one broker, as host:port.');
   return list.map((b) => (/:\d+$/.test(b) ? b : `${b}:9092`));
@@ -36,7 +41,7 @@ export function saslOf(v: Values): SASLOptions | undefined {
   throw new PluginError(`SASL ${m} isn’t one Data speaks: use PLAIN or SCRAM.`);
 }
 
-export function configOf(v: Values, log: (line: string) => void): KafkaConfig {
+function configOf(v: Values, log: (line: string) => void): KafkaConfig {
   return {
     clientId: 'hyperpane-data',
     brokers: brokersOf(v.brokers),
@@ -63,9 +68,11 @@ export function said(e: unknown): Error {
   const where = /(?:ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EHOSTUNREACH)\s+([^\s]+)/.exec(msg)?.[1];
   if (/ECONNREFUSED/.test(msg)) return new PluginError(`Nothing answers at ${where ?? 'the brokers'}: is Kafka running, on that port?`);
   if (/ENOTFOUND|EAI_AGAIN/.test(msg)) return new PluginError(`There’s no host ${where ?? 'by that name'}: check the brokers.`);
-  if (err?.name === 'KafkaJSConnectionTimeout' || /Connection timeout|ETIMEDOUT/.test(msg)) return new PluginError('The brokers didn’t answer in time: a firewall, a VPN, or the wrong address? (Or TLS where it isn’t.)');
+  if (err?.name === 'KafkaJSConnectionTimeout' || /Connection timeout|ETIMEDOUT/.test(msg))
+    return new PluginError('The brokers didn’t answer in time: a firewall, a VPN, or the wrong address? (Or TLS where it isn’t.)');
   if (err?.name === 'KafkaJSSASLAuthenticationError') return new PluginError(`Signing in failed: ${msg.replace(/^SASL \S+ authentication failed: /i, '')}`);
-  if (/Closed connection|Connection error/i.test(msg) && /ssl|tls/i.test(msg)) return new PluginError('The brokers closed the connection: TLS where it isn’t, or the other way round?');
+  if (/Closed connection|Connection error/i.test(msg) && /ssl|tls/i.test(msg))
+    return new PluginError('The brokers closed the connection: TLS where it isn’t, or the other way round?');
   const types: Record<string, string> = {
     TOPIC_ALREADY_EXISTS: 'There’s a topic by that name already.',
     UNKNOWN_TOPIC_OR_PARTITION: 'There’s no such topic (or partition).',

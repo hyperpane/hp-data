@@ -39,7 +39,9 @@ export function ConsoleView(p: TabProps) {
   const follow = useFollow(entries.length);
   const etcd = p.kind.engine === 'etcd';
   const calls = useMemo(() => callsOf(p, db), [p.connection.id, p.project, db, api]);
-  const prompt = etcd ? `${address(p.kind, p.connection.values)}>` : `${address(p.kind, { ...p.connection.values, db: 0 })}${db && db !== '0' ? `[${db}]` : ''}>`;
+  const prompt = etcd
+    ? `${address(p.kind, p.connection.values)}>`
+    : `${address(p.kind, { ...p.connection.values, db: 0 })}${db && db !== '0' ? `[${db}]` : ''}>`;
 
   useEffect(() => {
     if (p.visible) input.current?.focus();
@@ -109,7 +111,9 @@ export function ConsoleView(p: TabProps) {
       <div ref={follow.ref} onScroll={follow.onScroll} className="min-h-0 flex-1 overflow-auto px-3 py-2 leading-[18px] select-text">
         {!entries.length && (
           <div className="pb-2 font-sans text-[11.5px] text-[var(--node-muted)]">
-            {etcd ? 'etcd’s console: get, get --prefix, ls, count, put (--ttl), del (--prefix), version. ' : 'Commands as in redis-cli: SET k "a b", HGETALL user:1, SCAN 0 MATCH user:*. '}
+            {etcd
+              ? 'etcd’s console: get, get --prefix, ls, count, put (--ttl), del (--prefix), version. '
+              : 'Commands as in redis-cli: SET k "a b", HGETALL user:1, SCAN 0 MATCH user:*. '}
             ↑ and ↓ go through what you ran; clear empties this.
           </div>
         )}

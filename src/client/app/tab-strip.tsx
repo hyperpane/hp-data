@@ -9,7 +9,25 @@ import type { Connection } from '../../shared/types.ts';
 import { TAB_ICONS } from '../ui/icons.tsx';
 import type { Tab } from './tabs.ts';
 
-export function TabStrip({ tabs, active, connection, onActivate, onClose, onCloseOthers, onCloseConnection, left }: { tabs: Tab[]; active: string; connection(id: string | null): Connection | undefined; onActivate(key: string): void; onClose(key: string): void; onCloseOthers(key: string): void; onCloseConnection(conn: string): void; left?: React.ReactNode }) {
+export function TabStrip({
+  tabs,
+  active,
+  connection,
+  onActivate,
+  onClose,
+  onCloseOthers,
+  onCloseConnection,
+  left,
+}: {
+  tabs: Tab[];
+  active: string;
+  connection(id: string | null): Connection | undefined;
+  onActivate(key: string): void;
+  onClose(key: string): void;
+  onCloseOthers(key: string): void;
+  onCloseConnection(conn: string): void;
+  left?: React.ReactNode;
+}) {
   const menu = useMenu();
   return (
     <div className="flex h-9 flex-none items-stretch border-b border-[var(--node-border)]">
@@ -32,7 +50,11 @@ export function TabStrip({ tabs, active, connection, onActivate, onClose, onClos
               onContextMenu={(e) => {
                 e.preventDefault();
                 if (home) return;
-                menu.open(e, [{ label: 'Close', run: () => onClose(t.key) }, { label: 'Close Others', run: () => onCloseOthers(t.key) }, ...(c ? [{ label: `Close All of ${c.name}`, run: () => onCloseConnection(c.id) }] : [])]);
+                menu.open(e, [
+                  { label: 'Close', run: () => onClose(t.key) },
+                  { label: 'Close Others', run: () => onCloseOthers(t.key) },
+                  ...(c ? [{ label: `Close All of ${c.name}`, run: () => onCloseConnection(c.id) }] : []),
+                ]);
               }}
               className={cn(
                 'group relative flex max-w-[220px] flex-none cursor-default items-center gap-1.5 border-r border-[var(--node-border)] text-[11.5px]',
@@ -49,7 +71,10 @@ export function TabStrip({ tabs, active, connection, onActivate, onClose, onClos
                   aria-label="Close tab"
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={() => onClose(t.key)}
-                  className={cn('flex size-4 flex-none items-center justify-center rounded-[3px] hover:bg-[color-mix(in_srgb,var(--node-fg)_10%,transparent)]', on ? 'opacity-100' : 'opacity-0 group-hover:opacity-100')}
+                  className={cn(
+                    'flex size-4 flex-none items-center justify-center rounded-[3px] hover:bg-[color-mix(in_srgb,var(--node-fg)_10%,transparent)]',
+                    on ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+                  )}
                 >
                   <X className="size-3" />
                 </button>

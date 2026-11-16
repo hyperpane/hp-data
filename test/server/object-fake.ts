@@ -41,8 +41,14 @@ export async function fakeS3(o: { pageSize?: number } = {}) {
     const key = decodeURIComponent(rest.join('/'));
     const q = url.searchParams;
     log.push(`${req.method} ${bucket}${key ? `/${key}` : ''}${url.search}`);
-    const xml = (s: string, status = 200) => (res.writeHead(status, { 'content-type': 'application/xml' }), res.end(`<?xml version="1.0" encoding="UTF-8"?>${s}`));
-    if (!bucket) return xml(`<ListAllMyBucketsResult><Buckets>${[...buckets.keys()].map((b) => `<Bucket><Name>${b}</Name><CreationDate>2024-01-01T00:00:00.000Z</CreationDate></Bucket>`).join('')}</Buckets></ListAllMyBucketsResult>`);
+    const xml = (s: string, status = 200) => {
+      res.writeHead(status, { 'content-type': 'application/xml' });
+      return res.end(`<?xml version="1.0" encoding="UTF-8"?>${s}`);
+    };
+    if (!bucket)
+      return xml(
+        `<ListAllMyBucketsResult><Buckets>${[...buckets.keys()].map((b) => `<Bucket><Name>${b}</Name><CreationDate>2024-01-01T00:00:00.000Z</CreationDate></Bucket>`).join('')}</Buckets></ListAllMyBucketsResult>`,
+      );
     const b = buckets.get(bucket);
     if (!key && req.method === 'PUT') {
       if (b) return fail(409, 'BucketAlreadyOwnedByYou');
@@ -62,7 +68,10 @@ export async function fakeS3(o: { pageSize?: number } = {}) {
         const i = delimiter ? k.indexOf(delimiter, prefix.length) : -1;
         if (i >= 0) {
           const p = k.slice(0, i + 1);
-          if (!seen.has(p)) (seen.add(p), items.push({ key: p, prefix: true }));
+          if (!seen.has(p)) {
+            seen.add(p);
+            items.push({ key: p, prefix: true });
+          }
         } else items.push({ key: k });
       }
       const from = items.filter((x) => x.key > after);
@@ -71,14 +80,23 @@ export async function fakeS3(o: { pageSize?: number } = {}) {
       const name = (s: string) => esc(url ? enc(s) : s);
       return xml(
         `<ListBucketResult><Name>${bucket}</Name>${url ? '<EncodingType>url</EncodingType>' : ''}<IsTruncated>${from.length > max}</IsTruncated>${from.length > max ? `<NextContinuationToken>${esc(page[page.length - 1].key)}</NextContinuationToken>` : ''}${page
-          .map((x) => (x.prefix ? `<CommonPrefixes><Prefix>${name(x.key)}</Prefix></CommonPrefixes>` : `<Contents><Key>${name(x.key)}</Key><LastModified>${b.get(x.key)!.modified.toISOString()}</LastModified><ETag>"${md5hex(b.get(x.key)!.body)}"</ETag><Size>${b.get(x.key)!.body.length}</Size><StorageClass>STANDARD</StorageClass></Contents>`))
+          .map((x) =>
+            x.prefix
+              ? `<CommonPrefixes><Prefix>${name(x.key)}</Prefix></CommonPrefixes>`
+              : `<Contents><Key>${name(x.key)}</Key><LastModified>${b.get(x.key)!.modified.toISOString()}</LastModified><ETag>"${md5hex(b.get(x.key)!.body)}"</ETag><Size>${b.get(x.key)!.body.length}</Size><StorageClass>STANDARD</StorageClass></Contents>`,
+          )
           .join('')}</ListBucketResult>`,
       );
     }
-    if (!key && req.method === 'HEAD') return (res.writeHead(200), res.end());
+    if (!key && req.method === 'HEAD') {
+      res.writeHead(200);
+      return res.end();
+    }
     if (!key && req.method === 'POST' && q.has('delete')) {
       if (req.headers['content-md5'] !== createHash('md5').update(body).digest('base64')) return fail(400, 'InvalidDigest');
-      const keys = [...body.toString('utf8').matchAll(/<Key>([\s\S]*?)<\/Key>/g)].map((m) => m[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
+      const keys = [...body.toString('utf8').matchAll(/<Key>([\s\S]*?)<\/Key>/g)].map((m) =>
+        m[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'),
+      );
       for (const k of keys) b.delete(k);
       return xml('<DeleteResult></DeleteResult>');
     }
@@ -101,7 +119,11 @@ export async function fakeS3(o: { pageSize?: number } = {}) {
       uploads.delete(q.get('uploadId')!);
       return xml('<CompleteMultipartUploadResult></CompleteMultipartUploadResult>');
     }
-    if (req.method === 'DELETE' && q.has('uploadId')) return (uploads.delete(q.get('uploadId')!), res.writeHead(204), res.end());
+    if (req.method === 'DELETE' && q.has('uploadId')) {
+      uploads.delete(q.get('uploadId')!);
+      res.writeHead(204);
+      return res.end();
+    }
     if (req.method === 'PUT') {
       const source = req.headers['x-amz-copy-source'];
       if (source) {
@@ -111,13 +133,21 @@ export async function fakeS3(o: { pageSize?: number } = {}) {
         b.set(key, { ...from, modified: new Date() });
         return xml('<CopyObjectResult></CopyObjectResult>');
       }
-      const meta = Object.fromEntries(Object.entries(req.headers).filter(([k]) => k.startsWith('x-amz-meta-')).map(([k, v]) => [k, String(v)]));
+      const meta = Object.fromEntries(
+        Object.entries(req.headers)
+          .filter(([k]) => k.startsWith('x-amz-meta-'))
+          .map(([k, v]) => [k, String(v)]),
+      );
       b.set(key, { body, type: String(req.headers['content-type'] ?? 'binary/octet-stream'), modified: new Date(), meta });
       res.writeHead(200, { etag: `"${md5hex(body)}"` });
       return res.end();
     }
     const obj = b.get(key);
-    if (req.method === 'DELETE') return (b.delete(key), res.writeHead(204), res.end());
+    if (req.method === 'DELETE') {
+      b.delete(key);
+      res.writeHead(204);
+      return res.end();
+    }
     if (!obj) return fail(404, 'NoSuchKey', 'The specified key does not exist.');
     const headers = { 'content-type': obj.type, 'last-modified': obj.modified.toUTCString(), etag: `"${md5hex(obj.body)}"`, ...obj.meta };
     const range = /^bytes=(\d+)-(\d+)?$/.exec(String(req.headers.range ?? ''));
@@ -145,7 +175,9 @@ function checkSignature(req: http.IncomingMessage, url: URL, body: Buffer): stri
     const [, day, region] = /^[^/]+\/(\d{8})\/([^/]+)\//.exec(url.searchParams.get('X-Amz-Credential') ?? '') ?? [];
     const base = new URL(url);
     for (const k of [...base.searchParams.keys()]) if (k.startsWith('X-Amz-')) base.searchParams.delete(k);
-    const again = new URL(presign({ url: base, region, credentials, seconds: Number(url.searchParams.get('X-Amz-Expires')), date: fromStamp(url.searchParams.get('X-Amz-Date')!) }));
+    const again = new URL(
+      presign({ url: base, region, credentials, seconds: Number(url.searchParams.get('X-Amz-Expires')), date: fromStamp(url.searchParams.get('X-Amz-Date')!) }),
+    );
     return day && again.searchParams.get('X-Amz-Signature') === url.searchParams.get('X-Amz-Signature') ? null : 'presigned signature differs';
   }
   const auth = String(req.headers.authorization ?? '');
@@ -157,6 +189,15 @@ function checkSignature(req: http.IncomingMessage, url: URL, body: Buffer): stri
   const names = m[4].split(';');
   const headers: Record<string, string> = {};
   for (const n of names) if (!['host', 'x-amz-date', 'x-amz-content-sha256'].includes(n)) headers[n] = String(req.headers[n] ?? '');
-  const again = sign({ method: req.method!, url, headers, payloadHash, region: m[3], service: 's3', credentials, date: fromStamp(String(req.headers['x-amz-date'])) });
+  const again = sign({
+    method: req.method!,
+    url,
+    headers,
+    payloadHash,
+    region: m[3],
+    service: 's3',
+    credentials,
+    date: fromStamp(String(req.headers['x-amz-date'])),
+  });
   return again.authorization === auth ? null : 'signature differs';
 }

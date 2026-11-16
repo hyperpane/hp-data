@@ -89,8 +89,10 @@ export function parseShell(text: string): Statement[] {
   return out;
 }
 
-const WRITES = /^(insert|insertOne|insertMany|update|updateOne|updateMany|replaceOne|delete|deleteOne|deleteMany|remove|findOneAndUpdate|findOneAndReplace|findOneAndDelete|findAndModify|bulkWrite|drop|dropIndex|dropIndexes|createIndex|createIndexes|renameCollection|createCollection|createView|dropDatabase|save)$/;
-const COMMAND_WRITES = /^(insert|update|delete|drop|dropDatabase|create|createIndexes|dropIndexes|renameCollection|findAndModify|collMod|shutdown|createUser|dropUser|updateUser|grantRolesToUser|revokeRolesFromUser|compact|reIndex|applyOps)$/i;
+const WRITES =
+  /^(insert|insertOne|insertMany|update|updateOne|updateMany|replaceOne|delete|deleteOne|deleteMany|remove|findOneAndUpdate|findOneAndReplace|findOneAndDelete|findAndModify|bulkWrite|drop|dropIndex|dropIndexes|createIndex|createIndexes|renameCollection|createCollection|createView|dropDatabase|save)$/;
+const COMMAND_WRITES =
+  /^(insert|update|delete|drop|dropDatabase|create|createIndexes|dropIndexes|renameCollection|findAndModify|collMod|shutdown|createUser|dropUser|updateUser|grantRolesToUser|revokeRolesFromUser|compact|reIndex|applyOps)$/i;
 
 /** It changes something (as far as can be told): for read-only
  * connections. Text that doesn't parse doesn't run, so isn't one. */

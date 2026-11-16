@@ -1,7 +1,7 @@
 // What the server part and the window say to each other: saved
 // connections, the tree of what's in one, and each family's results.
 
-import type { Family, Values } from './kinds.ts';
+import type { Values } from './kinds.ts';
 
 export const ID = 'data';
 
@@ -156,11 +156,3 @@ export interface QueryResult {
   truncated?: boolean;
   notices?: string[];
 }
-
-export const FAMILY_TABS: Record<Family, TabType[]> = {
-  sql: ['console', 'table'],
-  kv: ['console', 'keys'],
-  document: ['console', 'collection'],
-  queue: ['topic', 'queue'],
-  object: ['bucket'],
-};

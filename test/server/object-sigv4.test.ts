@@ -10,7 +10,16 @@ const credentials = { accessKeyId: 'AKIAIOSFODNN7EXAMPLE', secretAccessKey: 'wJa
 const date = new Date('2013-05-24T00:00:00Z');
 
 test('GET Object example (S3 docs, sig-v4-header-based-auth)', () => {
-  const h = sign({ method: 'GET', url: new URL('https://examplebucket.s3.amazonaws.com/test.txt'), headers: { range: 'bytes=0-9' }, payloadHash: sha256hex(''), region: 'us-east-1', service: 's3', credentials, date });
+  const h = sign({
+    method: 'GET',
+    url: new URL('https://examplebucket.s3.amazonaws.com/test.txt'),
+    headers: { range: 'bytes=0-9' },
+    payloadHash: sha256hex(''),
+    region: 'us-east-1',
+    service: 's3',
+    credentials,
+    date,
+  });
   assert.equal(h['x-amz-date'], '20130524T000000Z');
   assert.equal(h['x-amz-content-sha256'], 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
   assert.equal(
@@ -31,16 +40,37 @@ test('PUT Object example (S3 docs): a signed payload and a key with $', () => {
     credentials,
     date,
   });
-  assert.match(h.authorization, /SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class, Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd$/);
+  assert.match(
+    h.authorization,
+    /SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class, Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd$/,
+  );
 });
 
 test('GET Bucket lifecycle example (S3 docs): a query without a value', () => {
-  const h = sign({ method: 'GET', url: new URL('https://examplebucket.s3.amazonaws.com/?lifecycle='), headers: {}, payloadHash: sha256hex(''), region: 'us-east-1', service: 's3', credentials, date });
+  const h = sign({
+    method: 'GET',
+    url: new URL('https://examplebucket.s3.amazonaws.com/?lifecycle='),
+    headers: {},
+    payloadHash: sha256hex(''),
+    region: 'us-east-1',
+    service: 's3',
+    credentials,
+    date,
+  });
   assert.match(h.authorization, /Signature=fea454ca298b7da1c68078a5d1bdbfbbe0d65c699e0f91ac7a200a0136783543$/);
 });
 
 test('GET Bucket (list objects) example (S3 docs): a query sorted and encoded', () => {
-  const h = sign({ method: 'GET', url: new URL('https://examplebucket.s3.amazonaws.com/?max-keys=2&prefix=J'), headers: {}, payloadHash: sha256hex(''), region: 'us-east-1', service: 's3', credentials, date });
+  const h = sign({
+    method: 'GET',
+    url: new URL('https://examplebucket.s3.amazonaws.com/?max-keys=2&prefix=J'),
+    headers: {},
+    payloadHash: sha256hex(''),
+    region: 'us-east-1',
+    service: 's3',
+    credentials,
+    date,
+  });
   assert.match(h.authorization, /Signature=34b48302e7b5fa45bde8084f4b7868a86f0a534bc59db6670ed5711ef69dc6f7$/);
 });
 
@@ -55,7 +85,15 @@ test('presigned GET example (S3 docs, sigv4-query-string-auth)', () => {
 
 test('a presigned link with a session token signs it', () => {
   const a = new URL(presign({ url: new URL('https://b.s3.amazonaws.com/k'), region: 'us-east-1', credentials, seconds: 60, date }));
-  const b = new URL(presign({ url: new URL('https://b.s3.amazonaws.com/k'), region: 'us-east-1', credentials: { ...credentials, sessionToken: 'tok/en+=' }, seconds: 60, date }));
+  const b = new URL(
+    presign({
+      url: new URL('https://b.s3.amazonaws.com/k'),
+      region: 'us-east-1',
+      credentials: { ...credentials, sessionToken: 'tok/en+=' },
+      seconds: 60,
+      date,
+    }),
+  );
   assert.equal(b.searchParams.get('X-Amz-Security-Token'), 'tok/en+=');
   assert.notEqual(a.searchParams.get('X-Amz-Signature'), b.searchParams.get('X-Amz-Signature'));
 });
@@ -66,7 +104,8 @@ test('uriEncode is RFC 3986, slashes kept when asked', () => {
 });
 
 test('the same key signs the same, however the URL spells it', () => {
-  const s = (u: string) => sign({ method: 'GET', url: new URL(u), headers: {}, payloadHash: 'UNSIGNED-PAYLOAD', region: 'eu-west-1', service: 's3', credentials, date }).authorization;
+  const s = (u: string) =>
+    sign({ method: 'GET', url: new URL(u), headers: {}, payloadHash: 'UNSIGNED-PAYLOAD', region: 'eu-west-1', service: 's3', credentials, date }).authorization;
   assert.equal(s('https://b.s3.eu-west-1.amazonaws.com/a%20b/%C3%BC'), s('https://b.s3.eu-west-1.amazonaws.com/a b/ü'));
 });
 
@@ -77,7 +116,11 @@ test('parseIni reads profiles, [profile x] too', () => {
 });
 
 test('credentialsOf: the connection, then the environment, then ~/.aws', async () => {
-  assert.deepEqual(await credentialsOf({ accessKeyId: 'A', secretAccessKey: 'S' }, '/nowhere', {}), { accessKeyId: 'A', secretAccessKey: 'S', sessionToken: undefined });
+  assert.deepEqual(await credentialsOf({ accessKeyId: 'A', secretAccessKey: 'S' }, '/nowhere', {}), {
+    accessKeyId: 'A',
+    secretAccessKey: 'S',
+    sessionToken: undefined,
+  });
   assert.equal((await credentialsOf({}, '/nowhere', { AWS_ACCESS_KEY_ID: 'E', AWS_SECRET_ACCESS_KEY: 'F' })).accessKeyId, 'E');
   await assert.rejects(credentialsOf({ accessKeyId: 'A' }, '/nowhere', {}), /secret access key/);
   await assert.rejects(credentialsOf({}, '/nowhere', {}), /no keys/);

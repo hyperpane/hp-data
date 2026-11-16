@@ -32,11 +32,12 @@ export function endpointOf(endpoint: string, region: string): Endpoint {
   } catch {
     throw new PluginError(`“${raw}” isn’t an endpoint: give it as https://host[:port].`);
   }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new PluginError(`The endpoint should start with https:// or http://, not ${url.protocol}//.`);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:')
+    throw new PluginError(`The endpoint should start with https:// or http://, not ${url.protocol}//.`);
   return { protocol: url.protocol, host: url.host, base: url.pathname.replace(/\/+$/, ''), aws: /(^|\.)amazonaws\.com(\.cn)?$/.test(url.hostname) };
 }
 
-export const awsHost = (region: string) => `s3.${region || 'us-east-1'}.amazonaws.com${region.startsWith('cn-') ? '.cn' : ''}`;
+const awsHost = (region: string) => `s3.${region || 'us-east-1'}.amazonaws.com${region.startsWith('cn-') ? '.cn' : ''}`;
 
 /** Whether the bucket goes in the path rather than the host name. */
 export function pathStyleFor(e: Endpoint, bucket: string, pathStyle: boolean): boolean {
@@ -53,7 +54,10 @@ export function queryString(q: Record<string, string | number | undefined>): str
 }
 
 /** The URL of a bucket (and a key in it), or of the service (no bucket). */
-export function urlFor(e: Endpoint, o: { bucket?: string; key?: string; region?: string; pathStyle?: boolean; query?: Record<string, string | number | undefined> }): URL {
+export function urlFor(
+  e: Endpoint,
+  o: { bucket?: string; key?: string; region?: string; pathStyle?: boolean; query?: Record<string, string | number | undefined> },
+): URL {
   let host = e.host;
   if (e.aws && o.region) host = awsHost(o.region);
   let path = e.base;

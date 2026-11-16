@@ -5,10 +5,19 @@
 import { Checkbox, NodeInput, Picker, cn } from '@hyperpane/ui';
 import type { Field } from '../../shared/kinds.ts';
 
-export function FieldInput({ f, value, saved, onChange }: { f: Field; value: string | number | boolean | undefined; saved: boolean; onChange(v: string | number | boolean): void }) {
+export function FieldInput({
+  f,
+  value,
+  saved,
+  onChange,
+}: {
+  f: Field;
+  value: string | number | boolean | undefined;
+  saved: boolean;
+  onChange(v: string | number | boolean): void;
+}) {
   const cls = 'h-7 w-full';
-  if (f.type === 'boolean')
-    return <Checkbox className="h-7 text-[12px]" checked={value === true} onCheckedChange={onChange} label={f.label} />;
+  if (f.type === 'boolean') return <Checkbox className="h-7 text-[12px]" checked={value === true} onCheckedChange={onChange} label={f.label} />;
   if (f.type === 'textarea')
     return (
       <textarea
@@ -24,7 +33,10 @@ export function FieldInput({ f, value, saved, onChange }: { f: Field; value: str
     return <Picker size="sm" className="w-full" label={f.label} value={String(value ?? f.default ?? '')} options={f.options ?? []} onValueChange={onChange} />;
   return (
     <NodeInput
-      className={cn(cls, f.type !== 'password' && (f.key === 'host' || f.key === 'url' || f.key === 'file' || f.key === 'endpoint' || f.key === 'brokers') && 'font-mono')}
+      className={cn(
+        cls,
+        f.type !== 'password' && (f.key === 'host' || f.key === 'url' || f.key === 'file' || f.key === 'endpoint' || f.key === 'brokers') && 'font-mono',
+      )}
       type={f.type === 'password' ? 'password' : f.type === 'number' ? 'number' : 'text'}
       value={value === undefined ? '' : String(value)}
       placeholder={f.type === 'password' && saved ? '•••••••• (saved)' : (f.placeholder ?? (f.default !== undefined ? String(f.default) : ''))}

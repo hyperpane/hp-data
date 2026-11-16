@@ -35,7 +35,10 @@ export const clickhouse = (ctx: DriverContext): SqlDriver => {
   const auth: Record<string, string> = { 'X-ClickHouse-User': String(v.user || 'default') };
   if (v.password) auth['X-ClickHouse-Key'] = String(v.password);
 
-  async function send(sql: string, o: { database?: string; format?: boolean; limit?: number; signal?: AbortSignal; id?: string } = {}): Promise<{ text: string; compact: Compact | null; summary: Record<string, string> }> {
+  async function send(
+    sql: string,
+    o: { database?: string; format?: boolean; limit?: number; signal?: AbortSignal; id?: string } = {},
+  ): Promise<{ text: string; compact: Compact | null; summary: Record<string, string> }> {
     const url = new URL(base);
     url.searchParams.set('database', o.database || home);
     if (o.id) url.searchParams.set('query_id', o.id);
@@ -47,7 +50,15 @@ export const clickhouse = (ctx: DriverContext): SqlDriver => {
     if (v.timezone) url.searchParams.set('session_timezone', String(v.timezone));
     if (Number(v.queryTimeout) > 0) url.searchParams.set('max_execution_time', String(Number(v.queryTimeout)));
     const body = o.format && !/\bformat\s+\w+\s*$/i.test(sql) ? `${sql}\nFORMAT JSONCompact` : sql;
-    const res = await request({ method: 'POST', url, headers: { ...auth, 'content-type': 'text/plain; charset=utf-8' }, body, signal: o.signal, timeout: 300_000, tls });
+    const res = await request({
+      method: 'POST',
+      url,
+      headers: { ...auth, 'content-type': 'text/plain; charset=utf-8' },
+      body,
+      signal: o.signal,
+      timeout: 300_000,
+      tls,
+    });
     const text = res.body.toString('utf8');
     if (res.status >= 400) {
       const m = /Code: (\d+)\.\s*DB::Exception: ([\s\S]*?)(?:\s*\(\w+\)\s*\(version[^)]*\))?\s*$/.exec(text);
@@ -83,7 +94,15 @@ export const clickhouse = (ctx: DriverContext): SqlDriver => {
       if (r.compact) {
         const truncated = r.compact.data.length > o.limit;
         const data = truncated ? r.compact.data.slice(0, o.limit) : r.compact.data;
-        return { statement, columns: r.compact.meta.map((m) => ({ name: m.name, type: m.type })), rows: data.map((row) => row.map(toCell)), command: `${verb(statement)} ${data.length}`, affected: null, ms: since(t0), truncated };
+        return {
+          statement,
+          columns: r.compact.meta.map((m) => ({ name: m.name, type: m.type })),
+          rows: data.map((row) => row.map(toCell)),
+          command: `${verb(statement)} ${data.length}`,
+          affected: null,
+          ms: since(t0),
+          truncated,
+        };
       }
       const written = Number(r.summary.written_rows ?? 0);
       const text = r.text.trim();
@@ -102,12 +121,23 @@ export const clickhouse = (ctx: DriverContext): SqlDriver => {
 
   const describe = async (t: TableRef): Promise<TableInfo> => {
     const db = t.database || home;
-    const cols = await rows<{ name: string; type: string; default_kind: string; is_in_primary_key: number; is_in_sorting_key: number }>(`SELECT name, type, default_kind, is_in_primary_key, is_in_sorting_key FROM system.columns WHERE database = ${lit(db)} AND table = ${lit(t.table)} ORDER BY position`);
+    const cols = await rows<{ name: string; type: string; default_kind: string; is_in_primary_key: number; is_in_sorting_key: number }>(
+      `SELECT name, type, default_kind, is_in_primary_key, is_in_sorting_key FROM system.columns WHERE database = ${lit(db)} AND table = ${lit(t.table)} ORDER BY position`,
+    );
     if (!cols.length) throw new PluginError(`There’s no table ${db}.${t.table}.`);
-    const [meta] = await rows<{ create_table_query: string; total_rows: string | null }>(`SELECT create_table_query, total_rows FROM system.tables WHERE database = ${lit(db)} AND name = ${lit(t.table)}`);
+    const [meta] = await rows<{ create_table_query: string; total_rows: string | null }>(
+      `SELECT create_table_query, total_rows FROM system.tables WHERE database = ${lit(db)} AND name = ${lit(t.table)}`,
+    );
     const sorting = cols.filter((c) => Number(c.is_in_sorting_key)).map((c) => c.name);
     return {
-      columns: cols.map((c) => ({ name: c.name, type: c.type, key: Number(c.is_in_primary_key) ? true : undefined, nullable: /^Nullable\(/.test(c.type), hasDefault: !!c.default_kind, readOnly: c.default_kind === 'MATERIALIZED' || c.default_kind === 'ALIAS' || undefined })),
+      columns: cols.map((c) => ({
+        name: c.name,
+        type: c.type,
+        key: Number(c.is_in_primary_key) ? true : undefined,
+        nullable: /^Nullable\(/.test(c.type),
+        hasDefault: !!c.default_kind,
+        readOnly: c.default_kind === 'MATERIALIZED' || c.default_kind === 'ALIAS' || undefined,
+      })),
       indexes: sorting.length ? [{ name: 'ORDER BY', columns: sorting, unique: false, primary: true }] : [],
       foreignKeys: [],
       ddl: meta?.create_table_query ? `${meta.create_table_query};` : '',
@@ -125,12 +155,27 @@ export const clickhouse = (ctx: DriverContext): SqlDriver => {
 
     async children(path: string[]): Promise<TreeNode[]> {
       if (path.length === 0) {
-        const dbs = await rows<{ name: string; n: string }>(`SELECT d.name AS name, (SELECT count() FROM system.tables t WHERE t.database = d.name) AS n FROM system.databases d WHERE ${v.showSystem ? '1' : `d.name NOT IN ${SYSTEM}`} ORDER BY d.name = ${lit(home)} DESC, d.name`);
-        return dbs.map((d) => ({ name: d.name, type: 'database', detail: Number(d.n) ? d.n : undefined, expand: d.name === home, open: { tab: 'console', ref: { database: d.name }, title: d.name } }));
+        const dbs = await rows<{ name: string; n: string }>(
+          `SELECT d.name AS name, (SELECT count() FROM system.tables t WHERE t.database = d.name) AS n FROM system.databases d WHERE ${v.showSystem ? '1' : `d.name NOT IN ${SYSTEM}`} ORDER BY d.name = ${lit(home)} DESC, d.name`,
+        );
+        return dbs.map((d) => ({
+          name: d.name,
+          type: 'database',
+          detail: Number(d.n) ? d.n : undefined,
+          expand: d.name === home,
+          open: { tab: 'console', ref: { database: d.name }, title: d.name },
+        }));
       }
       if (path.length === 1) {
-        const ts = await rows<{ name: string; engine: string; total_rows: string | null }>(`SELECT name, engine, total_rows FROM system.tables WHERE database = ${lit(path[0])} ORDER BY name`);
-        return ts.map((t) => ({ name: t.name, type: /View/.test(t.engine) ? 'view' : 'table', detail: t.total_rows !== null ? `${Number(t.total_rows).toLocaleString('en')} rows` : t.engine, open: { tab: 'table', ref: { database: path[0], table: t.name }, title: t.name } }));
+        const ts = await rows<{ name: string; engine: string; total_rows: string | null }>(
+          `SELECT name, engine, total_rows FROM system.tables WHERE database = ${lit(path[0])} ORDER BY name`,
+        );
+        return ts.map((t) => ({
+          name: t.name,
+          type: /View/.test(t.engine) ? 'view' : 'table',
+          detail: t.total_rows !== null ? `${Number(t.total_rows).toLocaleString('en')} rows` : t.engine,
+          open: { tab: 'table', ref: { database: path[0], table: t.name }, title: t.name },
+        }));
       }
       if (path.length === 2) {
         const info = await describe({ database: path[0], table: path[1] });
@@ -175,7 +220,9 @@ export const clickhouse = (ctx: DriverContext): SqlDriver => {
     },
 
     async completions(database) {
-      const cols = await rows<{ database: string; table: string; name: string }>(`SELECT database, table, name FROM system.columns WHERE database NOT IN ${SYSTEM} ORDER BY database, table, position LIMIT 20000`);
+      const cols = await rows<{ database: string; table: string; name: string }>(
+        `SELECT database, table, name FROM system.columns WHERE database NOT IN ${SYSTEM} ORDER BY database, table, position LIMIT 20000`,
+      );
       const map = new Map<string, { schema?: string; name: string; columns: string[] }>();
       for (const c of cols) {
         const k = `${c.database}.${c.table}`;

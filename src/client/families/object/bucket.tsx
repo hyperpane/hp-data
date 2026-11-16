@@ -105,12 +105,34 @@ export function BucketView(p: TabProps) {
   const put = (puts: Put[]) =>
     puts.length &&
     void run('Uploading', () =>
-      upload(where, prefix, puts, (done, of, name) => setBusy(done < of ? `Uploading ${of > 1 ? `${done + 1} of ${of}: ` : ''}${name}…` : null)).then((n) => api.toast(`Uploaded ${count(n, 'file')} to ${bucket}/${prefix}`)),
+      upload(where, prefix, puts, (done, of, name) => setBusy(done < of ? `Uploading ${of > 1 ? `${done + 1} of ${of}: ` : ''}${name}…` : null)).then((n) =>
+        api.toast(`Uploaded ${count(n, 'file')} to ${bucket}/${prefix}`),
+      ),
     );
 
-  const open = (row: Row) => (row.folder ? go(row.key) : void run(null, () => api.save('objDownload', { id: where.id, project: where.project ?? undefined, bucket, key: row.key }, row.name.split('/').pop() || row.name), false));
+  const open = (row: Row) =>
+    row.folder
+      ? go(row.key)
+      : void run(
+          null,
+          () => api.save('objDownload', { id: where.id, project: where.project ?? undefined, bucket, key: row.key }, row.name.split('/').pop() || row.name),
+          false,
+        );
 
-  const ctx = { where, prefix, readOnly, selected: [...selected], reload, go, upload: () => picker.current?.click(), run, setSelected: (k: string) => (setSelected(new Set([k])), setAnchor(k)) };
+  const ctx = {
+    where,
+    prefix,
+    readOnly,
+    selected: [...selected],
+    reload,
+    go,
+    upload: () => picker.current?.click(),
+    run,
+    setSelected: (k: string) => {
+      setSelected(new Set([k]));
+      setAnchor(k);
+    },
+  };
   const showMenu = (e: React.MouseEvent | { clientX: number; clientY: number; preventDefault(): void; stopPropagation(): void }, row: Row | null) => {
     e.preventDefault();
     menu.open(e, menuFor({ ...ctx, selected: row ? (selected.has(row.key) ? [...selected] : [row.key]) : [] }));
@@ -152,20 +174,42 @@ export function BucketView(p: TabProps) {
         <ToolButton label="Back (⌘[)" icon={ArrowLeft} disabled={!back.current.length} onClick={goBack} />
         <ToolButton label="Up (⌘↑)" icon={ArrowUp} disabled={!prefix || flat} onClick={() => go(parentOf(prefix))} />
         <nav className="flex min-w-0 flex-1 items-center overflow-hidden text-[11.5px]" aria-label="Folder">
-          <button type="button" className={cn('flex flex-none items-center gap-1 rounded px-1 py-0.5 hover:bg-[color-mix(in_srgb,var(--node-fg)_7%,transparent)]', !prefix && 'font-medium')} onClick={() => go('')}>
+          <button
+            type="button"
+            className={cn(
+              'flex flex-none items-center gap-1 rounded px-1 py-0.5 hover:bg-[color-mix(in_srgb,var(--node-fg)_7%,transparent)]',
+              !prefix && 'font-medium',
+            )}
+            onClick={() => go('')}
+          >
             <Database className="size-3 text-[var(--node-muted)]" />
             {bucket}
           </button>
           {crumbs(prefix).map((c, i, list) => (
             <span key={c.prefix} className="flex min-w-0 items-center">
               <span className="px-0.5 text-[var(--node-muted)]">/</span>
-              <button type="button" title={c.prefix} className={cn('truncate rounded px-1 py-0.5 hover:bg-[color-mix(in_srgb,var(--node-fg)_7%,transparent)]', i === list.length - 1 && 'font-medium')} onClick={() => go(c.prefix)}>
+              <button
+                type="button"
+                title={c.prefix}
+                className={cn(
+                  'truncate rounded px-1 py-0.5 hover:bg-[color-mix(in_srgb,var(--node-fg)_7%,transparent)]',
+                  i === list.length - 1 && 'font-medium',
+                )}
+                onClick={() => go(c.prefix)}
+              >
                 {c.name}
               </button>
             </span>
           ))}
         </nav>
-        <NodeInput className="w-36" placeholder="Filter" value={filter} onChange={(e) => setFilter(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setFilter('')} aria-label="Filter what’s loaded" />
+        <NodeInput
+          className="w-36"
+          placeholder="Filter"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          onKeyDown={(e) => e.key === 'Escape' && setFilter('')}
+          aria-label="Filter what’s loaded"
+        />
         <ToolButton label={flat ? 'By folder' : 'Flat: everything under this folder'} icon={ListTree} active={flat} onClick={() => setFlat(!flat)} />
         {!readOnly && (
           <>
@@ -195,12 +239,20 @@ export function BucketView(p: TabProps) {
           sort={sort}
           onSort={setSort}
           anchor={anchor}
-          onSelect={(s, a) => (setSelected(s), setAnchor(a))}
+          onSelect={(s, a) => {
+            setSelected(s);
+            setAnchor(a);
+          }}
           onOpen={open}
           onMenu={showMenu}
           onKey={onKey}
           onDrop={readOnly ? null : (dt) => void droppedFiles(dt).then(put, api.fail)}
-          empty={<p className="pointer-events-none px-3 py-3 text-[var(--node-muted)]">{loading ? 'Loading' : filter ? 'Nothing loaded matches' : prefix ? 'This folder is empty' : 'This bucket is empty'}{!readOnly && !loading && !filter ? ' Drop files here to upload them' : ''}</p>}
+          empty={
+            <p className="pointer-events-none px-3 py-3 text-[var(--node-muted)]">
+              {loading ? 'Loading' : filter ? 'Nothing loaded matches' : prefix ? 'This folder is empty' : 'This bucket is empty'}
+              {!readOnly && !loading && !filter ? ' Drop files here to upload them' : ''}
+            </p>
+          }
           footer={
             next && (
               <div className="px-2 py-1.5">
@@ -215,7 +267,14 @@ export function BucketView(p: TabProps) {
           <>
             <ResizeHandle axis="x" dragging={preview.dragging} {...preview.handleProps} />
             <div className="flex min-h-0 flex-none flex-col" style={{ width: preview.size }}>
-              <Preview where={where} objectKey={previewing} onDownload={() => open(rows.find((r) => r.key === previewing) ?? { key: previewing, folder: false, name: previewing, size: null, modified: null })} onLink={(e) => menu.open(e, linkMenu(ctx, previewing))} />
+              <Preview
+                where={where}
+                objectKey={previewing}
+                onDownload={() =>
+                  open(rows.find((r) => r.key === previewing) ?? { key: previewing, folder: false, name: previewing, size: null, modified: null })
+                }
+                onLink={(e) => menu.open(e, linkMenu(ctx, previewing))}
+              />
             </div>
           </>
         )}

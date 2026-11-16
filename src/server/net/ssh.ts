@@ -30,7 +30,7 @@ const DEFAULT_KEYS = ['id_ed25519', 'id_ecdsa', 'id_rsa'];
 async function keyOf(v: Values): Promise<Buffer> {
   if (v.sshAuth === 'pasted') {
     if (!v.sshKey) throw new PluginError('Paste the private key on the SSH tab.');
-    return Buffer.from(String(v.sshKey).trim() + '\n');
+    return Buffer.from(`${String(v.sshKey).trim()}\n`);
   }
   const named = String(v.sshKeyFile ?? '').trim();
   const files = named ? [expand(named)] : DEFAULT_KEYS.map((k) => path.join(os.homedir(), '.ssh', k));
@@ -38,7 +38,10 @@ async function keyOf(v: Values): Promise<Buffer> {
     try {
       return await readFile(f);
     } catch (e) {
-      if (named) throw new PluginError(`Couldn’t read the key ${named} on the server: ${(e as NodeJS.ErrnoException).code === 'ENOENT' ? 'there’s no such file' : (e as Error).message}.`);
+      if (named)
+        throw new PluginError(
+          `Couldn’t read the key ${named} on the server: ${(e as NodeJS.ErrnoException).code === 'ENOENT' ? 'there’s no such file' : (e as Error).message}.`,
+        );
     }
   }
   throw new PluginError('There’s no key in ~/.ssh on the server (id_ed25519, id_ecdsa, id_rsa): name the key file, paste a key, or use a password.');
@@ -55,9 +58,11 @@ async function knownHosts(file: string): Promise<Record<string, string>> {
 
 function sshError(e: Error & { level?: string; code?: string }, where: string, reached = false): PluginError {
   if (e instanceof PluginError) return e;
-  if (e.level === 'client-authentication') return new PluginError(`The SSH host ${where} didn’t take the sign-in: check the user and the ${'key or password'}.`);
+  if (e.level === 'client-authentication')
+    return new PluginError(`The SSH host ${where} didn’t take the sign-in: check the user and the ${'key or password'}.`);
   if (/Encrypted private key detected, but no passphrase given/i.test(e.message)) return new PluginError('The key has a passphrase: give it on the SSH tab.');
-  if (/bad passphrase|Unsupported key format|Cannot parse privateKey/i.test(e.message)) return new PluginError(`The key couldn’t be read: ${e.message} (a wrong passphrase, or not a private key).`);
+  if (/bad passphrase|Unsupported key format|Cannot parse privateKey/i.test(e.message))
+    return new PluginError(`The key couldn’t be read: ${e.message} (a wrong passphrase, or not a private key).`);
   if (e.level === 'client-timeout' || e.code === 'ETIMEDOUT')
     return new PluginError(
       reached
@@ -70,7 +75,11 @@ function sshError(e: Error & { level?: string; code?: string }, where: string, r
 }
 
 /** Opens the tunnel to `target` (as the SSH host sees it). */
-export async function openTunnel(v: Values, target: { host: string; port: number }, o: { dataDir: string; log(line: string): void; timeout?: number }): Promise<Tunnel> {
+export async function openTunnel(
+  v: Values,
+  target: { host: string; port: number },
+  o: { dataDir: string; log(line: string): void; timeout?: number },
+): Promise<Tunnel> {
   const sshHost = String(v.sshHost ?? '').trim();
   if (!sshHost) throw new PluginError('Give the SSH host on the SSH tab.');
   const sshPort = Number(v.sshPort || 22);
@@ -112,7 +121,12 @@ export async function openTunnel(v: Values, target: { host: string; port: number
     // first is said; a listener stays so the second doesn't end the part.
     client.on('error', () => {});
     client.once('error', (e: Error & { level?: string }) => {
-      if (seen && known[where] && known[where] !== seen) reject(new PluginError(`The SSH host ${where}’s key has changed (it was ${known[where]}, it’s ${seen} now): it may be another machine. If it was reinstalled, forget its key in the connection’s SSH tab.`));
+      if (seen && known[where] && known[where] !== seen)
+        reject(
+          new PluginError(
+            `The SSH host ${where}’s key has changed (it was ${known[where]}, it’s ${seen} now): it may be another machine. If it was reinstalled, forget its key in the connection’s SSH tab.`,
+          ),
+        );
       else reject(sshError(e, where, reached));
     });
     if (config.password) client.on('keyboard-interactive', (_n, _i, _l, prompts, finish) => finish(prompts.map(() => String(config.password))));
@@ -131,7 +145,12 @@ export async function openTunnel(v: Values, target: { host: string; port: number
   // A forward to the target must work before it's said to be open.
   await new Promise<void>((resolve, reject) => {
     client.forwardOut('127.0.0.1', 0, target.host, target.port, (err, stream) => {
-      if (err) return reject(new PluginError(`The SSH host ${where} couldn’t reach ${target.host}:${target.port}: ${err.message} (is TCP forwarding allowed there, and is the address right as the SSH host sees it?)`));
+      if (err)
+        return reject(
+          new PluginError(
+            `The SSH host ${where} couldn’t reach ${target.host}:${target.port}: ${err.message} (is TCP forwarding allowed there, and is the address right as the SSH host sees it?)`,
+          ),
+        );
       stream.end();
       resolve();
     });

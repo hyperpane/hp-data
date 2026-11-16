@@ -83,13 +83,19 @@ export function ddlOf(d: Dialect, t: TableRef, info: Pick<TableInfo, 'columns' |
   const lines = info.columns.map((c) => `  ${ident(d, c.name)} ${c.type ?? ''}${c.nullable === false ? ' NOT NULL' : ''}`.trimEnd());
   const pk = info.columns.filter((c) => c.key).map((c) => ident(d, c.name));
   if (pk.length) lines.push(`  PRIMARY KEY (${pk.join(', ')})`);
-  for (const f of info.foreignKeys) lines.push(`  CONSTRAINT ${ident(d, f.name)} FOREIGN KEY (${f.columns.map((c) => ident(d, c)).join(', ')}) REFERENCES ${f.table} (${f.to.map((c) => ident(d, c)).join(', ')})`);
-  const idx = info.indexes.filter((i) => !i.primary).map((i) => `CREATE ${i.unique ? 'UNIQUE ' : ''}INDEX ${ident(d, i.name)} ON ${qualified(d, t)} (${i.columns.map((c) => ident(d, c)).join(', ')});`);
+  for (const f of info.foreignKeys)
+    lines.push(
+      `  CONSTRAINT ${ident(d, f.name)} FOREIGN KEY (${f.columns.map((c) => ident(d, c)).join(', ')}) REFERENCES ${f.table} (${f.to.map((c) => ident(d, c)).join(', ')})`,
+    );
+  const idx = info.indexes
+    .filter((i) => !i.primary)
+    .map((i) => `CREATE ${i.unique ? 'UNIQUE ' : ''}INDEX ${ident(d, i.name)} ON ${qualified(d, t)} (${i.columns.map((c) => ident(d, c)).join(', ')});`);
   return [`CREATE TABLE ${qualified(d, t)} (\n${lines.join(',\n')}\n);`, ...idx].join('\n');
 }
 
 /** Rows as arrays in the columns' order. */
-export const rowsOf = (columns: Column[], rows: Record<string, unknown>[], cell: (v: unknown) => Cell): Cell[][] => rows.map((r) => columns.map((c) => cell(r[c.name])));
+export const rowsOf = (columns: Column[], rows: Record<string, unknown>[], cell: (v: unknown) => Cell): Cell[][] =>
+  rows.map((r) => columns.map((c) => cell(r[c.name])));
 
 /** At most `limit` rows, and whether there were more. */
 export function cap<T>(rows: T[], limit: number): { rows: T[]; truncated: boolean } {

@@ -21,9 +21,15 @@ const PORT = Number(url.port || 6379);
 const DB = 15;
 
 const reachable = await new Promise<boolean>((resolve) => {
-  const s = net.connect({ host: HOST, port: PORT }, () => (s.destroy(), resolve(true)));
+  const s = net.connect({ host: HOST, port: PORT }, () => {
+    s.destroy();
+    resolve(true);
+  });
   s.on('error', () => resolve(false));
-  s.setTimeout(1000, () => (s.destroy(), resolve(false)));
+  s.setTimeout(1000, () => {
+    s.destroy();
+    resolve(false);
+  });
 });
 
 const make_ = (values: Record<string, string | number | boolean> = {}): KvDriver => {
@@ -56,10 +62,32 @@ describe('redis', { skip: !reachable && `nothing answers at ${HOST}:${PORT}` }, 
 
   test('writes and reads every type', async () => {
     await d.set({ db: DB, key: 's', value: { type: 'string', value: 'héllo' }, ttl: 100 });
-    await d.set({ db: DB, key: 'h', value: { type: 'hash', fields: [{ field: 'a', value: '1' }, { field: 'b', value: '2' }], total: 2 } });
+    await d.set({
+      db: DB,
+      key: 'h',
+      value: {
+        type: 'hash',
+        fields: [
+          { field: 'a', value: '1' },
+          { field: 'b', value: '2' },
+        ],
+        total: 2,
+      },
+    });
     await d.set({ db: DB, key: 'l', value: { type: 'list', items: ['x', 'y', 'z'], total: 3 } });
     await d.set({ db: DB, key: 'st', value: { type: 'set', members: ['m2', 'm1'], total: 2 } });
-    await d.set({ db: DB, key: 'z', value: { type: 'zset', members: [{ member: 'a', score: 1.5 }, { member: 'b', score: -2 }], total: 2 } });
+    await d.set({
+      db: DB,
+      key: 'z',
+      value: {
+        type: 'zset',
+        members: [
+          { member: 'a', score: 1.5 },
+          { member: 'b', score: -2 },
+        ],
+        total: 2,
+      },
+    });
     await d.set({ db: DB, key: 'x', value: { type: 'stream', entries: [{ id: '', fields: { f: 'v' } }], total: 1 } });
 
     const s = (await d.get({ db: DB, key: 's' })) as KvValue;
@@ -74,7 +102,10 @@ describe('redis', { skip: !reachable && `nothing answers at ${HOST}:${PORT}` }, 
     const st = await d.get({ db: DB, key: 'st' });
     assert.deepEqual(st.type === 'set' && st.members, ['m1', 'm2']);
     const z = await d.get({ db: DB, key: 'z' });
-    assert.deepEqual(z.type === 'zset' && z.members, [{ member: 'b', score: -2 }, { member: 'a', score: 1.5 }]);
+    assert.deepEqual(z.type === 'zset' && z.members, [
+      { member: 'b', score: -2 },
+      { member: 'a', score: 1.5 },
+    ]);
     const x = await d.get({ db: DB, key: 'x' });
     assert.deepEqual(x.type === 'stream' && x.entries[0].fields, { f: 'v' });
 
@@ -125,7 +156,10 @@ describe('redis', { skip: !reachable && `nothing answers at ${HOST}:${PORT}` }, 
       cursor = r.cursor;
     } while (cursor !== '0');
     assert.deepEqual([...new Set(all)].sort(), ['page:1', 'page:2', 'page:3']);
-    assert.deepEqual((await d.scan({ db: DB, pattern: 'page:2', cursor: '0', count: 10 })).keys.map((k) => [k.key, k.type, k.ttl]), [['page:2', 'string', -1]]);
+    assert.deepEqual(
+      (await d.scan({ db: DB, pattern: 'page:2', cursor: '0', count: 10 })).keys.map((k) => [k.key, k.type, k.ttl]),
+      [['page:2', 'string', -1]],
+    );
 
     await d.rename({ db: DB, key: 'page:1', to: 'page:one' });
     await assert.rejects(d.rename({ db: DB, key: 'page:one', to: 'page:2' }), /already a key “page:2”/);
@@ -171,7 +205,8 @@ describe('redis', { skip: !reachable && `nothing answers at ${HOST}:${PORT}` }, 
 
   test('the calls, and a read-only connection', async () => {
     const plugin = make()(testHost({ id: 'data' }));
-    const save = (name: string, readOnly: boolean) => invoke<{ id: string }>(plugin, { op: 'save', connection: { name, kind: 'redis', readOnly, values: { host: HOST, port: PORT } } });
+    const save = (name: string, readOnly: boolean) =>
+      invoke<{ id: string }>(plugin, { op: 'save', connection: { name, kind: 'redis', readOnly, values: { host: HOST, port: PORT } } });
     const rw = (await save('rw', false)).id;
     const ro = (await save('ro', true)).id;
     try {

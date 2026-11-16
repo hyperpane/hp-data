@@ -8,7 +8,10 @@ import { KINDS, withDefaults } from '../../src/shared/kinds.ts';
 import { rabbitmq } from '../../src/server/drivers/queue/rabbitmq.ts';
 import type { QueueDriver } from '../../src/server/drivers/types.ts';
 
-const up = await fetch('http://localhost:15672/api/overview', { headers: { authorization: `Basic ${btoa('guest:guest')}` }, signal: AbortSignal.timeout(1500) }).then(
+const up = await fetch('http://localhost:15672/api/overview', {
+  headers: { authorization: `Basic ${btoa('guest:guest')}` },
+  signal: AbortSignal.timeout(1500),
+}).then(
   (r) => r.ok,
   () => false,
 );
@@ -33,7 +36,10 @@ after(async () => {
 test('info and the tree', { skip }, async () => {
   assert.match((await d.info()).version, /^RabbitMQ \d/);
   assert.ok((await d.children([])).some((n) => n.name === '/'));
-  assert.deepEqual((await d.children(['/'])).map((n) => n.name), ['Queues', 'Exchanges']);
+  assert.deepEqual(
+    (await d.children(['/'])).map((n) => n.name),
+    ['Queues', 'Exchanges'],
+  );
   const qs = await d.children(['/', 'Queues']);
   assert.deepEqual(qs.find((q) => q.name === queue)?.open, { tab: 'queue', ref, title: queue });
   assert.ok((await d.children(['/', 'Exchanges'])).some((x) => x.name === 'amq.direct' && x.open?.ref.exchange === 'amq.direct'));
@@ -43,7 +49,10 @@ test('publish, then peek: the messages stay, marked redelivered', { skip }, asyn
   await d.publish({ ref, value: '{"n":1}', headers: { h: 'x' } });
   await d.publish({ ref, value: 'two' });
   const first = await d.peek({ ref, limit: 10 }, signal);
-  assert.deepEqual(first.map((m) => m.value), ['{"n":1}', 'two']);
+  assert.deepEqual(
+    first.map((m) => m.value),
+    ['{"n":1}', 'two'],
+  );
   assert.equal(first[0].headers?.h, 'x');
   const again = await d.peek({ ref, limit: 10 }, signal);
   assert.equal(again.length, 2);
@@ -59,7 +68,10 @@ test('an exchange: publish with a routing key, bindings, no peek', { skip }, asy
 });
 
 test('tail says why not', { skip }, async () => {
-  await assert.rejects(d.tail(ref, () => true, signal), /without taking them/);
+  await assert.rejects(
+    d.tail(ref, () => true, signal),
+    /without taking them/,
+  );
 });
 
 test('describe and purge', { skip }, async () => {

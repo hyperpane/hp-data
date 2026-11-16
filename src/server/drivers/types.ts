@@ -64,7 +64,6 @@ export interface KvDriver extends BaseDriver {
   command(o: { db?: number; line: string }): Promise<{ reply: unknown; ms: number }>;
 }
 
-
 export interface DocumentDriver extends BaseDriver {
   family: 'document';
   find(r: FindRequest, signal: AbortSignal): Promise<FindResult>;
@@ -97,7 +96,11 @@ export interface ObjectDriver extends BaseDriver {
   list(r: ListRequest, signal: AbortSignal): Promise<ListResult>;
   head(bucket: string, key: string): Promise<ObjectHead>;
   /** The object's bytes (the first `limit`, for a preview). */
-  read(bucket: string, key: string, o: { limit?: number; signal: AbortSignal }): Promise<{ body: ReadableStream<Uint8Array>; size: number; contentType: string | null }>;
+  read(
+    bucket: string,
+    key: string,
+    o: { limit?: number; signal: AbortSignal },
+  ): Promise<{ body: ReadableStream<Uint8Array>; size: number; contentType: string | null }>;
   write(bucket: string, key: string, body: ReadableStream<Uint8Array> | Uint8Array, o: { size?: number; contentType?: string }): Promise<void>;
   remove(bucket: string, keys: string[]): Promise<number>;
   copy(bucket: string, from: string, to: string): Promise<void>;

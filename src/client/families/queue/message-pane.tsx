@@ -10,12 +10,31 @@ import type { Api } from '../../lib/api.ts';
 import type { Caps } from './caps.ts';
 import { fullTime, placeOf, pretty } from './format.ts';
 
-export function MessagePane({ m, caps, api, readOnly, onAgain, onClose }: { m: Message; caps: Caps; api: Api; readOnly: boolean; onAgain(): void; onClose(): void }) {
+export function MessagePane({
+  m,
+  caps,
+  api,
+  readOnly,
+  onAgain,
+  onClose,
+}: {
+  m: Message;
+  caps: Caps;
+  api: Api;
+  readOnly: boolean;
+  onAgain(): void;
+  onClose(): void;
+}) {
   const [mode, setMode] = useState<'tree' | 'text'>('tree');
   const v = pretty(m.value);
   const headers = Object.entries(m.headers ?? {});
   const where: [string, string][] = [
-    ...(m.partition !== undefined ? ([['Partition', String(m.partition)], ['Offset', m.offset ?? '']] as [string, string][]) : [['Id', m.id] as [string, string]]),
+    ...(m.partition !== undefined
+      ? ([
+          ['Partition', String(m.partition)],
+          ['Offset', m.offset ?? ''],
+        ] as [string, string][])
+      : [['Id', m.id] as [string, string]]),
     ['Time', fullTime(m.at) || '—'],
     ...(m.key !== undefined && m.key !== null ? [['Key', m.key] as [string, string]] : []),
     ...Object.entries(m.meta ?? {}).map(([k, x]) => [k, String(x)] as [string, string]),
@@ -58,7 +77,9 @@ export function MessagePane({ m, caps, api, readOnly, onAgain, onClose }: { m: M
           {v.json && mode === 'tree' ? (
             <JsonTree value={v.value} depth={3} className="px-1 py-1 text-[11.5px]" />
           ) : (
-            <pre className="px-3 py-2 font-mono text-[11.5px] break-all whitespace-pre-wrap select-text">{v.text || <span className="text-[var(--node-muted)]">{m.meta?.tombstone ? 'null (a tombstone)' : 'empty'}</span>}</pre>
+            <pre className="px-3 py-2 font-mono text-[11.5px] break-all whitespace-pre-wrap select-text">
+              {v.text || <span className="text-[var(--node-muted)]">{m.meta?.tombstone ? 'null (a tombstone)' : 'empty'}</span>}
+            </pre>
           )}
         </section>
         <Pairs title={`Headers${headers.length ? ` (${headers.length})` : ''}`} rows={headers} empty="No headers" api={api} />

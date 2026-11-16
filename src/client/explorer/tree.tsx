@@ -31,7 +31,23 @@ export interface ExplorerHandle {
   refresh(conn: string): void;
 }
 
-export function Explorer({ state, api, project, ops, open, handle, activeConn }: { state: State | null; api: Api; project: string | null; ops: ConnectionOps; open(t: NewTab): void; handle: React.RefObject<ExplorerHandle | null>; activeConn: string | null }) {
+export function Explorer({
+  state,
+  api,
+  project,
+  ops,
+  open,
+  handle,
+  activeConn,
+}: {
+  state: State | null;
+  api: Api;
+  project: string | null;
+  ops: ConnectionOps;
+  open(t: NewTab): void;
+  handle: React.RefObject<ExplorerHandle | null>;
+  activeConn: string | null;
+}) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [loaded, setLoaded] = useState<Map<string, Loaded>>(() => new Map());
   const [filter, setFilter] = useState('');
@@ -52,7 +68,7 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
       const opens = nodes.filter((n) => n.expand && !n.leaf).map((n) => keyOf(conn, [...path, n.name]));
       const fresh = opens.filter((x) => !auto.current.has(x));
       if (fresh.length) {
-        fresh.forEach((x) => auto.current.add(x));
+        for (const x of fresh) auto.current.add(x);
         setExpanded((s) => new Set([...s, ...fresh]));
         for (const n of nodes.filter((n) => n.expand && !n.leaf)) void load(conn, [...path, n.name]);
       }
@@ -93,7 +109,9 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
 
   // A session that ended (disconnected, or idle): its items load again
   // when it's opened next.
-  const openIds = Object.keys(state?.open ?? {}).sort().join();
+  const openIds = Object.keys(state?.open ?? {})
+    .sort()
+    .join();
   const before = useRef<Set<string>>(new Set());
   useEffect(() => {
     const now = new Set(Object.keys(state?.open ?? {}));
@@ -119,12 +137,31 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
     const fam = FAMILIES[kind.family];
     const items: (MenuEntry | null)[] = node
       ? [
-          ...(node.open ? [{ label: 'Open', shortcut: '↵', run: () => open({ type: node.open!.tab, conn: c.id, ref: node.open!.ref, title: node.open!.title }) }] : []),
+          ...(node.open
+            ? [{ label: 'Open', shortcut: '↵', run: () => open({ type: node.open!.tab, conn: c.id, ref: node.open!.ref, title: node.open!.title }) }]
+            : []),
           { label: 'Refresh', run: () => refresh(c.id, node.leaf ? path.slice(0, -1) : path) },
           { label: 'Copy Name', run: () => api.copy(node.name.replace(/^index:/, ''), 'the name') },
         ]
-      : [...connectionMenu(c, !!state?.open[c.id], ops, kind.family), null, { label: 'Refresh', run: () => refresh(c.id, []) }, { label: 'Copy Address', run: () => api.copy(address(kind, c.values), 'the address') }, { label: 'Copy Name', run: () => api.copy(c.name, 'the name') }];
-    const own = fam.actions?.({ node, path, connection: c, kind, api, project, readOnly: c.readOnly, open, refresh: () => refresh(c.id, node && !node.leaf ? path : path.slice(0, -1)) }) ?? [];
+      : [
+          ...connectionMenu(c, !!state?.open[c.id], ops, kind.family),
+          null,
+          { label: 'Refresh', run: () => refresh(c.id, []) },
+          { label: 'Copy Address', run: () => api.copy(address(kind, c.values), 'the address') },
+          { label: 'Copy Name', run: () => api.copy(c.name, 'the name') },
+        ];
+    const own =
+      fam.actions?.({
+        node,
+        path,
+        connection: c,
+        kind,
+        api,
+        project,
+        readOnly: c.readOnly,
+        open,
+        refresh: () => refresh(c.id, node && !node.leaf ? path : path.slice(0, -1)),
+      }) ?? [];
     return own.length ? [...items, null, ...own] : items;
   };
 
@@ -154,7 +191,12 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
       return;
     }
     const nodes = visible(c.id, path);
-    if (l?.nodes && !l.nodes.length) rows.push(<div key={`${k}:empty`} className="py-1 text-[11px] text-[var(--node-muted)] italic" style={{ paddingLeft: 22 + depth * 14 }}>Empty</div>);
+    if (l?.nodes && !l.nodes.length)
+      rows.push(
+        <div key={`${k}:empty`} className="py-1 text-[11px] text-[var(--node-muted)] italic" style={{ paddingLeft: 22 + depth * 14 }}>
+          Empty
+        </div>,
+      );
     for (const n of nodes) {
       const p = [...path, n.name];
       const nk = keyOf(c.id, p);
@@ -166,7 +208,10 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
           role="treeitem"
           aria-expanded={n.leaf ? undefined : isOpen}
           tabIndex={-1}
-          className={cn('group flex h-[22px] cursor-default items-center gap-1 pr-2 whitespace-nowrap', selected === nk ? 'bg-[color-mix(in_srgb,var(--node-accent)_20%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]')}
+          className={cn(
+            'group flex h-[22px] cursor-default items-center gap-1 pr-2 whitespace-nowrap',
+            selected === nk ? 'bg-[color-mix(in_srgb,var(--node-accent)_20%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
+          )}
           style={{ paddingLeft: 4 + depth * 14 }}
           onClick={() => setSelected(nk)}
           onDoubleClick={() => (n.open ? open({ type: n.open.tab, conn: c.id, ref: n.open.ref, title: n.open.title }) : !n.leaf && toggle(c.id, p))}
@@ -176,7 +221,16 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
             menu.open(e, nodeMenu(c, p, n));
           }}
         >
-          <button type="button" tabIndex={-1} aria-label={isOpen ? 'Collapse' : 'Expand'} className={cn('flex size-4 flex-none items-center justify-center text-[var(--node-muted)]', n.leaf && 'invisible')} onClick={(e) => (e.stopPropagation(), toggle(c.id, p))}>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={isOpen ? 'Collapse' : 'Expand'}
+            className={cn('flex size-4 flex-none items-center justify-center text-[var(--node-muted)]', n.leaf && 'invisible')}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggle(c.id, p);
+            }}
+          >
             {isOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
           </button>
           <Icon className="size-3.5 flex-none" style={{ color: NODE_COLORS[n.type] ?? 'var(--node-muted)' }} />
@@ -205,7 +259,12 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
   }, [connections, sort, grouped, onlyOpen, openIds]);
 
   for (const [group, list] of groups) {
-    if (groups.length > 1 || group) rows.push(<div key={`group:${group}`} className="px-2 pt-2 pb-0.5 text-[10px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">{group || 'Other'}</div>);
+    if (groups.length > 1 || group)
+      rows.push(
+        <div key={`group:${group}`} className="px-2 pt-2 pb-0.5 text-[10px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">
+          {group || 'Other'}
+        </div>,
+      );
     for (const c of list) {
       const kind = kindOf(c.kind);
       if (!kind) continue;
@@ -221,7 +280,11 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
           aria-expanded={isOpen}
           tabIndex={-1}
           title={session ? `${session.version}${session.detail ? ` · ${session.detail}` : ''}` : kind.name}
-          className={cn('group flex h-[26px] cursor-default items-center gap-1.5 pr-2', selected === k ? 'bg-[color-mix(in_srgb,var(--node-accent)_20%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]', activeConn === c.id && selected !== k && 'bg-[color-mix(in_srgb,var(--node-fg)_3%,transparent)]')}
+          className={cn(
+            'group flex h-[26px] cursor-default items-center gap-1.5 pr-2',
+            selected === k ? 'bg-[color-mix(in_srgb,var(--node-accent)_20%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
+            activeConn === c.id && selected !== k && 'bg-[color-mix(in_srgb,var(--node-fg)_3%,transparent)]',
+          )}
           style={{ paddingLeft: 4 }}
           onClick={() => setSelected(k)}
           onDoubleClick={() => toggle(c.id, [])}
@@ -231,7 +294,16 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
             menu.open(e, nodeMenu(c, [], null));
           }}
         >
-          <button type="button" tabIndex={-1} aria-label={isOpen ? 'Collapse' : 'Expand'} className="flex size-4 flex-none items-center justify-center text-[var(--node-muted)]" onClick={(e) => (e.stopPropagation(), toggle(c.id, []))}>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={isOpen ? 'Collapse' : 'Expand'}
+            className="flex size-4 flex-none items-center justify-center text-[var(--node-muted)]"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggle(c.id, []);
+            }}
+          >
             {isOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
           </button>
           <span className="relative flex-none">
@@ -254,7 +326,13 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
       <Toolbar>
         <span className="mr-auto truncate text-[11px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">Explorer</span>
         <ToolButton label="New connection" icon={Plus} onClick={() => ops.pickKind()} />
-        <ToolButton label="Refresh everything open" icon={RefreshCw} onClick={() => connections.filter((c) => expanded.has(keyOf(c.id, []))).forEach((c) => refresh(c.id, []))} />
+        <ToolButton
+          label="Refresh everything open"
+          icon={RefreshCw}
+          onClick={() => {
+            for (const c of connections.filter((c) => expanded.has(keyOf(c.id, [])))) refresh(c.id, []);
+          }}
+        />
         <ToolButton label="Collapse all" icon={ChevronsDownUp} onClick={() => setExpanded(new Set())} />
         <ToolButton
           label="Explorer options"
@@ -266,9 +344,15 @@ export function Explorer({ state, api, project, ops, open, handle, activeConn }:
                 any: connections.length > 0,
                 anyOpen: Object.keys(state?.open ?? {}).length > 0,
                 newConnection: () => ops.pickKind(),
-                connectAll: () => connections.forEach((c) => !state?.open[c.id] && ops.connect(c)),
-                disconnectAll: () => connections.forEach((c) => state?.open[c.id] && ops.disconnect(c)),
-                expandOpen: () => connections.filter((c) => state?.open[c.id]).forEach((c) => handle.current?.reveal(c.id)),
+                connectAll: () => {
+                  for (const c of connections) if (!state?.open[c.id]) ops.connect(c);
+                },
+                disconnectAll: () => {
+                  for (const c of connections) if (state?.open[c.id]) ops.disconnect(c);
+                },
+                expandOpen: () => {
+                  for (const c of connections.filter((c) => state?.open[c.id])) handle.current?.reveal(c.id);
+                },
                 collapse: () => setExpanded(new Set()),
               }),
             )

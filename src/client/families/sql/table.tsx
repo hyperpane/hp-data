@@ -22,7 +22,13 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
   const table: TableRef = { database: tab.ref.database, schema: tab.ref.schema, table: tab.ref.table ?? '' };
   const s = tab.state ?? {};
   const [view, setView] = useState<'data' | 'structure' | 'ddl'>((s.view as 'data') ?? 'data');
-  const [size, setSize] = useState<(typeof SIZES)[number]>((SIZES as readonly string[]).includes(String(s.size)) ? (String(s.size) as '200') : (SIZES as readonly string[]).includes(String(connection.values.pageSize)) ? (String(connection.values.pageSize) as '200') : '200');
+  const [size, setSize] = useState<(typeof SIZES)[number]>(
+    (SIZES as readonly string[]).includes(String(s.size))
+      ? (String(s.size) as '200')
+      : (SIZES as readonly string[]).includes(String(connection.values.pageSize))
+        ? (String(connection.values.pageSize) as '200')
+        : '200',
+  );
   const [offset, setOffset] = useState(0);
   const [where, setWhere] = useState<string>(typeof s.where === 'string' ? s.where : '');
   const [applied, setApplied] = useState(where);
@@ -35,7 +41,9 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
   const [info, setInfo] = useState<TableInfo | null>(null);
   const [value, setValue] = useState<{ r: number; c: number; value: Cell } | null>(null);
   const [tick, setTick] = useState(0);
-  const dialect = (kind.engine === 'postgres' || kind.engine === 'mysql' || kind.engine === 'sqlite' || kind.engine === 'clickhouse' ? kind.engine : 'postgres') as Dialect;
+  const dialect = (
+    kind.engine === 'postgres' || kind.engine === 'mysql' || kind.engine === 'sqlite' || kind.engine === 'clickhouse' ? kind.engine : 'postgres'
+  ) as Dialect;
   const name = qualified(dialect, table);
   const editable = !!page?.editable && !readOnly;
   const sendRows = useRowsPort(connection.name, visible);
@@ -141,7 +149,11 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
         />
         {view === 'data' && (
           <>
-            <ToolButton label="Refresh" icon={RefreshCw} onClick={() => (hasEdits(edits) ? api.toast('Save or revert the changes first', true) : setTick((t) => t + 1))} />
+            <ToolButton
+              label="Refresh"
+              icon={RefreshCw}
+              onClick={() => (hasEdits(edits) ? api.toast('Save or revert the changes first', true) : setTick((t) => t + 1))}
+            />
             <ToolbarSeparator />
             <ToolButton label="First page" icon={ChevronFirst} disabled={offset === 0} onClick={() => go(0)} />
             <ToolButton label="Previous page" icon={ChevronLeft} disabled={offset === 0} onClick={() => go(offset - Number(size))} />
@@ -149,9 +161,22 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               {rowsShown ? `${(offset + 1).toLocaleString()}–${(offset + rowsShown).toLocaleString()}` : '0'}
               {total !== null ? ` of ${total.toLocaleString()}` : ''}
             </span>
-            <ToolButton label="Next page" icon={ChevronRight} disabled={rowsShown < Number(size) || (total !== null && offset + rowsShown >= total)} onClick={() => go(offset + Number(size))} />
+            <ToolButton
+              label="Next page"
+              icon={ChevronRight}
+              disabled={rowsShown < Number(size) || (total !== null && offset + rowsShown >= total)}
+              onClick={() => go(offset + Number(size))}
+            />
             <ToolButton label="Last page" icon={ChevronLast} disabled={last === null || offset >= last} onClick={() => last !== null && go(last)} />
-            <Picker label="Rows per page" value={size} options={SIZES.map((x) => ({ value: x, label: x }))} onValueChange={(v) => (setSize(v), setOffset(0))} />
+            <Picker
+              label="Rows per page"
+              value={size}
+              options={SIZES.map((x) => ({ value: x, label: x }))}
+              onValueChange={(v) => {
+                setSize(v);
+                setOffset(0);
+              }}
+            />
             {editable && (
               <>
                 <ToolbarSeparator />
@@ -171,7 +196,20 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               </>
             )}
             <ToolbarSpacer />
-            <ToolButton label="Open the query in a console" icon={SquareTerminal} onClick={() => open({ key: `${connection.id}:console:${Date.now().toString(36)}`, type: 'console', conn: connection.id, ref: { database: table.database }, title: `${table.table}`, state: { text: `${page?.sql ?? `SELECT * FROM ${name}`};\n` } })} />
+            <ToolButton
+              label="Open the query in a console"
+              icon={SquareTerminal}
+              onClick={() =>
+                open({
+                  key: `${connection.id}:console:${Date.now().toString(36)}`,
+                  type: 'console',
+                  conn: connection.id,
+                  ref: { database: table.database },
+                  title: `${table.table}`,
+                  state: { text: `${page?.sql ?? `SELECT * FROM ${name}`};\n` },
+                })
+              }
+            />
           </>
         )}
       </Toolbar>
@@ -193,7 +231,12 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             className="h-6 flex-1 font-mono text-[11px]"
           />
           {order.length > 0 && (
-            <button type="button" className="flex-none font-mono text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]" title="Click a column’s header to sort, Shift-click to add; click here to clear" onClick={() => setOrder([])}>
+            <button
+              type="button"
+              className="flex-none font-mono text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]"
+              title="Click a column’s header to sort, Shift-click to add; click here to clear"
+              onClick={() => setOrder([])}
+            >
               ORDER BY {order.map((o) => `${o.column}${o.desc ? ' DESC' : ''}`).join(', ')} ×
             </button>
           )}
@@ -230,7 +273,11 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             <StatusBar>
               <span>{count(rowsShown, 'row')}</span>
               <span>{ms(page.ms)}</span>
-              {readOnly ? <span>read only</span> : !page.editable && <span>Not editable: {kind.engine === 'clickhouse' ? 'ClickHouse rows aren’t edited one by one' : 'no primary key'}</span>}
+              {readOnly ? (
+                <span>read only</span>
+              ) : (
+                !page.editable && <span>Not editable: {kind.engine === 'clickhouse' ? 'ClickHouse rows aren’t edited one by one' : 'no primary key'}</span>
+              )}
               {hasEdits(edits) && <span className="text-[#d29922]">{count(pending.length, 'change')} not saved (⌘S)</span>}
               <span className="ml-auto truncate font-mono">{page.sql}</span>
             </StatusBar>
@@ -239,7 +286,11 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
           !error && <div className="p-6 text-center text-[var(--node-muted)]">Loading {table.table}…</div>
         )
       ) : view === 'structure' ? (
-        info ? <Structure info={info} copy={api.copy} /> : <div className="p-6 text-center text-[var(--node-muted)]">Loading</div>
+        info ? (
+          <Structure info={info} copy={api.copy} />
+        ) : (
+          <div className="p-6 text-center text-[var(--node-muted)]">Loading</div>
+        )
       ) : (
         <CodeEditor value={info?.ddl ?? '-- Loading'} language="sql" dialect={dialect === 'clickhouse' ? 'standard' : dialect} readOnly className="flex-1" />
       )}
@@ -249,7 +300,11 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
           value={value.value}
           copy={api.copy}
           onClose={() => setValue(null)}
-          onSave={editable && !page.columns[value.c].readOnly ? (text) => setEdits((e) => ({ ...e, changed: new Map(e.changed).set(`${value.r}:${value.c}`, text) })) : undefined}
+          onSave={
+            editable && !page.columns[value.c].readOnly
+              ? (text) => setEdits((e) => ({ ...e, changed: new Map(e.changed).set(`${value.r}:${value.c}`, text) }))
+              : undefined
+          }
         />
       )}
     </div>

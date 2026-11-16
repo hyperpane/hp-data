@@ -10,7 +10,9 @@ import { type KeyNode, keyTree, ttlText } from './lib.ts';
 import { Muted, TypeBadge } from './parts.tsx';
 import type { Scan } from './use-scan.ts';
 
-type Row = { kind: 'folder'; prefix: string; name: string; count: number; depth: number; open: boolean } | { kind: 'key'; name: string; entry: KeyEntry; depth: number };
+type Row =
+  | { kind: 'folder'; prefix: string; name: string; count: number; depth: number; open: boolean }
+  | { kind: 'key'; name: string; entry: KeyEntry; depth: number };
 
 function rowsOf(nodes: KeyNode[], open: Set<string>, depth = 0, out: Row[] = []): Row[] {
   for (const n of nodes) {
@@ -109,12 +111,22 @@ export function KeyList(p: KeyListProps) {
               onClick={() => toggle(r.prefix)}
               onContextMenu={(e) =>
                 menu.open(e, [
-                  { label: `Show only ${r.prefix}*`, run: () => (setTyped(`${r.prefix}*`), p.onPattern(`${r.prefix}*`)) },
+                  {
+                    label: `Show only ${r.prefix}*`,
+                    run: () => {
+                      setTyped(`${r.prefix}*`);
+                      p.onPattern(`${r.prefix}*`);
+                    },
+                  },
                   { label: 'Copy the prefix', run: () => p.copy(r.prefix, 'the prefix') },
                 ])
               }
             >
-              {r.open ? <ChevronDown className="size-3 flex-none text-[var(--node-muted)]" /> : <ChevronRight className="size-3 flex-none text-[var(--node-muted)]" />}
+              {r.open ? (
+                <ChevronDown className="size-3 flex-none text-[var(--node-muted)]" />
+              ) : (
+                <ChevronRight className="size-3 flex-none text-[var(--node-muted)]" />
+              )}
               <Folder className="size-3.5 flex-none text-[var(--node-muted)]" />
               <span className="min-w-0 flex-1 truncate font-mono text-[11.5px]">{r.name}</span>
               <span className="flex-none text-[10.5px] text-[var(--node-muted)] tabular-nums">{r.count}</span>
@@ -124,7 +136,10 @@ export function KeyList(p: KeyListProps) {
               key={`k:${r.entry.key}`}
               data-kv-key={r.entry.key}
               title={r.entry.key}
-              className={cn('flex h-[22px] cursor-default items-center gap-1.5 pr-2', r.entry.key === p.selected ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[var(--node-hover)]')}
+              className={cn(
+                'flex h-[22px] cursor-default items-center gap-1.5 pr-2',
+                r.entry.key === p.selected ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[var(--node-hover)]',
+              )}
               style={{ paddingLeft: 6 + r.depth * 12 + (p.tree ? 16 : 0) }}
               onClick={() => p.onSelect(r.entry.key)}
               onContextMenu={(e) =>
@@ -150,7 +165,9 @@ export function KeyList(p: KeyListProps) {
       </div>
       <StatusBar>
         <span>
-          {scan.loading && !scan.keys.length ? 'Scanning' : `${scan.keys.length.toLocaleString()} ${scan.keys.length === 1 ? 'key' : 'keys'}${scan.more ? ' so far' : ''}`}
+          {scan.loading && !scan.keys.length
+            ? 'Scanning'
+            : `${scan.keys.length.toLocaleString()} ${scan.keys.length === 1 ? 'key' : 'keys'}${scan.more ? ' so far' : ''}`}
           {scan.total !== undefined && ` · ${scan.total.toLocaleString()} in the database`}
         </span>
       </StatusBar>

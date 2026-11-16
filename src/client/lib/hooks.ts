@@ -1,6 +1,5 @@
 // The window's hooks: a setting kept in this browser, an element's width,
-// a pointer drag, a list that follows its end, saving soon after the last
-// change, and sending results out of the Rows port.
+// a list that follows its end, and sending results out of the Rows port.
 
 import { useEffect, useRef, useState } from 'react';
 import { useHost } from '@hyperpane/sdk/client';
@@ -55,21 +54,6 @@ export function useWidth<T extends HTMLElement>(): [React.RefObject<T | null>, n
   return [ref, width];
 }
 
-/** Follows a pointer drag from a handle: `move` gets how far it went. */
-export function dragFrom(e: React.PointerEvent<HTMLElement>, move: (dx: number, dy: number) => void) {
-  const x = e.clientX;
-  const y = e.clientY;
-  const el = e.currentTarget;
-  el.setPointerCapture(e.pointerId);
-  const onMove = (ev: PointerEvent) => move(ev.clientX - x, ev.clientY - y);
-  const up = () => {
-    el.removeEventListener('pointermove', onMove);
-    el.removeEventListener('pointerup', up);
-  };
-  el.addEventListener('pointermove', onMove);
-  el.addEventListener('pointerup', up);
-}
-
 /** Keeps a list scrolled to its end while it's there; scrolled up, it
  * stays put and says there's more. */
 export function useFollow(dep: unknown) {
@@ -90,22 +74,6 @@ export function useFollow(dep: unknown) {
       if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
     },
   };
-}
-
-/** Saves a little after the last change, so typing isn't a write a key. */
-export function useSoon<T>(value: T, save: (v: T) => void, ms = 500) {
-  const first = useRef(true);
-  const fn = useRef(save);
-  fn.current = save;
-  const key = JSON.stringify(value);
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    const t = setTimeout(() => fn.current(value), ms);
-    return () => clearTimeout(t);
-  }, [key]);
 }
 
 /** Sends a tab's new result out of the Rows port, while the tab is shown.

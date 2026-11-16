@@ -34,7 +34,8 @@ export interface Watermarks {
 export function rangesFor(r: Pick<PeekRequest, 'from' | 'partition' | 'offset' | 'limit'>, marks: Watermarks[]): Range[] {
   const n = BigInt(Math.max(1, r.limit));
   const parts = r.partition === undefined || r.partition === null ? marks : marks.filter((m) => m.partition === r.partition);
-  if (r.partition !== undefined && r.partition !== null && !parts.length) throw new PluginError(`There’s no partition ${r.partition}: the topic has ${marks.length}.`);
+  if (r.partition !== undefined && r.partition !== null && !parts.length)
+    throw new PluginError(`There’s no partition ${r.partition}: the topic has ${marks.length}.`);
   const out: Range[] = [];
   for (const m of parts) {
     const low = BigInt(m.low);
@@ -92,7 +93,15 @@ async function watermarks(c: Client, topic: string): Promise<Watermarks[]> {
 /** A consumer in a group of its own, gone (with its group) when `end` is called. */
 async function throwaway(c: Client, topic: string) {
   const groupId = throwawayGroup();
-  const consumer: Consumer = c.kafka.consumer({ groupId, allowAutoTopicCreation: false, sessionTimeout: 10_000, rebalanceTimeout: 10_000, heartbeatInterval: 3_000, maxWaitTimeInMs: 500, retry: { retries: 2 } });
+  const consumer: Consumer = c.kafka.consumer({
+    groupId,
+    allowAutoTopicCreation: false,
+    sessionTimeout: 10_000,
+    rebalanceTimeout: 10_000,
+    heartbeatInterval: 3_000,
+    maxWaitTimeInMs: 500,
+    retry: { retries: 2 },
+  });
   const untrack = c.track(consumer);
   const end = async () => {
     untrack();
@@ -136,7 +145,10 @@ export async function withGroup(c: Client, topic: string, marks: Watermarks[], r
   const { consumer, end } = await throwaway(c, topic);
   let finish!: () => void;
   let fail!: (e: unknown) => void;
-  const finished = new Promise<void>((res, rej) => ((finish = res), (fail = rej)));
+  const finished = new Promise<void>((res, rej) => {
+    finish = res;
+    fail = rej;
+  });
   let quiet: NodeJS.Timeout | undefined;
   const overall = setTimeout(() => finish(), PEEK_TIMEOUT);
   const abort = () => finish();
@@ -200,7 +212,10 @@ export async function tail(c: Client, ref: Ref, emit: (m: Message) => boolean, s
     // From each partition's end as it was asked, not as it is once the
     // group has joined: what's sent meanwhile is shown too.
     for (const m of marks) consumer.seek({ topic, partition: m.partition, offset: m.high });
-    await Promise.race([new Promise<void>((res) => (stop.signal.aborted ? res() : stop.signal.addEventListener('abort', () => res(), { once: true }))), crashed]);
+    await Promise.race([
+      new Promise<void>((res) => (stop.signal.aborted ? res() : stop.signal.addEventListener('abort', () => res(), { once: true }))),
+      crashed,
+    ]);
   } catch (e) {
     throw said(e);
   } finally {

@@ -77,7 +77,25 @@ async function onDb(client: MongoClient, database: string, calls: ShellCall[]): 
   }
 }
 
-const MODIFIERS = new Set(['sort', 'limit', 'skip', 'project', 'projection', 'hint', 'maxTimeMS', 'collation', 'batchSize', 'comment', 'toArray', 'pretty', 'count', 'itcount', 'size', 'explain', 'allowDiskUse']);
+const MODIFIERS = new Set([
+  'sort',
+  'limit',
+  'skip',
+  'project',
+  'projection',
+  'hint',
+  'maxTimeMS',
+  'collation',
+  'batchSize',
+  'comment',
+  'toArray',
+  'pretty',
+  'count',
+  'itcount',
+  'size',
+  'explain',
+  'allowDiskUse',
+]);
 
 async function onCollection(client: MongoClient, database: string, collection: string, calls: ShellCall[], signal: AbortSignal): Promise<unknown> {
   const coll = client.db(database).collection(collection);
@@ -94,8 +112,10 @@ async function onCollection(client: MongoClient, database: string, collection: s
         if (!MODIFIERS.has(m.name)) throw new PluginError(`.${m.name}() isn’t something a find can be followed by here.`);
         const x = m.args.map(bson);
         if (m.name === 'sort') cursor = cursor.sort(x[0]);
-        else if (m.name === 'limit') (cursor = cursor.limit(Number(x[0]))), (limited = true);
-        else if (m.name === 'skip') cursor = cursor.skip(Number(x[0]));
+        else if (m.name === 'limit') {
+          cursor = cursor.limit(Number(x[0]));
+          limited = true;
+        } else if (m.name === 'skip') cursor = cursor.skip(Number(x[0]));
         else if (m.name === 'project' || m.name === 'projection') cursor = cursor.project(x[0]);
         else if (m.name === 'hint') cursor = cursor.hint(x[0]);
         else if (m.name === 'maxTimeMS') cursor = cursor.maxTimeMS(Number(x[0]));
@@ -114,7 +134,7 @@ async function onCollection(client: MongoClient, database: string, collection: s
       return coll.findOne(obj(first.args[0], 'findOne'), a[1] ? { projection: a[1] } : {});
     case 'aggregate': {
       if (!Array.isArray(a[0])) throw new PluginError('aggregate takes a pipeline: [ { $match: … }, … ].');
-      let cursor = coll.aggregate(a[0], a[1] ?? {});
+      const cursor = coll.aggregate(a[0], a[1] ?? {});
       for (const m of rest) {
         if (m.name === 'explain') return cursor.explain();
         if (m.name !== 'toArray' && m.name !== 'pretty') throw new PluginError(`.${m.name}() can’t follow aggregate() here.`);
@@ -192,7 +212,8 @@ async function run(client: MongoClient, s: Statement, database: string, signal: 
       const r = await client.db('admin').admin().listDatabases({ authorizedDatabases: true });
       return { result: r.databases.map((d) => ({ name: d.name, sizeOnDisk: d.sizeOnDisk ?? null, empty: d.empty ?? false })) };
     }
-    if (what === 'collections' || what === 'tables') return { result: (await client.db(database).listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name).sort() };
+    if (what === 'collections' || what === 'tables')
+      return { result: (await client.db(database).listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name).sort() };
     if (what === 'users') return { result: (await client.db(database).command({ usersInfo: 1 })).users };
     if (what === 'roles') return { result: (await client.db(database).command({ rolesInfo: 1 })).roles };
     throw new PluginError(`“show ${s.what}” isn’t something the console knows: show dbs, show collections, show users, show roles.`);

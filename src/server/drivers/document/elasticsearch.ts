@@ -79,7 +79,7 @@ export function searchBody(filter: string): Record<string, unknown> {
 
 const strip = (doc: unknown): { id?: string; source: Record<string, unknown> } => {
   const parsed = typeof doc === 'string' ? parseRelaxed(doc) : doc;
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new PluginError('The document has to be an object: { … }.');
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new PluginError('The document has to be an object: { "key": value }');
   const { _id, _index, _score, ...source } = parsed as Record<string, unknown>;
   return { id: _id === undefined || _id === null || _id === '' ? undefined : String(_id), source };
 };

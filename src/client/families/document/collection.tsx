@@ -23,7 +23,7 @@ interface Query {
 
 const PLACEHOLDERS: Record<string, Query & { projectionLabel: string }> = {
   mongodb: {
-    filter: '{ status: "paid", total: { $gt: 20 } }   ·   { _id: ObjectId("…") }',
+    filter: '{ status: "paid", total: { $gt: 20 } }   ·   { _id: ObjectId("65f1c2a9e4") }',
     sort: '{ placed: -1 }',
     projection: '{ name: 1, email: 1 }',
     projectionLabel: 'Project',
@@ -129,7 +129,7 @@ export function CollectionView(p: TabProps) {
 
   const call = (op: string, payload: Record<string, unknown>) => api.call(op, { id: p.connection.id, project: p.project, ref: tab.ref, ...payload });
   const hint = mongo
-    ? 'Shell literals work: ObjectId("…"), ISODate("…"), NumberLong(…)'
+    ? 'Shell literals work: ObjectId("65f1c2a9e4"), ISODate("2026-01-31"), NumberLong(42)'
     : dynamo
       ? idFields.length
         ? `The key: ${idFields.join(', ')}`

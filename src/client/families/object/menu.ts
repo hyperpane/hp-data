@@ -45,7 +45,7 @@ export function menuFor(c: MenuContext): (MenuEntry | null)[] {
   if (one && isFolder(one)) entries.push({ label: 'Open', run: () => c.go(one) });
   if (files.length)
     entries.push({
-      label: files.length === 1 ? 'Download' : `Download ${count(files.length, 'File')}…`,
+      label: files.length === 1 ? 'Download' : `Download ${count(files.length, 'File')}`,
       run: () => void c.run(null, () => download(where, files), false),
     });
   if (one && !isFolder(one)) entries.push(null, ...linkMenu(c, one));
@@ -66,7 +66,7 @@ export function menuFor(c: MenuContext): (MenuEntry | null)[] {
     entries.push(null);
     if (one) entries.push({ label: isFolder(one) ? 'Rename Folder' : 'Rename or Move', run: () => void c.run(null, () => rename(where, one)) });
     entries.push({
-      label: one ? `Delete “${nameOf(one)}”…` : `Delete ${count(selected.length, 'Item')}…`,
+      label: one ? `Delete “${nameOf(one)}”` : `Delete ${count(selected.length, 'Item')}`,
       danger: true,
       run: () => void c.run(null, () => remove(where, selected)),
     });

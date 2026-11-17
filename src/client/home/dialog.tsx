@@ -215,7 +215,7 @@ export function ConnectionDialog({
                   <NodeInput
                     value={url}
                     onChange={(e) => fromUrl(e.target.value)}
-                    placeholder={`${kind.schemes[0]}://user:password@host:port/…  (paste one to fill the fields)`}
+                    placeholder={`${kind.schemes[0]}://user:password@host:port/name  (paste one to fill the fields)`}
                     className="h-7 font-mono"
                     spellCheck={false}
                   />

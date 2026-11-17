@@ -138,7 +138,7 @@ function Body({ content }: { content: Content | null }) {
       return (
         <pre className="min-h-0 flex-1 p-2 font-mono text-[11px] leading-4 whitespace-pre-wrap break-words select-text">
           {content.text}
-          {content.truncated && <span className="block pt-1 text-[var(--node-muted)] italic">… the first {formatSize(PREVIEW_BYTES)}</span>}
+          {content.truncated && <span className="block pt-1 text-[var(--node-muted)] italic">Only the first {formatSize(PREVIEW_BYTES)}</span>}
         </pre>
       );
     default:

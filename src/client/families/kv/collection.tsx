@@ -116,7 +116,7 @@ export function Collection(p: CollectionProps) {
                       'truncate border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] px-2',
                       i === 0 && head.length > 1 && 'text-[var(--node-muted)]',
                     )}
-                    title={c.length > 80 ? `${c.slice(0, 500)}…` : c}
+                    title={c.length > 500 ? c.slice(0, 500) : c}
                     onDoubleClick={() => setOpen({ row: r, col: i })}
                   >
                     {c}

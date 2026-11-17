@@ -101,7 +101,7 @@ export function oneLine(v: unknown, mongo: boolean, room = 400): string {
     } else out += JSON.stringify(x ?? null);
   };
   walk(v);
-  return out.length > room ? `${out.slice(0, room)}…` : out;
+  return out.length > room ? out.slice(0, room) : out;
 }
 
 /** The document's id fields, from the document as it came. */

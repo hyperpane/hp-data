@@ -130,7 +130,7 @@ export const dynamodb: Factory = (ctx) => {
 
   const asItem = (doc: unknown): Record<string, unknown> => {
     const parsed = typeof doc === 'string' ? parseRelaxed(doc) : doc;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new PluginError('The item has to be an object: { … }.');
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new PluginError('The item has to be an object: { "key": value }');
     return parsed as Record<string, unknown>;
   };
   const keyOf = async (table: string, doc: Record<string, unknown>) => {
@@ -253,7 +253,7 @@ export const dynamodb: Factory = (ctx) => {
         return { ...result, ms: since(t0) };
       }
       const statements = splitStatements(o.text);
-      if (!statements.length) throw new PluginError('Type a statement: SELECT * FROM "table" WHERE …');
+      if (!statements.length) throw new PluginError('Type a statement: SELECT * FROM "table"');
       let result: unknown = null;
       for (const s of statements) {
         const r = await statement(s, 1000, undefined, o.signal);

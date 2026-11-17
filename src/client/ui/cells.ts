@@ -21,7 +21,7 @@ export function formatSize(n: number): string {
 /** What a cell shows, in one line. */
 export function display(c: Cell): string {
   if (c === null) return 'NULL';
-  if (typeof c === 'string') return c.length > 2000 ? `${c.slice(0, 2000)}…` : c;
+  if (typeof c === 'string') return c.length > 2000 ? c.slice(0, 2000) : c;
   if (typeof c === 'number' || typeof c === 'boolean') return String(c);
   if (isBytes(c)) return hexPreview(c);
   return JSON.stringify(c);
@@ -30,7 +30,7 @@ export function display(c: Cell): string {
 function hexPreview(c: { $bytes: string; size: number }): string {
   const b = Uint8Array.from(atob(c.$bytes), (x) => x.charCodeAt(0));
   const hex = Array.from(b.subarray(0, 16), (x) => x.toString(16).padStart(2, '0')).join('');
-  return `0x${hex}${c.size > 16 ? '…' : ''} (${formatSize(c.size)})`;
+  return `0x${hex} (${formatSize(c.size)})`;
 }
 
 /** A cell as plain text, in full (null: ''). */

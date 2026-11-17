@@ -11,7 +11,7 @@ export function KindPicker({ onPick }: { onPick(k: Kind): void }) {
   const kinds = KINDS.filter((k) => !pick || `${k.name} ${k.tagline}`.toLowerCase().includes(pick.toLowerCase()));
   return (
     <div className="flex max-h-[62vh] flex-col gap-3 overflow-auto p-4">
-      <NodeInput autoFocus value={pick} onChange={(e) => setPick(e.target.value)} placeholder="PostgreSQL, Redis, S3…" />
+      <NodeInput autoFocus value={pick} onChange={(e) => setPick(e.target.value)} placeholder="PostgreSQL, Redis, S3" />
       {CATEGORIES.map((cat) => {
         const list = kinds.filter((k) => k.category === cat.id);
         if (!list.length) return null;

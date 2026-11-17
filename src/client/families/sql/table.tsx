@@ -283,7 +283,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             </StatusBar>
           </>
         ) : (
-          !error && <div className="p-6 text-center text-[var(--node-muted)]">Loading {table.table}…</div>
+          !error && <div className="p-6 text-center text-[var(--node-muted)]">Loading {table.table}</div>
         )
       ) : view === 'structure' ? (
         info ? (

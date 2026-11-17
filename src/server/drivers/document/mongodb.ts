@@ -56,7 +56,7 @@ const fromText = (text: string, what: string): Document => EJSON.deserialize(par
 /** A value from a window (text as typed, or EJSON) as BSON-ready values. */
 function fromValue(v: unknown, what = 'document'): Document {
   const parsed = typeof v === 'string' ? parseRelaxed(v) : v;
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new PluginError(`The ${what} has to be an object: { … }.`);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new PluginError(`The ${what} has to be an object: { key: value }`);
   return EJSON.deserialize(parsed as Document, { relaxed: false }) as Document;
 }
 

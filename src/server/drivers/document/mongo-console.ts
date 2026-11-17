@@ -16,7 +16,7 @@ const MAX_DOCS = 5000;
 const bson = (v: unknown): any => (v === undefined ? undefined : EJSON.deserialize(v as Document, { relaxed: false }));
 const obj = (v: unknown, what: string): Document => {
   if (v === undefined) return {};
-  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new PluginError(`${what} takes an object: { … }.`);
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new PluginError(`${what} takes an object: { key: value }`);
   return bson(v);
 };
 
@@ -73,7 +73,7 @@ async function onDb(client: MongoClient, database: string, calls: ShellCall[]): 
     case 'currentOp':
       return client.db('admin').command({ currentOp: 1, ...(a[0] ?? {}) });
     default:
-      throw new PluginError(`db.${name}() isn’t something the console knows: try db.runCommand({ … }).`);
+      throw new PluginError(`db.${name}() isn’t something the console knows: try db.runCommand({ ping: 1 })`);
   }
 }
 
@@ -133,7 +133,7 @@ async function onCollection(client: MongoClient, database: string, collection: s
       cursorOnly();
       return coll.findOne(obj(first.args[0], 'findOne'), a[1] ? { projection: a[1] } : {});
     case 'aggregate': {
-      if (!Array.isArray(a[0])) throw new PluginError('aggregate takes a pipeline: [ { $match: … }, … ].');
+      if (!Array.isArray(a[0])) throw new PluginError('aggregate takes a pipeline: [ { $match: { status: "paid" } } ]');
       const cursor = coll.aggregate(a[0], a[1] ?? {});
       for (const m of rest) {
         if (m.name === 'explain') return cursor.explain();

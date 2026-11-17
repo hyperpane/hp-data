@@ -216,7 +216,7 @@ export const clickhouse = (ctx: DriverContext): SqlDriver => {
     describe,
 
     async apply() {
-      throw new PluginError('ClickHouse tables aren’t edited row by row: use ALTER TABLE … UPDATE or INSERT in a console.');
+      throw new PluginError('ClickHouse tables aren’t edited row by row: use ALTER TABLE with UPDATE, or INSERT, in a console');
     },
 
     async completions(database) {

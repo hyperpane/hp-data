@@ -85,7 +85,7 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
       if (
         !(await api.confirm(
           `Run this on ${connection.name}?`,
-          `It looks like it changes data:\n\n${first.length > 300 ? `${first.slice(0, 300)}…` : first}`,
+          `It looks like it changes data:\n\n${first.length > 300 ? first.slice(0, 300) : first}`,
           'Run',
           true,
         ))

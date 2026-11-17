@@ -67,7 +67,7 @@ function statement(r: Reader): Statement {
     calls.push({ name, args });
   }
   if (props.length) {
-    if (!calls.length) r.fail(`Say what to do with ${props.join('.')}: find(), countDocuments()…`);
+    if (!calls.length) r.fail(`Say what to do with ${props.join('.')}: find() or countDocuments()`);
     return { kind: 'collection', database, collection: props.join('.'), calls };
   }
   return { kind: 'db', database, calls };
@@ -85,7 +85,7 @@ export function parseShell(text: string): Statement[] {
     const next = r.text[r.pos];
     if (next !== undefined && next !== ';' && !/^\s*(db\b|show\b|use\b)/.test(r.text.slice(r.pos))) r.fail(`Unexpected “${next}”`);
   }
-  if (!out.length) throw new PluginError('Type something to run: db.collection.find(), show collections…');
+  if (!out.length) throw new PluginError('Type something to run: db.collection.find() or show collections');
   return out;
 }
 

@@ -21,7 +21,7 @@ export const fullTime = (at: number | null | undefined) => (at ? new Date(at).to
 export function preview(m: Message, max = 300): string {
   if (m.binary) return `(binary, base64) ${m.value.slice(0, 80)}`;
   const one = m.value.replace(/\s+/g, ' ').trim();
-  return one.length > max ? `${one.slice(0, max)}…` : one;
+  return one.length > max ? one.slice(0, max) : one;
 }
 
 /** The value as indented JSON, when it is JSON. */

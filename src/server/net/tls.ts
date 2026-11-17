@@ -29,7 +29,7 @@ async function pem(value: unknown, what: string, folder: string | null): Promise
   const full = path.isAbsolute(file) ? file : folder ? path.join(folder, file) : file;
   try {
     const text = await readFile(full, 'utf8');
-    if (!isPem(text)) throw new PluginError(`${s} isn’t a PEM file (the ${what} should start with -----BEGIN …-----).`);
+    if (!isPem(text)) throw new PluginError(`${s} isn’t a PEM file (the ${what} should start with -----BEGIN)`);
     return text;
   } catch (e) {
     if (e instanceof PluginError) throw e;

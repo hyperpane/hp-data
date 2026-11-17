@@ -105,7 +105,7 @@ export function BucketView(p: TabProps) {
   const put = (puts: Put[]) =>
     puts.length &&
     void run('Uploading', () =>
-      upload(where, prefix, puts, (done, of, name) => setBusy(done < of ? `Uploading ${of > 1 ? `${done + 1} of ${of}: ` : ''}${name}…` : null)).then((n) =>
+      upload(where, prefix, puts, (done, of, name) => setBusy(done < of ? `Uploading ${of > 1 ? `${done + 1} of ${of}: ` : ''}${name}` : null)).then((n) =>
         api.toast(`Uploaded ${count(n, 'file')} to ${bucket}/${prefix}`),
       ),
     );

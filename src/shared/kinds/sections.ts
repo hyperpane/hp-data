@@ -212,7 +212,7 @@ function options(k: Kind): Field[] {
     key: 'notes',
     label: 'Notes',
     type: 'textarea',
-    placeholder: 'What it is, who to ask, where the password lives…',
+    placeholder: 'What it is, who to ask, where the password lives',
     advanced: true,
     help: 'Shown on its card.',
   });

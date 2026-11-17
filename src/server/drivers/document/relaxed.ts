@@ -329,6 +329,6 @@ export function parseRelaxed(text: string): unknown {
 export function parseObject(text: string | undefined, what: string, fallback: Record<string, unknown> = {}): Record<string, unknown> {
   const v = parseRelaxed(text ?? '');
   if (v === undefined) return fallback;
-  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new PluginError(`The ${what} has to be an object: { … }.`);
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new PluginError(`The ${what} has to be an object: { key: value }`);
   return v as Record<string, unknown>;
 }

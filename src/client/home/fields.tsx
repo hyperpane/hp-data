@@ -4,6 +4,7 @@
 
 import { Checkbox, NodeInput, Picker, cn } from '@hyperpane/ui';
 import type { Field } from '../../shared/kinds.ts';
+import { codeArea, softField } from '../ui/parts.tsx';
 
 export function FieldInput({
   f,
@@ -17,7 +18,7 @@ export function FieldInput({
   onChange(v: string | number | boolean): void;
 }) {
   const cls = 'h-7 w-full';
-  if (f.type === 'boolean') return <Checkbox className="h-7 text-[12px]" checked={value === true} onCheckedChange={onChange} label={f.label} />;
+  if (f.type === 'boolean') return <Checkbox className="h-7 text-xs" checked={value === true} onCheckedChange={onChange} label={f.label} />;
   if (f.type === 'textarea')
     return (
       <textarea
@@ -26,11 +27,20 @@ export function FieldInput({
         onChange={(e) => onChange(e.target.value)}
         spellCheck={false}
         rows={String(value ?? '').includes('\n') ? 5 : 2}
-        className="w-full resize-y rounded-[5px] border border-[var(--node-border)] bg-[var(--node-bg)] px-2 py-1 font-mono text-[11px] text-[var(--node-fg)] outline-none placeholder:text-[var(--node-muted)] focus:border-[var(--node-accent)]"
+        className={cn(codeArea, 'block w-full resize-y')}
       />
     );
   if (f.type === 'select')
-    return <Picker size="sm" className="w-full" label={f.label} value={String(value ?? f.default ?? '')} options={f.options ?? []} onValueChange={onChange} />;
+    return (
+      <Picker
+        size="sm"
+        className={cn('w-full', softField)}
+        label={f.label}
+        value={String(value ?? f.default ?? '')}
+        options={f.options ?? []}
+        onValueChange={onChange}
+      />
+    );
   return (
     <NodeInput
       className={cn(

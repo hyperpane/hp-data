@@ -3,7 +3,7 @@
 // RedisJSON documents use it too, always as JSON.
 
 import { useEffect, useMemo, useState } from 'react';
-import { NodeButton, Tabs } from '@hyperpane/ui';
+import { NodeButton, Tabs, Toolbar } from '@hyperpane/ui';
 import { CodeEditor } from '../../ui/code.tsx';
 import { prettyJson } from './lib.ts';
 
@@ -50,12 +50,11 @@ export function StringEditor(p: StringEditorProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex h-8 flex-none items-center gap-2 border-b border-[var(--node-border)] px-2 text-[11px]">
+      <Toolbar className="gap-2">
         {pretty && !p.json && (
           <Tabs
             variant="pills"
             label="Show the value as"
-            className="h-6"
             value={asJson ? 'json' : 'text'}
             onValueChange={(v) => setAsJson(v === 'json')}
             items={(['text', 'json'] as const).map((v) => ({
@@ -66,26 +65,22 @@ export function StringEditor(p: StringEditorProps) {
             }))}
           />
         )}
-        <span className="text-[var(--node-muted)]">
+        <span className="min-w-0 truncate text-2xs text-[var(--node-muted)]">
           {p.size !== undefined && `${p.size.toLocaleString()} bytes`}
           {p.binary && ' · not UTF-8: shown with \\xNN escapes, saved as the bytes they stand for'}
           {p.truncated && ' · only the first megabyte is shown, so it can’t be changed here'}
         </span>
         {!locked && (
-          <div className="ml-auto flex gap-1">
-            <NodeButton disabled={!changed || busy} onClick={() => setDraft(shown)}>
+          <div className="ms-auto flex flex-none gap-1">
+            <NodeButton variant="ghost" disabled={!changed || busy} onClick={() => setDraft(shown)}>
               Undo
             </NodeButton>
-            <NodeButton
-              disabled={!changed || busy}
-              onClick={() => void save()}
-              className={changed ? 'border-[var(--node-accent)] text-[var(--node-accent)]' : undefined}
-            >
+            <NodeButton variant={changed ? 'primary' : 'default'} disabled={!changed || busy} onClick={() => void save()}>
               {busy ? 'Saving' : 'Save'}
             </NodeButton>
           </div>
         )}
-      </div>
+      </Toolbar>
       <CodeEditor
         className="min-h-0 flex-1"
         value={draft}

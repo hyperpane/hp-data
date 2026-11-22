@@ -9,7 +9,7 @@ import { Radio, RefreshCw } from 'lucide-react';
 import { ColumnResizer, NodeButton, NodeInput, Picker, SplitPane, StatusBar, Toolbar, cn, styles, useColumnWidths, useCompact } from '@hyperpane/ui';
 import type { Message } from '../../../shared/queue.ts';
 import type { TabProps } from '../../app/tabs.ts';
-import { ErrorBox, count, ms } from '../../ui/parts.tsx';
+import { ErrorBox, count, ms, softField } from '../../ui/parts.tsx';
 import type { Caps } from './caps.ts';
 import { MessagePane } from './message-pane.tsx';
 import { clock, fullTime, matches, placeOf, preview } from './format.ts';
@@ -138,8 +138,8 @@ export function Messages({
 
   const table = (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div ref={scroller} tabIndex={0} onKeyDown={onKey} className="min-h-0 flex-1 overflow-auto outline-none">
-        <table className="w-full table-fixed border-collapse text-[11.5px]">
+      <div ref={scroller} tabIndex={0} onKeyDown={onKey} className="group/list min-h-0 flex-1 overflow-auto outline-none">
+        <table className="w-full table-fixed border-collapse text-xs">
           <colgroup>
             <col style={{ width: cols.widths.time }} />
             <col style={{ width: cols.widths.at }} />
@@ -147,25 +147,25 @@ export function Messages({
             <col />
             {!narrow && <col style={{ width: 34 }} />}
           </colgroup>
-          <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-bg)]')}>
-            <tr className="text-left text-[10.5px] text-[var(--node-muted)]">
-              <th className="relative border-b border-[var(--node-border)] px-2 py-1 font-normal">
+          <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-header)]')}>
+            <tr className="h-7 text-left text-2xs text-[var(--node-muted)]">
+              <th className="relative border-b border-[var(--node-border)] px-2 font-medium">
                 Time
                 <ColumnResizer {...cols.resizer('time')} />
               </th>
-              <th className="relative border-b border-[var(--node-border)] px-2 py-1 font-normal">
+              <th className="relative border-b border-[var(--node-border)] px-2 font-medium">
                 {caps.partitions ? 'Part:Offset' : 'Message'}
                 <ColumnResizer {...cols.resizer('at')} />
               </th>
               {!narrow && (
-                <th className="relative border-b border-[var(--node-border)] px-2 py-1 font-normal">
+                <th className="relative border-b border-[var(--node-border)] px-2 font-medium">
                   {caps.engine === 'rabbitmq' ? 'Routing key' : caps.engine === 'sqs' ? 'Group' : 'Key'}
                   <ColumnResizer {...cols.resizer('key')} />
                 </th>
               )}
-              <th className="border-b border-[var(--node-border)] px-2 py-1 font-normal">Value</th>
+              <th className="border-b border-[var(--node-border)] px-2 font-medium">Value</th>
               {!narrow && (
-                <th className="border-b border-[var(--node-border)] px-1 py-1 text-right font-normal" title="Headers">
+                <th className="border-b border-[var(--node-border)] px-1 text-right font-medium" title="Headers">
                   H
                 </th>
               )}
@@ -180,9 +180,9 @@ export function Messages({
                   onClick={() => setSel(i)}
                   onDoubleClick={() => api.copy(m.value, 'the value')}
                   className={cn(
-                    'h-[22px] cursor-default touch:h-9',
-                    sel === i ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
-                    fresh.has(m.id) && sel !== i && 'bg-[color-mix(in_srgb,#3fb950_10%,transparent)]',
+                    'h-7 cursor-default touch:h-10 [&>td]:border-b [&>td]:border-[var(--node-border)]',
+                    sel === i ? 'bg-[var(--node-selection-inactive)] group-focus-within/list:bg-[var(--node-selection)]' : 'hover:bg-[var(--node-hover)]',
+                    fresh.has(m.id) && sel !== i && 'bg-[color-mix(in_srgb,var(--ansi-2)_10%,transparent)]',
                   )}
                 >
                   <td className="truncate px-2 font-mono text-[var(--node-muted)] tabular-nums" title={fullTime(m.at)}>
@@ -199,14 +199,14 @@ export function Messages({
                   <td className={cn('truncate px-2 font-mono', m.binary && 'text-[var(--node-muted)]')}>
                     {preview(m) || <span className="text-[var(--node-muted)]">{m.meta?.tombstone ? 'null (tombstone)' : 'empty'}</span>}
                   </td>
-                  {!narrow && <td className="px-1 text-right text-[var(--node-muted)] tabular-nums">{nh || ''}</td>}
+                  {!narrow && <td className="px-1 text-right text-2xs text-[var(--node-muted)] tabular-nums">{nh || ''}</td>}
                 </tr>
               );
             })}
           </tbody>
         </table>
         {!shown.length && !busy && (
-          <p className="py-8 text-center text-[var(--node-muted)]">
+          <p className="py-10 text-center text-xs text-[var(--node-muted)]">
             {list.length
               ? 'No message matches the filter'
               : live
@@ -220,10 +220,12 @@ export function Messages({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Toolbar>
+      <Toolbar className={cn(caps.peekNote && 'border-b-0')}>
         {caps.from && (
           <Picker<From>
             label="Where to look"
+            size="sm"
+            className={softField}
             value={q.from}
             options={[
               { value: 'latest', label: 'Newest' },
@@ -240,6 +242,8 @@ export function Messages({
         {caps.partitions && partitionOptions.length > 0 && (
           <Picker
             label="Partition"
+            size="sm"
+            className={softField}
             value={q.partition}
             options={partitionOptions}
             onValueChange={(partition) => {
@@ -250,7 +254,7 @@ export function Messages({
         )}
         {caps.from && q.from === 'offset' && (
           <NodeInput
-            className="h-6 w-[90px] font-mono"
+            className="w-[90px] flex-none font-mono"
             value={q.offset}
             placeholder="offset"
             aria-label="Offset"
@@ -260,6 +264,8 @@ export function Messages({
         )}
         <Picker
           label="How many"
+          size="sm"
+          className={softField}
           value={q.limit}
           options={LIMITS.map((l) => ({ value: l, label: `${l} messages` }))}
           onValueChange={(limit) => {
@@ -268,27 +274,31 @@ export function Messages({
           }}
         />
         <NodeButton disabled={busy} onClick={() => void load()}>
-          <RefreshCw className={cn('size-3.5', busy && 'animate-spin')} />
+          <RefreshCw className={cn(busy && 'animate-spin')} />
           Refresh
         </NodeButton>
         {caps.live && (
           <NodeButton
             onClick={() => setLive((x) => !x)}
             title={caps.engine === 'sqs' ? 'Polls every 2 seconds and adds messages it hasn’t seen' : 'Adds messages as they’re published'}
-            className={cn(live && 'border-[#3fb950] text-[#3fb950]')}
+            aria-pressed={live}
+            className={cn(
+              live && 'bg-[color-mix(in_srgb,var(--ansi-2)_16%,transparent)] text-[var(--ansi-2)] hover:bg-[color-mix(in_srgb,var(--ansi-2)_22%,transparent)]',
+            )}
           >
-            <Radio className={cn('size-3.5', live && 'animate-pulse')} />
+            <Radio className={cn(live && 'animate-pulse')} />
             Live
           </NodeButton>
         )}
         <NodeInput
-          className="ml-1 h-6 min-w-[120px] flex-1"
+          className="ms-1 min-w-[120px] flex-1"
           placeholder="Filter by key, value or header"
+          aria-label="Filter"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
       </Toolbar>
-      {caps.peekNote && <div className="flex-none border-b border-[var(--node-border)] px-3 py-1 text-[10.5px] text-[var(--node-muted)]">{caps.peekNote}</div>}
+      {caps.peekNote && <div className="flex-none border-b border-[var(--node-border)] px-3 pb-2 text-2xs text-[var(--node-muted)]">{caps.peekNote}</div>}
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
       {selected ? (
         <SplitPane
@@ -307,7 +317,7 @@ export function Messages({
       <StatusBar>
         <span>{filter ? `${count(shown.length, 'message')} of ${list.length.toLocaleString()}` : count(list.length, 'message')}</span>
         {took !== null && <span>looked in {ms(took)}</span>}
-        {live && <span className="text-[#3fb950]">live{fresh.size ? `: ${fresh.size.toLocaleString()} new` : ''}</span>}
+        {live && <span className="text-[var(--ansi-2)]">live{fresh.size ? `: ${fresh.size.toLocaleString()} new` : ''}</span>}
       </StatusBar>
     </div>
   );

@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Copy, Download, Link } from 'lucide-react';
 import { formatTime } from '@hyperpane/sdk/client';
-import { JsonTree, NodeMessage, ToolButton, cn, fileIcon } from '@hyperpane/ui';
+import { JsonTree, NodeMessage, Spinner, ToolButton, cn, fileIcon } from '@hyperpane/ui';
 import { PREVIEW_BYTES, type ObjectDetails } from '../../../shared/object.ts';
 import { formatSize } from '../../ui/cells.ts';
 import { looksLikeText, nameOf, shownAs } from './paths.ts';
@@ -88,9 +88,9 @@ export function Preview({
 
   return (
     <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
-      <div className="flex h-8 flex-none items-center gap-1.5 border-b border-[var(--node-border)] px-2">
+      <div className="flex h-10 flex-none items-center gap-1 border-b border-[var(--node-border)] ps-3 pe-2.5 touch:h-12">
         <Icon className="size-3.5 flex-none text-[var(--node-muted)]" />
-        <span className="min-w-0 flex-1 truncate font-medium" title={objectKey}>
+        <span className="ms-1 min-w-0 flex-1 truncate font-medium" title={objectKey}>
           {nameOf(objectKey)}
         </span>
         {content && 'text' in content && <ToolButton label="Copy the text" icon={Copy} onClick={() => api.copy(content.text, 'the text')} />}
@@ -101,17 +101,22 @@ export function Preview({
         <NodeMessage error>{error}</NodeMessage>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-auto">
-          <table className="w-full flex-none border-b border-[var(--node-border)] text-[11px]">
+          <table className="my-1.5 w-full flex-none text-2xs">
             <tbody>
               {meta.map(([label, value]) => (
                 <tr key={label} className="align-top">
-                  <td className="w-[96px] py-0.5 pr-2 pl-2 whitespace-nowrap text-[var(--node-muted)]">{label}</td>
-                  <td className="py-0.5 pr-2 font-mono break-all select-text">{value}</td>
+                  <td className="w-[104px] py-1 ps-3 pe-2 whitespace-nowrap text-[var(--node-muted)]">{label}</td>
+                  <td className="py-1 pe-3 font-mono break-all select-text">{value}</td>
                 </tr>
               ))}
               {!head && (
                 <tr>
-                  <td className="px-2 py-1 text-[var(--node-muted)]">Loading</td>
+                  <td className="px-3 py-1 text-[var(--node-muted)]">
+                    <span className="flex items-center gap-2">
+                      <Spinner size="xs" />
+                      Loading
+                    </span>
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -128,21 +133,21 @@ function Body({ content }: { content: Content | null }) {
   switch (content.kind) {
     case 'image':
       return (
-        <div className="flex min-h-[120px] flex-1 items-center justify-center bg-[repeating-conic-gradient(color-mix(in_srgb,var(--node-fg)_6%,transparent)_0%_25%,transparent_0%_50%)] bg-[length:16px_16px] p-3">
+        <div className="flex min-h-[120px] flex-1 items-center justify-center border-t border-[var(--node-border)] bg-[repeating-conic-gradient(color-mix(in_srgb,var(--node-fg)_6%,transparent)_0%_25%,transparent_0%_50%)] bg-[length:16px_16px] p-3">
           <img src={content.url} alt="" className="max-h-full max-w-full object-contain" />
         </div>
       );
     case 'json':
-      return <JsonTree value={content.value} depth={2} className="min-h-0 flex-1 p-2" />;
+      return <JsonTree value={content.value} depth={2} className="min-h-0 flex-1 border-t border-[var(--node-border)] px-2 py-2 font-mono text-xs" />;
     case 'text':
       return (
-        <pre className="min-h-0 flex-1 p-2 font-mono text-[11px] leading-4 whitespace-pre-wrap break-words select-text">
+        <pre className="min-h-0 flex-1 border-t border-[var(--node-border)] px-3 py-2 font-mono text-xs leading-5 whitespace-pre-wrap break-words select-text">
           {content.text}
-          {content.truncated && <span className="block pt-1 text-[var(--node-muted)] italic">Only the first {formatSize(PREVIEW_BYTES)}</span>}
+          {content.truncated && <span className="block pt-1 font-sans text-2xs text-[var(--node-muted)]">Only the first {formatSize(PREVIEW_BYTES)}</span>}
         </pre>
       );
     default:
-      return <p className="px-2 py-3 text-[var(--node-muted)]">{content.why}</p>;
+      return <p className="border-t border-[var(--node-border)] px-3 py-6 text-center text-[var(--node-muted)]">{content.why}</p>;
   }
 }
 

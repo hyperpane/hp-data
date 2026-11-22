@@ -8,23 +8,23 @@ import type { TableInfo } from '../../../shared/sql.ts';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-1.5">
-      <h3 className="text-[11px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">{title}</h3>
+    <section className="flex flex-col">
+      <h3 className="flex h-7 items-center text-xs font-medium text-[var(--node-muted)]">{title}</h3>
       {children}
     </section>
   );
 }
 
-const th = 'border-b border-[var(--node-border)] px-2 py-1 text-left font-medium text-[var(--node-muted)]';
-const td = 'border-b border-[color-mix(in_srgb,var(--node-border)_60%,transparent)] px-2 py-1';
+const th = 'h-7 border-b border-[var(--node-border)] bg-[var(--node-header)] px-2 text-left text-2xs font-medium text-[var(--node-muted)]';
+const td = 'h-7 border-b border-[var(--node-border)] px-2';
 
 export function Structure({ info, copy }: { info: TableInfo; copy(text: string, what?: string): void }) {
   const cols = useColumnWidths('data.sql.structure', { type: 200, nullable: 72, fallback: 88 }, { min: 40, max: 600 });
   return (
-    <div className="min-h-0 flex-1 overflow-auto p-3 select-text">
-      <div className="flex max-w-[900px] flex-col gap-5">
+    <div className="min-h-0 flex-1 overflow-auto px-3 py-2 select-text">
+      <div className="flex max-w-[900px] flex-col gap-4">
         <Section title={`Columns · ${info.columns.length}${info.rows !== null ? ` · about ${info.rows.toLocaleString()} rows` : ''}`}>
-          <table className="w-full table-fixed border-collapse text-[11.5px]">
+          <table className="w-full table-fixed border-collapse text-xs">
             <colgroup>
               <col />
               <col style={{ width: cols.widths.type }} />
@@ -50,19 +50,21 @@ export function Structure({ info, copy }: { info: TableInfo; copy(text: string, 
             </thead>
             <tbody>
               {info.columns.map((c) => (
-                <tr key={c.name} className="hover:bg-[color-mix(in_srgb,var(--node-fg)_4%,transparent)]" onDoubleClick={() => copy(c.name, 'the name')}>
+                <tr key={c.name} className="hover:bg-[var(--node-hover)]" onDoubleClick={() => copy(c.name, 'the name')}>
                   <td className={`${td} font-mono`}>
                     <span className="flex min-w-0 items-center gap-1.5">
-                      {c.key && <Key className="size-3 flex-none text-[#e3b341]" />}
+                      {c.key && <Key className="size-3 flex-none text-[var(--ansi-3)]" />}
                       <span className="truncate" title={c.name}>
                         {c.name}
                       </span>
                     </span>
                   </td>
-                  <td className={`${td} truncate font-mono text-[#58a6ff]`} title={c.type}>
+                  <td className={`${td} truncate font-mono text-[var(--ansi-4)]`} title={c.type}>
                     {c.type}
                   </td>
-                  <td className={`${td} truncate`}>{c.nullable === false ? 'not null' : 'null'}</td>
+                  <td className={`${td} truncate font-mono ${c.nullable === false ? '' : 'text-[var(--node-muted)]'}`}>
+                    {c.nullable === false ? 'not null' : 'null'}
+                  </td>
                   <td className={`${td} truncate text-[var(--node-muted)]`}>{c.readOnly ? 'generated' : c.hasDefault ? 'yes' : ''}</td>
                 </tr>
               ))}
@@ -71,7 +73,7 @@ export function Structure({ info, copy }: { info: TableInfo; copy(text: string, 
         </Section>
         {info.indexes.length > 0 && (
           <Section title={`Indexes · ${info.indexes.length}`}>
-            <table className="w-full border-collapse text-[11.5px]">
+            <table className="w-full border-collapse text-xs">
               <tbody>
                 {info.indexes.map((i) => (
                   <tr key={i.name}>
@@ -86,7 +88,7 @@ export function Structure({ info, copy }: { info: TableInfo; copy(text: string, 
         )}
         {info.foreignKeys.length > 0 && (
           <Section title={`Foreign keys · ${info.foreignKeys.length}`}>
-            <table className="w-full border-collapse text-[11.5px]">
+            <table className="w-full border-collapse text-xs">
               <tbody>
                 {info.foreignKeys.map((f) => (
                   <tr key={f.name}>

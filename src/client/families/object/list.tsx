@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp, Folder } from 'lucide-react';
 import { formatTime } from '@hyperpane/sdk/client';
 import { cn, fileIcon, useTouch } from '@hyperpane/ui';
 import { formatSize } from '../../ui/cells.ts';
+import { rowState } from '../../ui/parts.tsx';
 import type { Row, Sort, SortColumn } from './paths.ts';
 
 export interface ListProps {
@@ -93,7 +94,7 @@ export function List(p: ListProps) {
 
   return (
     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col" {...drops}>
-      <div className="flex h-6 flex-none items-center gap-2 border-b border-[var(--node-border)] px-2 text-[10.5px] text-[var(--node-muted)] select-none">
+      <div className="flex h-7 flex-none items-center gap-2 border-b border-[var(--node-border)] bg-[var(--node-header)] px-3.5 text-2xs font-medium text-[var(--node-muted)] select-none">
         <span className="w-4 flex-none" />
         {COLUMNS.map((c) => (
           <button
@@ -112,7 +113,7 @@ export function List(p: ListProps) {
         tabIndex={0}
         role="listbox"
         aria-multiselectable
-        className="min-h-0 flex-1 overflow-auto outline-none"
+        className="group/list min-h-0 flex-1 overflow-auto py-1 outline-none"
         onKeyDown={p.onKey}
         onContextMenu={(e) => {
           if (e.target === e.currentTarget) p.onMenu(e, null);
@@ -132,10 +133,7 @@ export function List(p: ListProps) {
               data-key={row.key}
               role="option"
               aria-selected={on}
-              className={cn(
-                'flex h-[22px] cursor-default items-center gap-2 px-2 text-[11.5px] select-none touch:h-9',
-                on ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
-              )}
+              className={cn('rounded-control mx-1.5 flex h-7 cursor-default items-center gap-2 px-2 text-xs select-none touch:h-10', rowState(on))}
               onMouseDown={(e) => e.button === 0 && click(e, row)}
               onClick={() => touch && row.folder && p.onOpen(row)}
               onDoubleClick={() => p.onOpen(row)}
@@ -149,18 +147,20 @@ export function List(p: ListProps) {
                 {row.name}
                 {row.folder && <span className="text-[var(--node-muted)]">/</span>}
               </span>
-              <span className="w-[72px] flex-none text-right text-[var(--node-muted)] tabular-nums">{row.size === null ? '—' : formatSize(row.size)}</span>
-              <span className="w-[128px] flex-none truncate text-[var(--node-muted)] tabular-nums max-sm:hidden">
+              <span className="w-[72px] flex-none text-right text-2xs text-[var(--node-muted)] tabular-nums">
+                {row.size === null ? '—' : formatSize(row.size)}
+              </span>
+              <span className="w-[128px] flex-none truncate text-2xs text-[var(--node-muted)] tabular-nums max-sm:hidden">
                 {row.modified ? formatTime(row.modified) : ''}
               </span>
-              <span className="w-[92px] flex-none truncate text-[10.5px] text-[var(--node-muted)] max-sm:hidden">{row.storageClass ?? ''}</span>
+              <span className="w-[92px] flex-none truncate text-2xs text-[var(--node-muted)] max-sm:hidden">{row.storageClass ?? ''}</span>
             </div>
           );
         })}
         {p.footer}
       </div>
       {over && (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center border-2 border-dashed border-[var(--node-accent)] bg-[color-mix(in_srgb,var(--node-accent)_10%,transparent)] text-[12px] font-medium">
+        <div className="rounded-surface pointer-events-none absolute inset-1.5 z-10 flex items-center justify-center border-2 border-dashed border-[var(--node-accent)] bg-[color-mix(in_srgb,var(--node-accent)_10%,transparent)] text-xs font-medium">
           Drop to upload here
         </div>
       )}

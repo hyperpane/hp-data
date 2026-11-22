@@ -5,12 +5,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Play, PlayCircle, Square } from 'lucide-react';
-import { NodeButton, Picker, SplitPane, Toolbar, ToolbarSeparator } from '@hyperpane/ui';
+import { Badge, NodeButton, Picker, SplitPane, Toolbar, ToolbarSeparator, cn } from '@hyperpane/ui';
 import { readsOnly, splitStatements } from '../../../shared/sql.ts';
 import type { QueryResult, TreeNode } from '../../../shared/types.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { useRowsPort } from '../../lib/hooks.ts';
 import { CodeEditor } from '../../ui/code.tsx';
+import { softField } from '../../ui/parts.tsx';
 import { Results, type RunLog } from './results.tsx';
 
 const LIMITS = ['100', '500', '1000', '5000', '20000'] as const;
@@ -127,21 +128,21 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
     <div className="flex min-h-0 flex-1 flex-col">
       <Toolbar>
         <NodeButton
+          variant="primary"
           disabled={!!running}
           onClick={() => editor.current?.run()}
           title="Run the statement at the cursor, or the selection (⌘Enter)"
-          className="text-[#3fb950]"
         >
-          <Play className="size-3.5" />
+          <Play />
           Run
         </NodeButton>
-        <NodeButton disabled={!!running} onClick={() => void run(text)} title="Run everything in the console">
-          <PlayCircle className="size-3.5" />
+        <NodeButton variant="ghost" disabled={!!running} onClick={() => void run(text)} title="Run everything in the console">
+          <PlayCircle />
           Run All
         </NodeButton>
         {running && (
-          <NodeButton onClick={() => running.abort()} className="text-[#f85149]">
-            <Square className="size-3" />
+          <NodeButton variant="danger" onClick={() => running.abort()}>
+            <Square />
             Cancel
           </NodeButton>
         )}
@@ -149,6 +150,8 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
         {databases.length > 0 && (
           <Picker
             label="The database statements run in"
+            size="sm"
+            className={cn('max-w-48', softField)}
             value={database}
             options={[
               ...(database && !databases.includes(database) ? [{ value: database, label: database }] : []),
@@ -160,14 +163,18 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
         )}
         <Picker
           label="The most rows a statement gives"
+          size="sm"
+          className={softField}
           value={limit}
           options={LIMITS.map((l) => ({ value: l, label: `${Number(l).toLocaleString()} rows` }))}
           onValueChange={(v) => setLimit(v as typeof limit)}
         />
         {connection.readOnly && (
-          <span className="ml-1 rounded-[3px] border border-[var(--node-border)] px-1 text-[10px] text-[var(--node-muted)]">read only</span>
+          <Badge size="sm" shape="rounded" className="ms-1">
+            Read only
+          </Badge>
         )}
-        <span className="ml-auto truncate text-[10.5px] text-[var(--node-muted)] max-sm:hidden touch:hidden">⌘Enter runs the statement at the cursor</span>
+        <span className="ms-auto truncate ps-2 text-2xs text-[var(--node-muted)] max-sm:hidden touch:hidden">⌘Enter runs the statement at the cursor</span>
       </Toolbar>
       <SplitPane
         id={`console.${kind.family}`}

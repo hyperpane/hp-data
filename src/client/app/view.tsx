@@ -159,7 +159,7 @@ export function DataView() {
           onCloseOthers={w.closeOthers}
           onCloseConnection={w.closeConnection}
           left={
-            <div className="flex flex-none items-center border-r border-[var(--node-border)] px-1">
+            <div className="flex flex-none items-center ps-1.5">
               {narrow ? (
                 <ToolButton label="Show the Explorer" icon={PanelLeft} active={sheet} onClick={() => setSheet(true)} />
               ) : (

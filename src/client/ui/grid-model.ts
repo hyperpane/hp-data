@@ -5,7 +5,7 @@
 import type { Cell, Column } from '../../shared/types.ts';
 import { display } from './cells.ts';
 
-export const ROW = 22;
+export const ROW = 24;
 
 export interface GridEdits {
   /** Changed cells: `${row}:${col}` → the new value. */

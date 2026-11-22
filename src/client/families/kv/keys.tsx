@@ -4,8 +4,8 @@
 // the selected key are kept with the tab.
 
 import { useMemo, useState } from 'react';
-import { KeyRound } from 'lucide-react';
-import { NodeButton, PaneBar, SplitPane, useSplitCompact } from '@hyperpane/ui';
+import { KeyRound, Plus } from 'lucide-react';
+import { Empty, NodeButton, PaneBar, SplitPane, useSplitCompact } from '@hyperpane/ui';
 import type { TabProps } from '../../app/tabs.ts';
 import { KeyList } from './key-list.tsx';
 import { KeyPanel } from './key-panel.tsx';
@@ -42,7 +42,7 @@ export function KeysView(p: TabProps) {
   const literalPrefix = /^[^*?[\\]*/.exec(pattern)?.[0] ?? '';
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col text-[12px]">
+    <div className="relative flex min-h-0 flex-1 flex-col text-xs">
       <SplitPane
         id={`kv.keys.${p.connection.id}`}
         direction="row"
@@ -94,11 +94,21 @@ export function KeysView(p: TabProps) {
               />
             </>
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-[var(--node-muted)]">
-              <KeyRound className="size-6 opacity-50" />
-              <span>Pick a key to see its value</span>
-              {!readOnly && <NodeButton onClick={() => setAdding(true)}>New key</NodeButton>}
-            </div>
+            <Empty
+              bordered={false}
+              className="flex-1"
+              icon={<KeyRound />}
+              title="No key selected"
+              description="Pick a key on the left to see its value"
+              action={
+                !readOnly && (
+                  <NodeButton onClick={() => setAdding(true)}>
+                    <Plus />
+                    New key
+                  </NodeButton>
+                )
+              }
+            />
           )
         }
       />

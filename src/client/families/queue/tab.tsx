@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Eraser, RefreshCw, Trash2 } from 'lucide-react';
-import { Tabs, ToolButton, cn, useAsync } from '@hyperpane/ui';
+import { Spinner, Tabs, ToolButton, cn, useAsync } from '@hyperpane/ui';
 import type { QueueInfo } from '../../../shared/queue.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { ErrorBox } from '../../ui/parts.tsx';
@@ -57,15 +57,15 @@ export function QueueTab(p: TabProps) {
   ];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col text-[12px] text-[var(--node-fg)]">
-      <div className="flex-none border-b border-[var(--node-border)] px-3 pt-2 pb-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-[13px] font-medium">{caps.name || '(default exchange)'}</span>
-          <span className="truncate text-[11px] text-[var(--node-muted)]">
+    <div className="flex min-h-0 flex-1 flex-col text-xs text-[var(--node-fg)]">
+      <div className="flex-none ps-3 pe-2.5 pt-1.5 pb-2.5">
+        <div className="flex h-7 min-w-0 items-center gap-2">
+          <span className="truncate text-sm font-semibold">{caps.name || '(default exchange)'}</span>
+          <span className="truncate text-2xs text-[var(--node-muted)]">
             {caps.noun}
             {tab.ref.vhost ? ` in ${tab.ref.vhost}` : ''} · {connection.name}
           </span>
-          <div className="ml-auto flex flex-none items-center gap-0.5">
+          <div className="ms-auto flex flex-none items-center gap-1">
             <ToolButton label="Refresh the figures" icon={RefreshCw} onClick={() => info.reload()} />
             {caps.purge && (
               <ToolButton label={readOnly ? 'Purge (the connection is read only)' : 'Purge'} icon={Eraser} disabled={readOnly} onClick={() => void purge()} />
@@ -76,7 +76,7 @@ export function QueueTab(p: TabProps) {
         <Figures info={info.value ?? null} loading={info.loading} />
       </div>
       {info.error && <ErrorBox error={info.error} />}
-      <Tabs label={caps.noun} className="px-2" value={view} onValueChange={setView} items={tabs.map((t) => ({ value: t.id, label: t.name }))} />
+      <Tabs label={caps.noun} className="px-1.5" value={view} onValueChange={setView} items={tabs.map((t) => ({ value: t.id, label: t.name }))} />
       {caps.peek && seen && (
         <div className={cn('min-h-0 flex-1 flex-col', view === 'messages' ? 'flex' : 'hidden')}>
           <Messages
@@ -117,13 +117,23 @@ export function QueueTab(p: TabProps) {
 }
 
 function Figures({ info, loading }: { info: QueueInfo | null; loading: boolean }) {
-  if (!info) return <div className="mt-1.5 h-[30px] text-[11px] text-[var(--node-muted)]">{loading ? 'Loading' : ''}</div>;
+  if (!info)
+    return (
+      <div className="mt-2 flex h-8 items-center gap-2 text-2xs text-[var(--node-muted)]">
+        {loading && (
+          <>
+            <Spinner size="xs" />
+            Loading
+          </>
+        )}
+      </div>
+    );
   return (
-    <div className={cn('mt-1.5 flex flex-wrap gap-x-5 gap-y-1.5', loading && 'opacity-60')}>
+    <div className={cn('mt-2 flex flex-wrap gap-x-6 gap-y-2', loading && 'opacity-60')}>
       {info.stats.map((s) => (
-        <div key={s.label} className="min-w-0">
-          <div className="text-[10px] tracking-wide text-[var(--node-muted)] uppercase">{s.label}</div>
-          <div className="max-w-[320px] truncate font-mono text-[12px] tabular-nums" title={s.value}>
+        <div key={s.label} className="flex min-w-0 flex-col gap-0.5">
+          <div className="text-2xs text-[var(--node-muted)]">{s.label}</div>
+          <div className="max-w-[320px] truncate font-mono text-xs font-medium tabular-nums" title={s.value}>
             {s.value}
           </div>
         </div>

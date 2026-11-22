@@ -7,8 +7,22 @@
 // connection.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUp, Database, FolderPlus, ListTree, RefreshCw, Trash2, Upload } from 'lucide-react';
-import { NodeButton, NodeInput, PaneBar, ResizeHandle, StatusBar, ToolButton, Toolbar, cn, useCompact, useMenu, useResizable } from '@hyperpane/ui';
+import { ArrowLeft, ArrowUp, Database, FolderOpen, FolderPlus, ListTree, RefreshCw, SearchX, Trash2, Upload } from 'lucide-react';
+import {
+  Empty,
+  NodeButton,
+  NodeInput,
+  PaneBar,
+  ResizeHandle,
+  Spinner,
+  StatusBar,
+  ToolButton,
+  Toolbar,
+  cn,
+  useCompact,
+  useMenu,
+  useResizable,
+} from '@hyperpane/ui';
 import type { ListResult } from '../../../shared/object.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { useKept } from '../../lib/hooks.ts';
@@ -171,32 +185,26 @@ export function BucketView(p: TabProps) {
   const bytes = all.reduce((n, r) => n + (r.size ?? 0), 0);
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col text-[12px]">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col text-xs">
       <Toolbar>
         <ToolButton label="Back (⌘[)" icon={ArrowLeft} disabled={!back.current.length} onClick={goBack} />
         <ToolButton label="Up (⌘↑)" icon={ArrowUp} disabled={!prefix || flat} onClick={() => go(parentOf(prefix))} />
-        <nav className="flex min-w-0 flex-1 items-center overflow-hidden text-[11.5px]" aria-label="Folder">
+        <nav className="flex min-w-0 flex-1 items-center overflow-hidden ps-1 text-xs" aria-label="Folder">
           <button
             type="button"
-            className={cn(
-              'flex flex-none items-center gap-1 rounded px-1 py-0.5 hover:bg-[color-mix(in_srgb,var(--node-fg)_7%,transparent)]',
-              !prefix && 'font-medium',
-            )}
+            className={cn('rounded-control flex h-7 flex-none items-center gap-1.5 px-1.5 hover:bg-[var(--node-hover)]', !prefix && 'font-medium')}
             onClick={() => go('')}
           >
-            <Database className="size-3 text-[var(--node-muted)]" />
+            <Database className="size-3.5 text-[var(--node-muted)]" />
             {bucket}
           </button>
           {crumbs(prefix).map((c, i, list) => (
             <span key={c.prefix} className="flex min-w-0 items-center">
-              <span className="px-0.5 text-[var(--node-muted)]">/</span>
+              <span className="px-0.5 text-[var(--node-muted)] opacity-60">/</span>
               <button
                 type="button"
                 title={c.prefix}
-                className={cn(
-                  'truncate rounded px-1 py-0.5 hover:bg-[color-mix(in_srgb,var(--node-fg)_7%,transparent)]',
-                  i === list.length - 1 && 'font-medium',
-                )}
+                className={cn('rounded-control h-7 truncate px-1.5 hover:bg-[var(--node-hover)]', i === list.length - 1 && 'font-medium')}
                 onClick={() => go(c.prefix)}
               >
                 {c.name}
@@ -251,15 +259,25 @@ export function BucketView(p: TabProps) {
             onKey={onKey}
             onDrop={readOnly ? null : (dt) => void droppedFiles(dt).then(put, api.fail)}
             empty={
-              <p className="pointer-events-none px-3 py-3 text-[var(--node-muted)]">
-                {loading ? 'Loading' : filter ? 'Nothing loaded matches' : prefix ? 'This folder is empty' : 'This bucket is empty'}
-                {!readOnly && !loading && !filter ? ' Drop files here to upload them' : ''}
-              </p>
+              loading ? (
+                <div className="pointer-events-none flex items-center justify-center gap-2 py-10 text-[var(--node-muted)]">
+                  <Spinner size="xs" />
+                  Loading
+                </div>
+              ) : (
+                <Empty
+                  bordered={false}
+                  className="pointer-events-none"
+                  icon={filter ? <SearchX /> : <FolderOpen />}
+                  title={filter ? 'Nothing loaded matches' : prefix ? 'This folder is empty' : 'This bucket is empty'}
+                  description={!readOnly && !filter ? 'Drop files here to upload them' : undefined}
+                />
+              )
             }
             footer={
               next && (
-                <div className="px-2 py-1.5">
-                  <NodeButton disabled={loading} onClick={() => void load(true)}>
+                <div className="flex justify-center px-2 py-2">
+                  <NodeButton variant="ghost" disabled={loading} onClick={() => void load(true)}>
                     {loading ? 'Loading' : 'Load more'}
                   </NodeButton>
                 </div>
@@ -293,7 +311,7 @@ export function BucketView(p: TabProps) {
         {filter && <span>{count(rows.length, 'match', 'matches')}</span>}
         {selected.size > 0 && <span>{count(selected.size, 'selected', 'selected')}</span>}
         {busy && <span className="truncate text-[var(--node-fg)]">{busy}</span>}
-        {readOnly && <span className="ml-auto">Read only</span>}
+        {readOnly && <span className="ms-auto">Read only</span>}
       </StatusBar>
       {menu.element}
     </div>

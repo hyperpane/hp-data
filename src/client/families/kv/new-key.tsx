@@ -94,7 +94,7 @@ export function NewKey({
       </Field>
       <Field label={la}>
         {type === 'string' ? (
-          <textarea className={cn(inputClass, 'h-24 resize-y py-1')} value={a} onChange={(e) => setA(e.target.value)} spellCheck={false} />
+          <textarea className={cn(inputClass, 'h-24 resize-y py-1.5')} value={a} onChange={(e) => setA(e.target.value)} spellCheck={false} />
         ) : (
           <input className={inputClass} value={a} onChange={(e) => setA(e.target.value)} spellCheck={false} />
         )}

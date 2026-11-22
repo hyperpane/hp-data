@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Plus, RefreshCw, RotateCcw, SquareTerminal, Upload } from 'lucide-react';
-import { NodeButton, NodeInput, Picker, StatusBar, Tabs, ToolButton, Toolbar, ToolbarSeparator, ToolbarSpacer, cn } from '@hyperpane/ui';
+import { NodeButton, NodeInput, Picker, Spinner, StatusBar, Tabs, ToolButton, Toolbar, ToolbarSeparator, ToolbarSpacer, cn } from '@hyperpane/ui';
 import { qualified, type Dialect } from '../../../shared/sql.ts';
 import type { Cell } from '../../../shared/types.ts';
 import type { BrowseResult, RowEdit, TableInfo, TableRef } from '../../../shared/sql.ts';
@@ -13,7 +13,7 @@ import type { TabProps } from '../../app/tabs.ts';
 import { useRowsPort } from '../../lib/hooks.ts';
 import { Grid, type GridEdits, hasEdits, noEdits } from '../../ui/grid.tsx';
 import { CodeEditor } from '../../ui/code.tsx';
-import { ErrorBox, ValueViewer, count, ms } from '../../ui/parts.tsx';
+import { ErrorBox, ValueViewer, count, ms, softField } from '../../ui/parts.tsx';
 import { Structure } from './structure.tsx';
 
 const SIZES = ['50', '100', '200', '500', '1000'] as const;
@@ -135,7 +135,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <Toolbar>
+      <Toolbar className={cn(view === 'data' && 'border-b-0')}>
         <Tabs
           variant="pills"
           label="View"
@@ -157,7 +157,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             <ToolbarSeparator />
             <ToolButton label="First page" icon={ChevronFirst} disabled={offset === 0} onClick={() => go(0)} />
             <ToolButton label="Previous page" icon={ChevronLeft} disabled={offset === 0} onClick={() => go(offset - Number(size))} />
-            <span className="min-w-[90px] text-center text-[11px] text-[var(--node-muted)] tabular-nums">
+            <span className="min-w-[90px] text-center text-2xs text-[var(--node-muted)] tabular-nums">
               {rowsShown ? `${(offset + 1).toLocaleString()}–${(offset + rowsShown).toLocaleString()}` : '0'}
               {total !== null ? ` of ${total.toLocaleString()}` : ''}
             </span>
@@ -170,6 +170,8 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             <ToolButton label="Last page" icon={ChevronLast} disabled={last === null || offset >= last} onClick={() => last !== null && go(last)} />
             <Picker
               label="Rows per page"
+              size="sm"
+              className={softField}
               value={size}
               options={SIZES.map((x) => ({ value: x, label: x }))}
               onValueChange={(v) => {
@@ -185,12 +187,13 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             )}
             {hasEdits(edits) && (
               <>
-                <NodeButton disabled={saving} onClick={submit} className="border-[#3fb950] text-[#3fb950]" title="⌘S">
-                  <Upload className="size-3.5" />
+                <ToolbarSeparator />
+                <NodeButton variant="primary" disabled={saving} onClick={submit} title="⌘S">
+                  <Upload />
                   Save {count(pending.length, 'change')}
                 </NodeButton>
-                <NodeButton disabled={saving} onClick={() => setEdits(noEdits())}>
-                  <RotateCcw className="size-3.5" />
+                <NodeButton variant="ghost" disabled={saving} onClick={() => setEdits(noEdits())}>
+                  <RotateCcw />
                   Revert
                 </NodeButton>
               </>
@@ -214,26 +217,29 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
         )}
       </Toolbar>
       {view === 'data' && (
-        <div className="flex h-8 flex-none items-center gap-2 border-b border-[var(--node-border)] px-2">
-          <span className="font-mono text-[11px] font-semibold text-[#bc8cff]">WHERE</span>
-          <NodeInput
-            value={where}
-            onChange={(e) => setWhere(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                setOffset(0);
-                setApplied(where);
-                setTick((t) => t + 1);
-              } else if (e.key === 'Escape') setWhere(applied);
-            }}
-            placeholder={`a condition, as in SQL: ${page?.columns[1]?.name ?? 'name'} LIKE 'a%'  (Enter applies)`}
-            spellCheck={false}
-            className="h-6 flex-1 font-mono text-[11px]"
-          />
+        <div className="flex flex-none items-center gap-2 border-b border-[var(--node-border)] px-2.5 pb-2">
+          <div className="relative flex min-w-0 flex-1">
+            <span className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 font-mono text-2xs font-medium text-[var(--ansi-5)]">WHERE</span>
+            <NodeInput
+              value={where}
+              onChange={(e) => setWhere(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setOffset(0);
+                  setApplied(where);
+                  setTick((t) => t + 1);
+                } else if (e.key === 'Escape') setWhere(applied);
+              }}
+              placeholder={`a condition, as in SQL: ${page?.columns[1]?.name ?? 'name'} LIKE 'a%'  (Enter applies)`}
+              spellCheck={false}
+              aria-label="WHERE"
+              className="w-full ps-14 font-mono"
+            />
+          </div>
           {order.length > 0 && (
             <button
               type="button"
-              className="flex-none font-mono text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)] max-sm:max-w-[40%] max-sm:truncate"
+              className="rounded-control h-7 flex-none px-2 font-mono text-2xs text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)] max-sm:max-w-[40%] max-sm:truncate"
               title="Click a column’s header to sort, Shift-click to add; click here to clear"
               onClick={() => setOrder([])}
             >
@@ -278,18 +284,26 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               ) : (
                 !page.editable && <span>Not editable: {kind.engine === 'clickhouse' ? 'ClickHouse rows aren’t edited one by one' : 'no primary key'}</span>
               )}
-              {hasEdits(edits) && <span className="text-[#d29922]">{count(pending.length, 'change')} not saved (⌘S)</span>}
-              <span className="ml-auto truncate font-mono">{page.sql}</span>
+              {hasEdits(edits) && <span className="text-[var(--ansi-3)]">{count(pending.length, 'change')} not saved (⌘S)</span>}
+              <span className="ms-auto truncate font-mono">{page.sql}</span>
             </StatusBar>
           </>
         ) : (
-          !error && <div className="p-6 text-center text-[var(--node-muted)]">Loading {table.table}</div>
+          !error && (
+            <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--node-muted)]">
+              <Spinner size="xs" />
+              Loading {table.table}
+            </div>
+          )
         )
       ) : view === 'structure' ? (
         info ? (
           <Structure info={info} copy={api.copy} />
         ) : (
-          <div className="p-6 text-center text-[var(--node-muted)]">Loading</div>
+          <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--node-muted)]">
+            <Spinner size="xs" />
+            Loading
+          </div>
         )
       ) : (
         <CodeEditor value={info?.ddl ?? '-- Loading'} language="sql" dialect={dialect === 'clickhouse' ? 'standard' : dialect} readOnly className="flex-1" />

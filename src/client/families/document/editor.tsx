@@ -46,7 +46,7 @@ export function DocEditor({
   };
   return (
     <div
-      className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 p-6"
+      className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 p-6 max-sm:p-3"
       onPointerDown={(e) => e.target === e.currentTarget && onClose()}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onClose();
@@ -56,14 +56,16 @@ export function DocEditor({
         }
       }}
     >
-      <div className="flex h-[min(620px,100%)] w-[min(760px,100%)] flex-col overflow-hidden rounded-lg border border-[var(--node-border)] bg-[var(--node-bg)] shadow-2xl">
-        <div className="flex h-9 flex-none items-center gap-2 border-b border-[var(--node-border)] px-3">
+      <div className="rounded-surface flex h-[min(620px,100%)] w-[min(760px,100%)] flex-col overflow-hidden border border-[var(--node-border)] bg-[var(--node-bg)]">
+        <div className="flex h-10 flex-none items-center gap-2 border-b border-[var(--node-border)] ps-3 pe-2.5">
           <span className="truncate font-medium">{editing.title}</span>
-          {hint && <span className="truncate text-[10.5px] text-[var(--node-muted)]">{hint}</span>}
-          <div className="ml-auto flex flex-none gap-1">
-            <NodeButton onClick={onClose}>{readOnly ? 'Close' : 'Cancel'}</NodeButton>
+          {hint && <span className="truncate text-2xs text-[var(--node-muted)]">{hint}</span>}
+          <div className="ms-auto flex flex-none gap-1">
+            <NodeButton variant={readOnly ? 'default' : 'ghost'} onClick={onClose}>
+              {readOnly ? 'Close' : 'Cancel'}
+            </NodeButton>
             {!readOnly && (
-              <NodeButton disabled={busy} onClick={() => void save()} className="border-[var(--node-accent)] text-[var(--node-accent)]">
+              <NodeButton variant="primary" disabled={busy} onClick={() => void save()}>
                 {busy ? 'Saving' : editing.mode === 'insert' ? 'Insert' : 'Save'}
               </NodeButton>
             )}

@@ -9,7 +9,7 @@ import type { QueueInfo } from '../../../shared/queue.ts';
 import type { Caps } from './caps.ts';
 
 export function DetailsView({ info, caps, loading }: { info: QueueInfo | null; caps: Caps; loading: boolean }) {
-  if (!info) return <p className="py-8 text-center text-[var(--node-muted)]">{loading ? 'Loading' : 'Nothing to show'}</p>;
+  if (!info) return <p className="py-10 text-center text-xs text-[var(--node-muted)]">{loading ? 'Loading' : 'Nothing to show'}</p>;
   const parts = info.partitions ?? [];
   return (
     <div className="min-h-0 flex-1 overflow-auto px-3 py-2">
@@ -44,7 +44,7 @@ export function DetailsView({ info, caps, loading }: { info: QueueInfo | null; c
               rows={info.consumers.map((c) => (caps.engine === 'kafka' ? [c.name, c.detail, c.lag ?? ''] : [c.name, c.detail]))}
             />
           ) : (
-            <p className="text-[11px] text-[var(--node-muted)]">
+            <p className="py-1 text-xs text-[var(--node-muted)]">
               {caps.engine === 'kafka' ? 'No group has committed offsets in this topic' : 'Nobody is consuming'}
             </p>
           )}
@@ -60,7 +60,7 @@ export function DetailsView({ info, caps, loading }: { info: QueueInfo | null; c
               rows={info.bindings.map((b) => [b.source, b.destination, b.routingKey || '—'])}
             />
           ) : (
-            <p className="text-[11px] text-[var(--node-muted)]">No bindings</p>
+            <p className="py-1 text-xs text-[var(--node-muted)]">No bindings</p>
           )}
         </Section>
       )}
@@ -74,7 +74,7 @@ export function DetailsView({ info, caps, loading }: { info: QueueInfo | null; c
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-4">
-      <h3 className="mb-1 text-[10px] tracking-wide text-[var(--node-muted)] uppercase">{title}</h3>
+      <h3 className="flex h-7 items-center text-xs font-medium text-[var(--node-muted)]">{title}</h3>
       {children}
     </section>
   );
@@ -100,7 +100,7 @@ function Table({
   const cols = useColumnWidths(id, Object.fromEntries((widths ?? []).map((w, i) => [String(i), w])), { min: 40, max: 600 });
   const flex = widths ? widths.indexOf(0) : -1;
   return (
-    <table className={cn('w-full border-collapse text-[11.5px]', widths && 'table-fixed')}>
+    <table className={cn('w-full border-collapse text-xs', widths && 'table-fixed')}>
       {widths && (
         <colgroup>
           {head.map((_, i) => (
@@ -110,9 +110,15 @@ function Table({
       )}
       {head.some(Boolean) && (
         <thead>
-          <tr className="text-[10.5px] text-[var(--node-muted)]">
+          <tr className="text-2xs text-[var(--node-muted)]">
             {head.map((h, i) => (
-              <th key={i} className={cn('relative border-b border-[var(--node-border)] px-2 py-1 font-normal', right.includes(i) ? 'text-right' : 'text-left')}>
+              <th
+                key={i}
+                className={cn(
+                  'relative h-7 border-b border-[var(--node-border)] bg-[var(--node-header)] px-2 font-medium',
+                  right.includes(i) ? 'text-right' : 'text-left',
+                )}
+              >
                 {h}
                 {widths && i !== flex && <ColumnResizer {...cols.resizer(String(i), i < flex ? 'end' : 'start')} />}
               </th>
@@ -122,13 +128,13 @@ function Table({
       )}
       <tbody>
         {rows.map((r, i) => (
-          <tr key={i} className={cn('hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]', warn?.[i] && 'text-[#d29922]')}>
+          <tr key={i} className={cn('hover:bg-[var(--node-hover)]', warn?.[i] && 'text-[var(--ansi-3)]')}>
             {r.map((c, j) => (
               <td
                 key={j}
                 className={cn(
                   widths && 'truncate',
-                  'border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] px-2 py-[3px] font-mono tabular-nums select-text',
+                  'h-7 border-b border-[var(--node-border)] px-2 font-mono tabular-nums select-text',
                   right.includes(j) && 'text-right',
                   j === 0 && !right.includes(0) && 'font-sans',
                 )}

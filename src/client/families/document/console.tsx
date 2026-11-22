@@ -6,8 +6,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EditorView } from '@codemirror/view';
-import { History, Play, Square } from 'lucide-react';
-import { JsonTree, NodeButton, SplitPane, StatusBar, Tabs, ToolButton, Toolbar, useMenu } from '@hyperpane/ui';
+import { Braces, History, Play, Square } from 'lucide-react';
+import { Badge, Empty, JsonTree, NodeButton, Spinner, SplitPane, StatusBar, Tabs, ToolButton, Toolbar, useMenu } from '@hyperpane/ui';
 import type { CommandResult } from '../../../shared/document.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { CodeEditor, statementAt } from '../../ui/code.tsx';
@@ -88,16 +88,21 @@ export function ConsoleView(p: TabProps) {
   const editor = (
     <div ref={box} className="flex min-h-0 flex-1 flex-col">
       <Toolbar>
-        <ToolButton label={running ? 'Running' : 'Run (⌘Enter)'} icon={Play} disabled={!!running} onClick={() => void run(text)} />
+        <NodeButton variant="primary" title="Run (⌘Enter)" disabled={!!running} onClick={() => void run(text)}>
+          <Play />
+          Run
+        </NodeButton>
         {running && (
-          <ToolButton
-            label="Cancel"
-            icon={Square}
+          <NodeButton
+            variant="danger"
             onClick={() => {
               running.abort();
               setRunning(null);
             }}
-          />
+          >
+            <Square />
+            Cancel
+          </NodeButton>
         )}
         <ToolButton
           label="History"
@@ -113,8 +118,12 @@ export function ConsoleView(p: TabProps) {
             )
           }
         />
-        {mongo && <span className="ml-1 text-[11px] text-[var(--node-muted)]">{database ? `db: ${database}` : 'db: test'}</span>}
-        {p.readOnly && <span className="ml-auto text-[10.5px] text-[var(--node-muted)]">Read only: changes are refused</span>}
+        {mongo && <span className="ms-1 font-mono text-2xs text-[var(--node-muted)]">{database ? `db: ${database}` : 'db: test'}</span>}
+        {p.readOnly && (
+          <Badge size="sm" shape="rounded" className="ms-auto" title="Changes are refused">
+            Read only
+          </Badge>
+        )}
       </Toolbar>
       <CodeEditor
         value={text}
@@ -133,7 +142,7 @@ export function ConsoleView(p: TabProps) {
     <div className="flex min-h-0 flex-1 flex-col">
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
       {out && !isText && Array.isArray(result) && result.length > 0 && result.every((x) => x && typeof x === 'object' && !Array.isArray(x)) && (
-        <Toolbar className="h-8">
+        <Toolbar>
           <Tabs
             variant="pills"
             label="Show as"
@@ -144,27 +153,39 @@ export function ConsoleView(p: TabProps) {
               { value: 'table', label: 'Table' },
             ]}
           />
-          <NodeButton className="ml-auto" onClick={() => api.copy(typeof result === 'string' ? result : JSON.stringify(result, null, 2), 'the result')}>
+          <NodeButton
+            variant="ghost"
+            className="ms-auto"
+            onClick={() => api.copy(typeof result === 'string' ? result : JSON.stringify(result, null, 2), 'the result')}
+          >
             Copy
           </NodeButton>
         </Toolbar>
       )}
       {!out ? (
-        !error && <div className="p-6 text-center text-[11.5px] text-[var(--node-muted)]">{running ? 'Running' : 'Run something to see its result here'}</div>
+        !error &&
+        (running ? (
+          <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--node-muted)]">
+            <Spinner size="xs" />
+            Running
+          </div>
+        ) : (
+          <Empty bordered={false} className="flex-1" icon={<Braces />} title="No result yet" description="Run something with ⌘Enter to see its result here" />
+        ))
       ) : isText ? (
-        <pre className="min-h-0 flex-1 overflow-auto p-2 font-mono text-[11.5px] whitespace-pre select-text">
+        <pre className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-xs whitespace-pre select-text">
           {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
         </pre>
       ) : table ? (
         <Grid columns={table.columns} rows={table.rows} copy={api.copy} empty="Nothing." className="min-h-0 flex-1" />
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col p-1 text-[11px]">
+        <div className="flex min-h-0 flex-1 flex-col px-1.5 py-1 font-mono text-xs">
           <JsonTree value={shown} depth={2} footer className="min-h-0 flex-1" />
         </div>
       )}
       <StatusBar>
         {out && <span>{ms(out.ms)}</span>}
-        {out?.status !== undefined && <span className={out.status >= 400 ? 'text-[#f85149]' : undefined}>{out.status}</span>}
+        {out?.status !== undefined && <span className={out.status >= 400 ? 'text-[var(--ansi-1)]' : undefined}>{out.status}</span>}
         {items !== null && (
           <span>
             {items.toLocaleString()} {items === 1 ? 'item' : 'items'}

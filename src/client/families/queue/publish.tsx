@@ -7,6 +7,7 @@ import { Plus, Send, Trash2 } from 'lucide-react';
 import { NodeButton, NodeInput, Picker, Tabs, ToolButton } from '@hyperpane/ui';
 import type { TabProps } from '../../app/tabs.ts';
 import { CodeEditor } from '../../ui/code.tsx';
+import { softField } from '../../ui/parts.tsx';
 import type { Caps } from './caps.ts';
 import { pretty } from './format.ts';
 
@@ -105,16 +106,16 @@ export function PublishForm({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {readOnly && (
-        <div className="flex-none border-b border-[var(--node-border)] px-3 py-1.5 text-[11px] text-[var(--node-muted)]">
+        <div className="flex-none border-b border-[var(--node-border)] bg-[var(--node-header)] px-3 py-2 text-xs text-[var(--node-muted)]">
           This connection is read only: nothing can be published from it
         </div>
       )}
-      <div className="flex flex-none flex-wrap items-end gap-3 px-3 pt-2.5 pb-2">
+      <div className="flex flex-none flex-wrap items-end gap-3 px-3 pt-3 pb-3">
         {caps.keyLabel && (
-          <label className="flex min-w-[200px] flex-1 flex-col gap-1">
-            <span className="text-[10.5px] text-[var(--node-muted)]">{caps.keyLabel}</span>
+          <label className="flex min-w-[200px] flex-1 flex-col gap-1.5">
+            <span className="text-xs font-medium text-[var(--node-muted)]">{caps.keyLabel}</span>
             <NodeInput
-              className="h-6 font-mono"
+              className="font-mono"
               value={draft.key}
               placeholder={caps.engine === 'kafka' ? 'none' : caps.engine === 'sqs' ? 'default' : 'none'}
               onChange={(e) => set({ key: e.target.value })}
@@ -122,16 +123,18 @@ export function PublishForm({
           </label>
         )}
         {caps.routing && (
-          <label className="flex min-w-[200px] flex-1 flex-col gap-1">
-            <span className="text-[10.5px] text-[var(--node-muted)]">Routing key</span>
-            <NodeInput className="h-6 font-mono" value={draft.routingKey} placeholder="empty" onChange={(e) => set({ routingKey: e.target.value })} />
+          <label className="flex min-w-[200px] flex-1 flex-col gap-1.5">
+            <span className="text-xs font-medium text-[var(--node-muted)]">Routing key</span>
+            <NodeInput className="font-mono" value={draft.routingKey} placeholder="empty" onChange={(e) => set({ routingKey: e.target.value })} />
           </label>
         )}
         {caps.partitions && (
-          <div className="flex flex-col gap-1">
-            <span className="text-[10.5px] text-[var(--node-muted)]">Partition</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-[var(--node-muted)]">Partition</span>
             <Picker
               label="Partition"
+              size="sm"
+              className={softField}
               value={draft.partition}
               options={[{ value: '', label: 'By key' }, ...partitions.map((n) => ({ value: String(n), label: String(n) }))]}
               onValueChange={(partition) => set({ partition })}
@@ -139,11 +142,11 @@ export function PublishForm({
           </div>
         )}
         {caps.engine === 'rabbitmq' && caps.noun === 'queue' && (
-          <span className="pb-1 text-[10.5px] text-[var(--node-muted)]">Through the default exchange, routing key “{caps.name}”.</span>
+          <span className="pb-1.5 text-2xs text-[var(--node-muted)]">Through the default exchange, routing key “{caps.name}”.</span>
         )}
       </div>
-      <div className="flex flex-none items-center gap-2 px-3 pb-1">
-        <span className="text-[10.5px] text-[var(--node-muted)]">Value</span>
+      <div className="flex flex-none items-center gap-2 px-3 pb-1.5">
+        <span className="text-xs font-medium text-[var(--node-muted)]">Value</span>
         <Tabs
           variant="pills"
           label="The value as"
@@ -157,14 +160,14 @@ export function PublishForm({
         {language === 'json' && pretty(draft.value).json && (
           <button
             type="button"
-            className="text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]"
+            className="rounded-control h-7 px-2 text-xs text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)]"
             onClick={() => set({ value: pretty(draft.value).text })}
           >
             Format
           </button>
         )}
       </div>
-      <div className="mx-3 flex min-h-[120px] flex-1 flex-col overflow-hidden rounded-md border border-[var(--node-border)]">
+      <div className="rounded-control mx-3 flex min-h-[120px] flex-1 flex-col overflow-hidden bg-[color-mix(in_srgb,var(--node-fg)_4%,transparent)] py-1">
         <CodeEditor
           key={language}
           className="min-h-0 flex-1"
@@ -177,21 +180,26 @@ export function PublishForm({
           lineNumbers={false}
         />
       </div>
-      <div className="flex max-h-[40%] flex-none flex-col gap-1 overflow-auto px-3 pt-2">
-        <span className="text-[10.5px] text-[var(--node-muted)]">{caps.engine === 'sqs' ? 'Message attributes' : 'Headers'}</span>
+      <div className="flex max-h-[40%] flex-none flex-col gap-1.5 overflow-auto px-3 pt-3">
+        <span className="text-xs font-medium text-[var(--node-muted)]">{caps.engine === 'sqs' ? 'Message attributes' : 'Headers'}</span>
         {rows.map((h, i) => {
           const last = i === draft.headers.length;
           return (
             <div key={i} className="group flex items-center gap-1.5">
               <NodeInput
-                className="h-6 flex-1 font-mono"
+                className="min-w-0 flex-1 font-mono"
                 value={h.key}
                 placeholder={last ? 'Add a header' : 'Name'}
                 onChange={(e) => setHeader(i, { key: e.target.value })}
               />
-              <NodeInput className="h-6 flex-[1.6] font-mono" value={h.value} placeholder="Value" onChange={(e) => setHeader(i, { value: e.target.value })} />
+              <NodeInput
+                className="min-w-0 flex-[1.6] font-mono"
+                value={h.value}
+                placeholder="Value"
+                onChange={(e) => setHeader(i, { value: e.target.value })}
+              />
               {last ? (
-                <span className="w-6 flex-none" />
+                <span className="w-7 flex-none touch:w-9" />
               ) : (
                 <ToolButton
                   label="Remove"
@@ -204,20 +212,16 @@ export function PublishForm({
           );
         })}
       </div>
-      <div className="mt-2 flex flex-none items-center gap-2 border-t border-[var(--node-border)] px-3 py-2">
-        <NodeButton disabled={readOnly || busy} onClick={() => void send()} className="border-[var(--node-accent)]">
-          <Send className="size-3.5" />
+      <div className="mt-3 flex h-12 flex-none items-center gap-2 border-t border-[var(--node-border)] px-3">
+        <NodeButton variant="primary" disabled={readOnly || busy} onClick={() => void send()}>
+          <Send />
           {busy ? 'Sending' : 'Send'}
         </NodeButton>
-        <span className="text-[10.5px] text-[var(--node-muted)] touch:hidden">⌘Enter</span>
-        <button
-          type="button"
-          className="ml-auto flex items-center gap-1 text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]"
-          onClick={() => onDraft(emptyDraft())}
-        >
-          <Plus className="size-3" />
+        <span className="text-2xs text-[var(--node-muted)] touch:hidden">⌘Enter</span>
+        <NodeButton variant="ghost" className="ms-auto" onClick={() => onDraft(emptyDraft())}>
+          <Plus />
           New message
-        </button>
+        </NodeButton>
       </div>
     </div>
   );

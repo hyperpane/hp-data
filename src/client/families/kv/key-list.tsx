@@ -4,9 +4,10 @@
 
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, Folder, FolderTree, List, Plus, RefreshCw, Search } from 'lucide-react';
-import { NodeButton, StatusBar, ToolButton, cn, useMenu } from '@hyperpane/ui';
+import { NodeButton, NodeInput, StatusBar, ToolButton, cn, useMenu } from '@hyperpane/ui';
 import type { KeyEntry } from '../../../shared/kv.ts';
 import { type KeyNode, keyTree, ttlText } from './lib.ts';
+import { rowState } from '../../ui/parts.tsx';
 import { Muted, TypeBadge } from './parts.tsx';
 import type { Scan } from './use-scan.ts';
 
@@ -68,22 +69,22 @@ export function KeyList(p: KeyListProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <form
-        className="flex h-9 flex-none items-center gap-1 border-b border-[var(--node-border)] px-2"
+        className="flex h-10 flex-none items-center gap-1 border-b border-[var(--node-border)] px-2.5 touch:h-12"
         onSubmit={(e) => {
           e.preventDefault();
           p.onPattern(typed.trim() || '*');
         }}
       >
         <div className="relative flex min-w-0 flex-1 items-center">
-          <Search className="pointer-events-none absolute left-1.5 size-3 text-[var(--node-muted)]" />
-          <input
+          <Search className="pointer-events-none absolute left-2 size-3.5 text-[var(--node-muted)]" />
+          <NodeInput
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
             placeholder="*"
             spellCheck={false}
             aria-label="Pattern"
             title="A glob: * any, ? one character, [abc] one of. Enter to search."
-            className="h-6 w-full min-w-0 rounded-[5px] border border-[var(--node-border)] bg-transparent pr-2 pl-6 font-mono text-[11.5px] text-[var(--node-fg)] outline-none focus:border-[var(--node-accent)]"
+            className="w-full pl-7 font-mono"
           />
         </div>
         <ToolButton label={p.tree ? 'Show the keys flat' : 'Group the keys by “:”'} icon={p.tree ? List : FolderTree} onClick={() => p.onTree(!p.tree)} />
@@ -92,7 +93,7 @@ export function KeyList(p: KeyListProps) {
       </form>
       <div
         tabIndex={0}
-        className="min-h-0 flex-1 overflow-auto py-0.5 outline-none"
+        className="group/list min-h-0 flex-1 overflow-auto py-1 outline-none"
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             e.preventDefault();
@@ -106,8 +107,8 @@ export function KeyList(p: KeyListProps) {
           r.kind === 'folder' ? (
             <div
               key={`f:${r.prefix}`}
-              className="flex h-[22px] cursor-default items-center gap-1 pr-2 hover:bg-[var(--node-hover)] touch:h-9"
-              style={{ paddingLeft: 6 + r.depth * 12 }}
+              className="rounded-control mx-1.5 flex h-7 cursor-default items-center gap-1.5 pe-2 hover:bg-[var(--node-hover)] touch:h-10"
+              style={{ paddingLeft: 8 + r.depth * 12 }}
               onClick={() => toggle(r.prefix)}
               onContextMenu={(e) =>
                 menu.open(e, [
@@ -128,19 +129,16 @@ export function KeyList(p: KeyListProps) {
                 <ChevronRight className="size-3 flex-none text-[var(--node-muted)]" />
               )}
               <Folder className="size-3.5 flex-none text-[var(--node-muted)]" />
-              <span className="min-w-0 flex-1 truncate font-mono text-[11.5px]">{r.name}</span>
-              <span className="flex-none text-[10.5px] text-[var(--node-muted)] tabular-nums">{r.count}</span>
+              <span className="min-w-0 flex-1 truncate font-mono">{r.name}</span>
+              <span className="flex-none text-2xs text-[var(--node-muted)] tabular-nums">{r.count}</span>
             </div>
           ) : (
             <div
               key={`k:${r.entry.key}`}
               data-kv-key={r.entry.key}
               title={r.entry.key}
-              className={cn(
-                'flex h-[22px] cursor-default items-center gap-1.5 pr-2 touch:h-9',
-                r.entry.key === p.selected ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[var(--node-hover)]',
-              )}
-              style={{ paddingLeft: 6 + r.depth * 12 + (p.tree ? 16 : 0) }}
+              className={cn('rounded-control mx-1.5 flex h-7 cursor-default items-center gap-2 pe-2 touch:h-10', rowState(r.entry.key === p.selected))}
+              style={{ paddingLeft: 8 + r.depth * 12 + (p.tree ? 18 : 0) }}
               onClick={() => p.onSelect(r.entry.key)}
               onContextMenu={(e) =>
                 menu.open(e, [
@@ -150,14 +148,14 @@ export function KeyList(p: KeyListProps) {
               }
             >
               <TypeBadge type={r.entry.type} />
-              <span className="min-w-0 flex-1 truncate font-mono text-[11.5px]">{r.name}</span>
-              {r.entry.ttl >= 0 && <span className="flex-none text-[10.5px] text-[var(--node-muted)] tabular-nums">{ttlText(r.entry.ttl)}</span>}
+              <span className="min-w-0 flex-1 truncate font-mono">{r.name}</span>
+              {r.entry.ttl >= 0 && <span className="flex-none text-2xs text-[var(--node-muted)] tabular-nums">{ttlText(r.entry.ttl)}</span>}
             </div>
           ),
         )}
         {scan.more && rows.length > 0 && (
           <div className="flex justify-center py-2">
-            <NodeButton disabled={scan.loading} onClick={scan.loadMore}>
+            <NodeButton variant="ghost" disabled={scan.loading} onClick={scan.loadMore}>
               {scan.loading ? 'Scanning' : 'Load more'}
             </NodeButton>
           </div>

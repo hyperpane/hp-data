@@ -3,8 +3,8 @@
 // bars, splits, tabs and pickers are the kit’s.)
 
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
-import { NodeButton, cn } from '@hyperpane/ui';
+import { TriangleAlert, X } from 'lucide-react';
+import { NodeButton, ToolButton, cn } from '@hyperpane/ui';
 import type { Kind } from '../../shared/kinds.ts';
 import type { Cell } from '../../shared/types.ts';
 import { editable, formatSize, isBytes } from './cells.ts';
@@ -21,9 +21,8 @@ export function KindTile({ kind, size = 28, className }: { kind: Pick<Kind, 'col
         height: size,
         borderRadius: Math.round(size * 0.26),
         fontSize: Math.round(size * 0.42),
-        background: `linear-gradient(135deg, ${kind.color}, color-mix(in srgb, ${kind.color} 72%, #000))`,
+        background: kind.color,
         color: light ? '#111' : '#fff',
-        boxShadow: 'inset 0 0 0 1px rgb(255 255 255 / 0.14)',
       }}
     >
       {kind.glyph}
@@ -38,20 +37,28 @@ function isLight(hex: string): boolean {
   return 0.299 * r + 0.587 * g + 0.114 * b > 170;
 }
 
+/** A field's soft fill, as the kit's NodeInput has it: for a Picker or a
+ * text area beside the kit's fields. */
+export const softField =
+  'border-transparent bg-[color-mix(in_srgb,var(--node-fg)_6%,transparent)] hover:border-transparent hover:bg-[color-mix(in_srgb,var(--node-fg)_9%,transparent)]';
+
+/** A text area for code (statements, a key, JSON) with the field's look. */
+export const codeArea =
+  'rounded-control border border-transparent bg-[color-mix(in_srgb,var(--node-fg)_6%,transparent)] px-2 py-1.5 font-mono text-xs text-[var(--node-fg)] outline-none transition-[border-color,box-shadow] duration-100 placeholder:text-[var(--node-muted)] hover:bg-[color-mix(in_srgb,var(--node-fg)_9%,transparent)] focus:border-[var(--node-accent)] focus:bg-transparent focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--node-accent)_22%,transparent)]';
+
+/** What failed, along the top of a view: a quiet red band, one line under it. */
 export function ErrorBox({ error, onClose, className }: { error: string; onClose?(): void; className?: string }) {
   return (
     <div
+      role="alert"
       className={cn(
-        'flex items-start gap-2 border-l-2 border-[#f85149] bg-[color-mix(in_srgb,#f85149_10%,transparent)] px-3 py-2 font-mono text-[11.5px] whitespace-pre-wrap text-[var(--node-fg)] select-text',
+        'flex flex-none items-start gap-2 border-b border-[var(--node-border)] bg-[color-mix(in_srgb,var(--ansi-1)_8%,transparent)] px-2.5 py-1.5 text-xs whitespace-pre-wrap text-[var(--node-fg)] select-text',
         className,
       )}
     >
-      <span className="min-w-0 flex-1">{error}</span>
-      {onClose && (
-        <button type="button" aria-label="Dismiss" className="text-[var(--node-muted)] hover:text-[var(--node-fg)]" onClick={onClose}>
-          <X className="size-3.5" />
-        </button>
-      )}
+      <TriangleAlert className="mt-[7px] size-3.5 flex-none text-[var(--ansi-1)]" />
+      <span className="min-w-0 flex-1 py-1.5 leading-4">{error}</span>
+      {onClose && <ToolButton label="Dismiss" icon={X} onClick={onClose} />}
     </div>
   );
 }
@@ -74,17 +81,26 @@ export function ValueViewer({
   const [draft, setDraft] = useState(text);
   useEffect(() => setDraft(text), [text]);
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 p-6" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="flex max-h-full w-[min(720px,100%)] flex-col overflow-hidden rounded-lg border border-[var(--node-border)] bg-[var(--node-bg)] shadow-2xl">
-        <div className="flex h-9 flex-none items-center gap-2 border-b border-[var(--node-border)] px-3">
+    <div
+      className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 p-6 max-sm:p-3"
+      onPointerDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="rounded-surface flex max-h-full w-[min(720px,100%)] flex-col overflow-hidden border border-[var(--node-border)] bg-[var(--node-bg)]">
+        <div className="flex h-10 flex-none items-center gap-2 border-b border-[var(--node-border)] ps-3 pe-2.5">
           <span className="truncate font-medium">{title}</span>
-          <span className="text-[10.5px] text-[var(--node-muted)]">
+          <span className="flex-none text-2xs text-[var(--node-muted)]">
             {value === null ? 'NULL' : isBytes(value) ? formatSize(value.size) : `${text.length.toLocaleString()} characters`}
           </span>
-          <div className="ml-auto flex gap-1">
-            <NodeButton onClick={() => copy(draft, 'the value')}>Copy</NodeButton>
+          <div className="ms-auto flex flex-none gap-1">
+            <NodeButton variant="ghost" onClick={() => copy(draft, 'the value')}>
+              Copy
+            </NodeButton>
+            <NodeButton variant={onSave ? 'ghost' : 'default'} onClick={onClose}>
+              Close
+            </NodeButton>
             {onSave && (
               <NodeButton
+                variant="primary"
                 disabled={draft === text}
                 onClick={() => {
                   onSave(draft);
@@ -94,7 +110,6 @@ export function ValueViewer({
                 Apply
               </NodeButton>
             )}
-            <NodeButton onClick={onClose}>Close</NodeButton>
           </div>
         </div>
         <textarea
@@ -103,7 +118,7 @@ export function ValueViewer({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === 'Escape' && onClose()}
-          className="min-h-[240px] flex-1 resize-none bg-transparent p-3 font-mono text-[12px] text-[var(--node-fg)] outline-none"
+          className="min-h-[240px] flex-1 resize-none bg-transparent p-3 font-mono text-xs leading-5 text-[var(--node-fg)] outline-none"
         />
       </div>
     </div>
@@ -115,3 +130,8 @@ export const count = (n: number, one: string, many = `${one}s`) => `${n.toLocale
 
 /** ms in a few characters: "84 ms", "1.2 s". */
 export const ms = (n: number) => (n < 1000 ? `${Math.round(n)} ms` : `${(n / 1000).toFixed(n < 10000 ? 2 : 1)} s`);
+
+/** A row's look in a list or a tree: hovered, or selected (the accent's
+ * selection while its list, a `group/list`, has the keys; quieter when not). */
+export const rowState = (selected: boolean) =>
+  selected ? 'bg-[var(--node-selection-inactive)] group-focus-within/list:bg-[var(--node-selection)]' : 'hover:bg-[var(--node-hover)]';

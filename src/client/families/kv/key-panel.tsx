@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Clock, Copy, Pencil, RefreshCw, Trash2 } from 'lucide-react';
-import { ToolButton, Toolbar } from '@hyperpane/ui';
+import { NodeButton, Spinner, ToolButton, Toolbar, cn } from '@hyperpane/ui';
 import type { KvValue } from '../../../shared/kv.ts';
 import type { KvEdit } from '../../../shared/kv.ts';
 import type { Api } from '../../lib/api.ts';
@@ -91,29 +91,29 @@ export function KeyPanel(p: KeyPanelProps) {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <Toolbar className="gap-2">
+      <Toolbar className={cn('gap-2', value?.meta && 'border-b-0')}>
         {value && <TypeBadge type={value.type} />}
-        <span className="min-w-0 truncate font-mono text-[12px] select-text" title={key}>
+        <span className="min-w-0 truncate font-mono text-xs font-medium select-text" title={key}>
           {key}
         </span>
         <ToolButton label="Copy the name" icon={Copy} onClick={() => api.copy(key, 'the key’s name')} />
-        <span className="flex-none text-[10.5px] text-[var(--node-muted)]">
+        <span className="flex-none text-2xs text-[var(--node-muted)] max-sm:hidden">
           {value && TYPE_NAMES[value.type]}
           {length !== null &&
             ` · ${length.toLocaleString()} ${value?.type === 'hash' ? 'fields' : value?.type === 'stream' ? 'entries' : value?.type === 'list' ? 'items' : 'members'}`}
         </span>
-        <div className="ml-auto flex flex-none items-center gap-0.5">
+        <div className="ms-auto flex flex-none items-center gap-1">
           {value && (
-            <button
-              type="button"
+            <NodeButton
+              variant="ghost"
               disabled={p.readOnly}
               onClick={() => void ttl()}
               title={p.readOnly ? undefined : 'Change the TTL'}
-              className="mr-1 inline-flex h-6 items-center gap-1 rounded-[5px] px-1.5 text-[11px] text-[var(--node-muted)] enabled:hover:bg-[var(--node-hover)] enabled:hover:text-[var(--node-fg)]"
+              className="px-2 font-normal text-[var(--node-muted)] hover:text-[var(--node-fg)] disabled:opacity-100"
             >
-              <Clock className="size-3" />
+              <Clock />
               {value.ttl >= 0 ? `TTL ${ttlText(value.ttl)}` : 'No TTL'}
-            </button>
+            </NodeButton>
           )}
           <ToolButton label="Read it again" icon={RefreshCw} onClick={() => void load()} />
           {!p.readOnly && <ToolButton label="Rename" icon={Pencil} onClick={() => void rename()} />}
@@ -121,10 +121,10 @@ export function KeyPanel(p: KeyPanelProps) {
         </div>
       </Toolbar>
       {value?.meta && (
-        <div className="flex flex-none flex-wrap gap-x-3 border-b border-[var(--node-border)] px-2 py-1 text-[10.5px] text-[var(--node-muted)]">
+        <div className="flex flex-none flex-wrap gap-x-4 gap-y-1 border-b border-[var(--node-border)] px-3 pb-2 text-2xs text-[var(--node-muted)]">
           {Object.entries(value.meta).map(([k, v]) => (
             <span key={k}>
-              {k} <span className="text-[var(--node-fg)]">{v}</span>
+              {k} <span className="font-mono text-[var(--node-fg)]">{v}</span>
             </span>
           ))}
         </div>
@@ -132,7 +132,14 @@ export function KeyPanel(p: KeyPanelProps) {
       {error ? (
         <Muted error>{error}</Muted>
       ) : !value ? (
-        <Muted>{loading ? 'Reading' : ''}</Muted>
+        <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--node-muted)]">
+          {loading && (
+            <>
+              <Spinner size="xs" />
+              Reading
+            </>
+          )}
+        </div>
       ) : value.type === 'string' || value.type === 'json' ? (
         <StringEditor
           key={`${key}:${value.type}`}

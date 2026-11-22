@@ -6,11 +6,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus, RefreshCw, SquareTerminal } from 'lucide-react';
-import { NodeButton, NodeInput, Picker, StatusBar, Tabs, ToolButton, Toolbar, cn } from '@hyperpane/ui';
+import { NodeButton, NodeInput, Picker, Spinner, StatusBar, Tabs, ToolButton, Toolbar, cn } from '@hyperpane/ui';
 import type { DocFindResult } from '../../../shared/document.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { Grid } from '../../ui/grid.tsx';
-import { ErrorBox, count, ms } from '../../ui/parts.tsx';
+import { ErrorBox, count, ms, softField } from '../../ui/parts.tsx';
 import { DocList } from './docs.tsx';
 import { DocEditor, type Editing } from './editor.tsx';
 import { keyOf, tableOf, toText } from './format.ts';
@@ -181,11 +181,11 @@ export function CollectionView(p: TabProps) {
   };
 
   const field = (name: keyof Query, label: string, placeholder: string, className?: string) => (
-    <label className={cn('flex min-w-0 items-center gap-1.5', className)}>
-      <span className="w-[58px] flex-none text-right text-[10.5px] text-[var(--node-muted)]">{label}</span>
+    <label className={cn('flex min-w-0 items-center gap-2', className)}>
+      <span className="w-14 flex-none text-right text-xs text-[var(--node-muted)]">{label}</span>
       <NodeInput
         spellCheck={false}
-        className="h-6 min-w-0 flex-1 font-mono text-[11.5px]"
+        className="min-w-0 flex-1 font-mono"
         placeholder={placeholder}
         value={q[name]}
         onChange={(e) => setQ({ ...q, [name]: e.target.value })}
@@ -205,14 +205,15 @@ export function CollectionView(p: TabProps) {
     : '';
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col text-[11.5px]">
-      <div className="flex flex-none flex-col gap-1 border-b border-[var(--node-border)] px-2 py-1.5">
-        <div className="flex items-center gap-1">
+    <div className="relative flex min-h-0 flex-1 flex-col text-xs">
+      <div className="flex flex-none flex-col gap-1.5 px-2.5 pt-2.5 pb-1">
+        <div className="flex items-center gap-1.5">
           {field('filter', dynamo ? 'Where' : engine === 'elasticsearch' ? 'Query' : 'Filter', ph.filter, 'flex-1')}
-          <NodeButton onClick={() => run()} className="border-[var(--node-accent)] text-[var(--node-accent)]">
+          <NodeButton variant="primary" onClick={() => run()}>
             Find
           </NodeButton>
           <NodeButton
+            variant="ghost"
             disabled={!q.filter && !q.sort && !q.projection}
             onClick={() => {
               const empty = { filter: '', sort: '', projection: '' };
@@ -223,7 +224,7 @@ export function CollectionView(p: TabProps) {
             Reset
           </NodeButton>
         </div>
-        <div className="flex items-center gap-1 max-sm:flex-col max-sm:items-stretch">
+        <div className="flex items-center gap-1.5 max-sm:flex-col max-sm:items-stretch">
           {!dynamo && field('sort', 'Sort', ph.sort, 'flex-1')}
           {field('projection', ph.projectionLabel, ph.projection, 'flex-1')}
         </div>
@@ -266,12 +267,14 @@ export function CollectionView(p: TabProps) {
             }
           />
         )}
-        <div className="ml-auto flex items-center gap-1">
-          <span className="text-[11px] text-[var(--node-muted)] tabular-nums">{pageText}</span>
+        <div className="ms-auto flex items-center gap-1">
+          <span className="pe-1 text-2xs text-[var(--node-muted)] tabular-nums">{pageText}</span>
           <ToolButton label="The page before" icon={ChevronLeft} disabled={!hasPrev || loading} onClick={prev} />
           <ToolButton label="The next page" icon={ChevronRight} disabled={!hasNext || loading} onClick={next} />
           <Picker
             label="Documents per page"
+            size="sm"
+            className={softField}
             value={String(limit)}
             options={LIMITS}
             onValueChange={(v) => {
@@ -283,7 +286,10 @@ export function CollectionView(p: TabProps) {
       </Toolbar>
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
       {!result && loading ? (
-        <div className="p-6 text-center text-[var(--node-muted)]">Finding</div>
+        <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--node-muted)]">
+          <Spinner size="xs" />
+          Finding
+        </div>
       ) : view === 'table' && table ? (
         <Grid
           columns={table.columns}
@@ -312,7 +318,7 @@ export function CollectionView(p: TabProps) {
         {loading && (
           <button
             type="button"
-            className="ml-auto hover:text-[var(--node-fg)]"
+            className="ms-auto hover:text-[var(--node-fg)]"
             onClick={() => {
               running.current?.abort();
               setLoading(false);

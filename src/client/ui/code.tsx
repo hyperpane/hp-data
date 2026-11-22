@@ -153,5 +153,5 @@ export function CodeEditor(p: CodeEditorProps) {
     if (v && lang) v.dispatch({ effects: lang.reconfigure(language()) as never });
   }, [schemaKey]);
 
-  return <div ref={box} className={cn('min-h-0 overflow-hidden text-[12px] [&_.cm-editor]:h-full [&_.cm-editor]:outline-none', p.className)} />;
+  return <div ref={box} className={cn('min-h-0 overflow-hidden text-xs [&_.cm-editor]:h-full [&_.cm-editor]:outline-none', p.className)} />;
 }

@@ -5,8 +5,8 @@
 // menu (Open, Refresh, Copy Name, and its family's own).
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, ChevronsDownUp, Ellipsis, LoaderCircle, Plus, RefreshCw, Search, TriangleAlert } from 'lucide-react';
-import { NodeInput, ToolButton, Toolbar, cn, useMenu, useTouch, type MenuEntry } from '@hyperpane/ui';
+import { ChevronDown, ChevronRight, ChevronsDownUp, Database, Ellipsis, LoaderCircle, Plus, RefreshCw, Search, TriangleAlert } from 'lucide-react';
+import { Badge, Empty, NodeButton, NodeInput, ToolButton, Toolbar, cn, useMenu, useTouch, type MenuEntry } from '@hyperpane/ui';
 import { address, kindOf } from '../../shared/kinds.ts';
 import { optionsMenu, usePrefs } from './options.ts';
 import type { Connection, State, TreeNode } from '../../shared/types.ts';
@@ -15,7 +15,7 @@ import { FAMILIES } from '../families/index.ts';
 import { connectionMenu, type ConnectionOps } from '../home/menu.ts';
 import type { Api } from '../lib/api.ts';
 import { NODE_COLORS, NODE_ICONS } from '../ui/icons.tsx';
-import { KindTile } from '../ui/parts.tsx';
+import { KindTile, rowState } from '../ui/parts.tsx';
 
 interface Loaded {
   loading?: boolean;
@@ -172,10 +172,10 @@ export function Explorer({
     const l = loaded.get(k);
     if (l?.error) {
       rows.push(
-        <div key={`${k}:error`} className="flex items-start gap-1.5 py-1 pr-2 text-[11px] text-[#f85149]" style={{ paddingLeft: 8 + depth * 14 }}>
+        <div key={`${k}:error`} className="mx-1.5 flex items-start gap-2 py-1.5 pe-2 text-2xs text-[var(--ansi-1)]" style={{ paddingLeft: 8 + depth * 14 }}>
           <TriangleAlert className="mt-px size-3.5 flex-none" />
           <span className="min-w-0 flex-1 break-words select-text">{l.error}</span>
-          <button type="button" className="flex-none text-[var(--node-muted)] underline hover:text-[var(--node-fg)]" onClick={() => refresh(c.id, path)}>
+          <button type="button" className="flex-none font-medium text-[var(--node-muted)] hover:text-[var(--node-fg)]" onClick={() => refresh(c.id, path)}>
             Retry
           </button>
         </div>,
@@ -184,7 +184,7 @@ export function Explorer({
     }
     if (l?.loading && !l.nodes) {
       rows.push(
-        <div key={`${k}:loading`} className="flex items-center gap-1.5 py-1 text-[11px] text-[var(--node-muted)]" style={{ paddingLeft: 8 + depth * 14 }}>
+        <div key={`${k}:loading`} className="mx-1.5 flex h-7 items-center gap-2 text-2xs text-[var(--node-muted)]" style={{ paddingLeft: 8 + depth * 14 }}>
           <LoaderCircle className="size-3.5 animate-spin" />
           {path.length ? 'Loading' : 'Connecting'}
         </div>,
@@ -194,7 +194,7 @@ export function Explorer({
     const nodes = visible(c.id, path);
     if (l?.nodes && !l.nodes.length)
       rows.push(
-        <div key={`${k}:empty`} className="py-1 text-[11px] text-[var(--node-muted)] italic" style={{ paddingLeft: 22 + depth * 14 }}>
+        <div key={`${k}:empty`} className="mx-1.5 flex h-7 items-center text-2xs text-[var(--node-muted)]" style={{ paddingLeft: 26 + depth * 14 }}>
           Empty
         </div>,
       );
@@ -211,8 +211,8 @@ export function Explorer({
           aria-expanded={n.leaf ? undefined : isOpen}
           tabIndex={-1}
           className={cn(
-            'group flex h-[22px] cursor-default items-center gap-1 pr-2 whitespace-nowrap touch:h-9',
-            selected === nk ? 'bg-[color-mix(in_srgb,var(--node-accent)_20%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
+            'rounded-control group mx-1.5 flex h-7 cursor-default items-center gap-1.5 pe-2 whitespace-nowrap outline-none touch:h-10',
+            rowState(selected === nk),
           )}
           style={{ paddingLeft: 4 + depth * 14 }}
           onClick={() => {
@@ -230,7 +230,7 @@ export function Explorer({
             type="button"
             tabIndex={-1}
             aria-label={isOpen ? 'Collapse' : 'Expand'}
-            className={cn('flex size-4 flex-none items-center justify-center text-[var(--node-muted)]', n.leaf && 'invisible')}
+            className={cn('-me-0.5 flex size-4 flex-none items-center justify-center text-[var(--node-muted)]', n.leaf && 'invisible')}
             onClick={(e) => {
               e.stopPropagation();
               toggle(c.id, p);
@@ -240,7 +240,7 @@ export function Explorer({
           </button>
           <Icon className="size-3.5 flex-none" style={{ color: NODE_COLORS[n.type] ?? 'var(--node-muted)' }} />
           <span className="truncate">{n.label ?? n.name}</span>
-          {details && n.detail && <span className="truncate text-[10.5px] text-[var(--node-muted)]">{n.detail}</span>}
+          {details && n.detail && <span className="truncate text-2xs text-[var(--node-muted)]">{n.detail}</span>}
         </div>,
       );
       if (isOpen && !n.leaf) pushNodes(c, p, depth + 1);
@@ -266,7 +266,7 @@ export function Explorer({
   for (const [group, list] of groups) {
     if (groups.length > 1 || group)
       rows.push(
-        <div key={`group:${group}`} className="px-2 pt-2 pb-0.5 text-[10px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">
+        <div key={`group:${group}`} className="mt-1 flex h-7 items-center px-3.5 text-xs font-medium text-[var(--node-muted)] first:mt-0">
           {group || 'Other'}
         </div>,
       );
@@ -286,9 +286,9 @@ export function Explorer({
           tabIndex={-1}
           title={session ? `${session.version}${session.detail ? ` · ${session.detail}` : ''}` : kind.name}
           className={cn(
-            'group flex h-[26px] cursor-default items-center gap-1.5 pr-2 touch:h-10',
-            selected === k ? 'bg-[color-mix(in_srgb,var(--node-accent)_20%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
-            activeConn === c.id && selected !== k && 'bg-[color-mix(in_srgb,var(--node-fg)_3%,transparent)]',
+            'rounded-control group mx-1.5 flex h-7 cursor-default items-center gap-2 pe-2 outline-none touch:h-10',
+            rowState(selected === k),
+            activeConn === c.id && selected !== k && 'bg-[color-mix(in_srgb,var(--node-fg)_4%,transparent)]',
           )}
           style={{ paddingLeft: 4 }}
           onClick={() => {
@@ -306,7 +306,7 @@ export function Explorer({
             type="button"
             tabIndex={-1}
             aria-label={isOpen ? 'Collapse' : 'Expand'}
-            className="flex size-4 flex-none items-center justify-center text-[var(--node-muted)]"
+            className="-me-1 flex size-4 flex-none items-center justify-center text-[var(--node-muted)]"
             onClick={(e) => {
               e.stopPropagation();
               toggle(c.id, []);
@@ -315,13 +315,19 @@ export function Explorer({
             {isOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
           </button>
           <span className="relative flex-none">
-            <KindTile kind={kind} size={17} />
-            {session && <span className="absolute -right-0.5 -bottom-0.5 size-[7px] rounded-full border border-[var(--node-bg)] bg-[#3fb950]" />}
-            {l?.error && !session && <span className="absolute -right-0.5 -bottom-0.5 size-[7px] rounded-full border border-[var(--node-bg)] bg-[#f85149]" />}
+            <KindTile kind={kind} size={18} />
+            {session && <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border-[1.5px] border-[var(--node-bg)] bg-[var(--ansi-2)]" />}
+            {l?.error && !session && (
+              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border-[1.5px] border-[var(--node-bg)] bg-[var(--ansi-1)]" />
+            )}
           </span>
-          {c.color && <span className="h-3 w-[3px] flex-none rounded-full" style={{ background: c.color }} />}
+          {c.color && <span className="-mx-1 h-3 w-[3px] flex-none rounded-full" style={{ background: c.color }} />}
           <span className="truncate font-medium">{c.name}</span>
-          {c.readOnly && <span className="flex-none text-[9.5px] text-[var(--node-muted)]">RO</span>}
+          {c.readOnly && (
+            <Badge size="sm" shape="rounded" title="Read only">
+              RO
+            </Badge>
+          )}
           {l?.loading && <LoaderCircle className="ml-auto size-3 flex-none animate-spin text-[var(--node-muted)]" />}
         </div>,
       );
@@ -332,7 +338,7 @@ export function Explorer({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Toolbar>
-        <span className="mr-auto truncate text-[11px] font-semibold tracking-wide text-[var(--node-muted)] uppercase">Explorer</span>
+        <span className="me-auto truncate ps-1 text-xs font-medium">Explorer</span>
         <ToolButton label="New connection" icon={Plus} onClick={() => ops.pickKind()} />
         <ToolButton
           label="Refresh everything open"
@@ -367,20 +373,26 @@ export function Explorer({
           }
         />
       </Toolbar>
-      <div className="flex-none border-b border-[var(--node-border)] p-1.5">
+      <div className="flex-none px-2 pt-2 pb-1">
         <label className="relative block">
-          <Search className="pointer-events-none absolute top-1/2 left-2 size-3 -translate-y-1/2 text-[var(--node-muted)]" />
-          <NodeInput value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter" className="h-6 w-full pl-6 text-[11px]" />
+          <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-[var(--node-muted)]" />
+          <NodeInput value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter" aria-label="Filter" className="w-full pl-7" />
         </label>
       </div>
-      <div role="tree" className="min-h-0 flex-1 overflow-auto py-1 text-[12px] select-none">
+      <div role="tree" className="group/list min-h-0 flex-1 overflow-auto py-1 text-xs select-none">
         {state && !connections.length ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-[11px] text-[var(--node-muted)]">
-            No connections yet
-            <button type="button" className="text-[var(--node-accent)] hover:underline" onClick={() => ops.pickKind()}>
-              Add one
-            </button>
-          </div>
+          <Empty
+            bordered={false}
+            icon={<Database />}
+            title="No connections yet"
+            description="Connect a database, a store, a queue or a bucket"
+            action={
+              <NodeButton variant="primary" onClick={() => ops.pickKind()}>
+                <Plus />
+                New connection
+              </NodeButton>
+            }
+          />
         ) : (
           rows
         )}

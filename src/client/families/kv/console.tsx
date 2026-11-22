@@ -97,8 +97,8 @@ export function ConsoleView(p: TabProps) {
   };
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col font-mono text-[12px]" onMouseUp={() => !window.getSelection()?.toString() && input.current?.focus()}>
-      <div className="absolute top-1 right-2 z-10">
+    <div className="relative flex min-h-0 flex-1 flex-col font-mono text-xs" onMouseUp={() => !window.getSelection()?.toString() && input.current?.focus()}>
+      <div className="absolute top-1.5 right-2.5 z-10">
         <ToolButton
           label="Clear (⌘K)"
           icon={Eraser}
@@ -110,7 +110,7 @@ export function ConsoleView(p: TabProps) {
       </div>
       <div ref={follow.ref} onScroll={follow.onScroll} className="min-h-0 flex-1 overflow-auto px-3 py-2 leading-[18px] select-text">
         {!entries.length && (
-          <div className="pb-2 font-sans text-[11.5px] text-[var(--node-muted)]">
+          <div className="pe-8 pb-2 font-sans text-xs text-[var(--node-muted)]">
             {etcd
               ? 'etcd’s console: get, get --prefix, ls, count, put (--ttl), del (--prefix), version. '
               : 'Commands as in redis-cli: SET k "a b", HGETALL user:1, SCAN 0 MATCH user:*. '}
@@ -124,14 +124,14 @@ export function ConsoleView(p: TabProps) {
                 <span className="text-[var(--node-muted)]">{e.prompt} </span>
                 {e.line}
               </span>
-              {e.ms !== undefined && <span className="flex-none font-sans text-[10.5px] text-[var(--node-muted)]">{ms(e.ms)}</span>}
+              {e.ms !== undefined && <span className="flex-none font-sans text-2xs text-[var(--node-muted)] tabular-nums">{ms(e.ms)}</span>}
             </div>
-            <div className={cn('break-all whitespace-pre-wrap', e.error && 'text-[#f85149]')}>{e.text}</div>
+            <div className={cn('break-all whitespace-pre-wrap', e.error && 'text-[var(--ansi-1)]')}>{e.text}</div>
           </div>
         ))}
       </div>
       <form
-        className="flex h-8 flex-none items-center gap-2 border-t border-[var(--node-border)] px-3"
+        className="flex h-10 flex-none items-center gap-2 border-t border-[var(--node-border)] px-3 touch:h-12"
         onSubmit={(e) => {
           e.preventDefault();
           void run();
@@ -162,7 +162,7 @@ export function ConsoleView(p: TabProps) {
           autoComplete="off"
           aria-label="Command"
           placeholder={busy ? 'Waiting for the reply' : ''}
-          className="min-w-0 flex-1 bg-transparent text-[var(--node-fg)] outline-none"
+          className="min-w-0 flex-1 bg-transparent text-[var(--node-fg)] outline-none placeholder:text-[var(--node-muted)]"
         />
       </form>
     </div>

@@ -239,7 +239,7 @@ export function Grid(p: GridProps) {
   const down = useRef<[number, number] | null>(null);
 
   if (!columns.length)
-    return <div className={cn('flex items-center justify-center p-6 text-[var(--node-muted)]', p.className)}>{p.empty ?? 'Nothing to show'}</div>;
+    return <div className={cn('flex items-center justify-center p-6 text-xs text-[var(--node-muted)]', p.className)}>{p.empty ?? 'Nothing to show'}</div>;
 
   return (
     <div
@@ -247,7 +247,7 @@ export function Grid(p: GridProps) {
       tabIndex={0}
       onKeyDown={onKey}
       onScroll={(e) => setScroll({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight })}
-      className={cn('relative min-h-0 overflow-auto font-mono text-[11.5px] outline-none select-none', p.className)}
+      className={cn('relative min-h-0 overflow-auto font-mono text-xs outline-none select-none', p.className)}
     >
       <div style={{ width: total, height: (all.length + 1) * ROW }} className="relative">
         <GridHeader columns={columns} all={all} total={total} w={w} setWidths={setWidths} order={p.order} onSort={p.onSort} />
@@ -257,17 +257,13 @@ export function Grid(p: GridProps) {
           const isNew = r >= rows.length;
           const gone = edits.deleted.has(r);
           return (
-            <div
-              key={r}
-              className={cn('absolute left-0 flex', r % 2 === 1 && 'bg-[color-mix(in_srgb,var(--node-fg)_2.5%,transparent)]')}
-              style={{ top: (r + 1) * ROW, height: ROW, width: total }}
-            >
+            <div key={r} className="absolute left-0 flex" style={{ top: (r + 1) * ROW, height: ROW, width: total }}>
               <div
                 className={cn(
-                  'sticky left-0 z-10 flex flex-none items-center justify-end border-r border-b border-[var(--node-border)] bg-[var(--node-bg)] pr-2 text-[10.5px] text-[var(--node-muted)]',
+                  'sticky left-0 z-10 flex flex-none items-center justify-end border-r border-b border-[var(--node-border)] bg-[var(--node-bg)] pe-2 text-2xs text-[var(--node-muted)] tabular-nums',
                   sel && range(sel).whole && r >= range(sel).r0 && r <= range(sel).r1 && 'text-[var(--node-accent)]',
-                  isNew && 'text-[#3fb950]',
-                  gone && 'text-[#f85149] line-through',
+                  isNew && 'text-[var(--ansi-2)]',
+                  gone && 'text-[var(--ansi-1)] line-through',
                 )}
                 style={{ width: NUM_W }}
                 onPointerDown={(e) => {
@@ -287,13 +283,13 @@ export function Grid(p: GridProps) {
                   <div
                     key={c}
                     className={cn(
-                      'flex flex-none items-center overflow-hidden border-r border-b border-[color-mix(in_srgb,var(--node-border)_70%,transparent)] px-2 whitespace-pre',
+                      'flex flex-none items-center overflow-hidden border-r border-b border-r-[color-mix(in_srgb,var(--node-border)_50%,transparent)] border-b-[var(--node-border)] px-2 whitespace-pre',
                       (typeof v === 'number' ||
                         (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v) && /int|num|dec|float|double|real/i.test(col.type ?? ''))) &&
                         'justify-end',
                       on && 'bg-[color-mix(in_srgb,var(--node-accent)_18%,transparent)]',
-                      changed && 'bg-[color-mix(in_srgb,#d29922_22%,transparent)]',
-                      isNew && 'bg-[color-mix(in_srgb,#3fb950_10%,transparent)]',
+                      changed && 'bg-[color-mix(in_srgb,var(--ansi-3)_18%,transparent)]',
+                      isNew && 'bg-[color-mix(in_srgb,var(--ansi-2)_10%,transparent)]',
                       gone && 'text-[var(--node-muted)] line-through',
                     )}
                     style={{ width: w(c) }}
@@ -325,7 +321,7 @@ export function Grid(p: GridProps) {
                             box.current?.focus();
                           }
                         }}
-                        className="h-full w-full bg-[var(--node-bg)] font-mono text-[11.5px] text-[var(--node-fg)] outline outline-1 outline-[var(--node-accent)]"
+                        className="h-full w-full bg-[var(--node-bg)] font-mono text-xs text-[var(--node-fg)] outline outline-1 outline-[var(--node-accent)]"
                       />
                     ) : (
                       <CellValue v={v} />
@@ -337,7 +333,7 @@ export function Grid(p: GridProps) {
           );
         })}
       </div>
-      {!all.length && <div className="absolute inset-x-0 top-10 text-center font-sans text-[var(--node-muted)]">{p.empty ?? 'No rows'}</div>}
+      {!all.length && <div className="absolute inset-x-0 top-12 text-center font-sans text-xs text-[var(--node-muted)]">{p.empty ?? 'No rows'}</div>}
       {menu.element}
     </div>
   );

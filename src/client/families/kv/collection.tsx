@@ -90,14 +90,14 @@ export function Collection(p: CollectionProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full table-fixed border-collapse font-mono text-[11.5px]">
+        <table className="w-full table-fixed border-collapse font-mono text-xs">
           <colgroup>
             {head.length > 1 && <col style={{ width: cols.widths[first] }} />}
             <col />
-            {!p.readOnly && <col style={{ width: 28 }} />}
+            {!p.readOnly && <col style={{ width: 36 }} />}
           </colgroup>
-          <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-bg)]')}>
-            <tr className="h-6 text-left text-[10.5px] text-[var(--node-muted)]">
+          <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-header)]')}>
+            <tr className="h-7 text-left text-2xs text-[var(--node-muted)]">
               {head.map((h, i) => (
                 <th key={h} className="relative border-b border-[var(--node-border)] px-2 font-sans font-medium">
                   {h}
@@ -109,15 +109,12 @@ export function Collection(p: CollectionProps) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="group h-[22px] hover:bg-[var(--node-hover)] touch:h-9">
+              <tr key={r.id} className="group h-7 hover:bg-[var(--node-hover)] touch:h-10">
                 {r.cells.map((c, i) => (
                   // biome-ignore lint/a11y/useKeyWithClickEvents: a finger's tap opens the cell, as a double-click does.
                   <td
                     key={i}
-                    className={cn(
-                      'truncate border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] px-2',
-                      i === 0 && head.length > 1 && 'text-[var(--node-muted)]',
-                    )}
+                    className={cn('truncate border-b border-[var(--node-border)] px-2', i === 0 && head.length > 1 && 'text-[var(--node-muted)]')}
                     title={c.length > 500 ? c.slice(0, 500) : c}
                     onClick={() => touch && setOpen({ row: r, col: i })}
                     onDoubleClick={() => setOpen({ row: r, col: i })}
@@ -126,9 +123,9 @@ export function Collection(p: CollectionProps) {
                   </td>
                 ))}
                 {!p.readOnly && (
-                  <td className="border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] text-center">
+                  <td className="border-b border-[var(--node-border)] text-center">
                     {r.del && (
-                      <span className="opacity-0 group-hover:opacity-100 touch:opacity-100">
+                      <span className="inline-flex opacity-0 group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
                         <ToolButton label="Remove" icon={Trash2} onClick={() => p.remove(r.del!.what, r.del!.op)} />
                       </span>
                     )}
@@ -141,15 +138,15 @@ export function Collection(p: CollectionProps) {
         {!p.readOnly && <AddRow value={v} edit={p.edit} fail={p.fail} />}
       </div>
       {v.total > limit && (
-        <div className="flex h-7 flex-none items-center gap-2 border-t border-[var(--node-border)] px-2 text-[10.5px] text-[var(--node-muted)]">
-          <span>
+        <div className="flex h-10 flex-none items-center gap-2 border-t border-[var(--node-border)] px-2.5 text-2xs text-[var(--node-muted)] touch:h-12">
+          <span className="tabular-nums">
             {(offset + 1).toLocaleString()}–{Math.min(offset + limit, v.total).toLocaleString()} of {v.total.toLocaleString()}
           </span>
-          <div className="ml-auto flex gap-1">
-            <NodeButton disabled={offset === 0} onClick={() => p.onPage(Math.max(0, offset - limit))}>
+          <div className="ms-auto flex gap-1">
+            <NodeButton variant="ghost" disabled={offset === 0} onClick={() => p.onPage(Math.max(0, offset - limit))}>
               Previous
             </NodeButton>
-            <NodeButton disabled={offset + limit >= v.total} onClick={() => p.onPage(offset + limit)}>
+            <NodeButton variant="ghost" disabled={offset + limit >= v.total} onClick={() => p.onPage(offset + limit)}>
               Next
             </NodeButton>
           </div>
@@ -228,14 +225,14 @@ function AddRow({ value: v, edit, fail }: { value: Coll; edit(op: KvEdit): Promi
   const [pa, pb] = ph[v.type];
   return (
     <form
-      className="flex items-center gap-1 px-2 py-1.5 max-sm:flex-wrap"
+      className="flex items-center gap-1.5 px-2.5 py-2 max-sm:flex-wrap"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
       }}
     >
       <input
-        className={cn(inputClass, 'h-6 min-w-0 flex-1 text-[11.5px] max-sm:basis-full')}
+        className={cn(inputClass, 'min-w-0 flex-1 max-sm:basis-full')}
         placeholder={pa}
         value={a}
         onChange={(e) => setA(e.target.value)}
@@ -243,7 +240,7 @@ function AddRow({ value: v, edit, fail }: { value: Coll; edit(op: KvEdit): Promi
       />
       {pb && (
         <input
-          className={cn(inputClass, 'h-6 min-w-0 text-[11.5px]', v.type === 'zset' ? 'w-24' : 'flex-1')}
+          className={cn(inputClass, 'min-w-0', v.type === 'zset' ? 'w-24' : 'flex-1')}
           placeholder={pb}
           value={b}
           onChange={(e) => setB(e.target.value)}

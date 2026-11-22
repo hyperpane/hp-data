@@ -223,7 +223,7 @@ export function CollectionView(p: TabProps) {
             Reset
           </NodeButton>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 max-sm:flex-col max-sm:items-stretch">
           {!dynamo && field('sort', 'Sort', ph.sort, 'flex-1')}
           {field('projection', ph.projectionLabel, ph.projection, 'flex-1')}
         </div>

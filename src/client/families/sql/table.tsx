@@ -233,7 +233,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
           {order.length > 0 && (
             <button
               type="button"
-              className="flex-none font-mono text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]"
+              className="flex-none font-mono text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)] max-sm:max-w-[40%] max-sm:truncate"
               title="Click a column’s header to sort, Shift-click to add; click here to clear"
               onClick={() => setOrder([])}
             >

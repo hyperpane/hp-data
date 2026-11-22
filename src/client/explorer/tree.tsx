@@ -1,12 +1,12 @@
 // The Database Explorer, as DataGrip's: every saved connection, each one
 // opening into what's in it (loaded as it's expanded: expanding a
 // connection connects it), with a filter, its status (connected, failed),
-// double-click to open, and each item's right-click menu (Open, Refresh,
-// Copy Name, and its family's own).
+// double-click to open (a tap, with a finger), and each item's right-click
+// menu (Open, Refresh, Copy Name, and its family's own).
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronsDownUp, Ellipsis, LoaderCircle, Plus, RefreshCw, Search, TriangleAlert } from 'lucide-react';
-import { NodeInput, ToolButton, Toolbar, cn, useMenu, type MenuEntry } from '@hyperpane/ui';
+import { NodeInput, ToolButton, Toolbar, cn, useMenu, useTouch, type MenuEntry } from '@hyperpane/ui';
 import { address, kindOf } from '../../shared/kinds.ts';
 import { optionsMenu, usePrefs } from './options.ts';
 import type { Connection, State, TreeNode } from '../../shared/types.ts';
@@ -55,6 +55,7 @@ export function Explorer({
   const menu = useMenu();
   const auto = useRef(new Set<string>());
   const prefs = usePrefs();
+  const touch = useTouch();
   const { sort, grouped, details, onlyOpen } = prefs;
   const connections = state?.connections ?? [];
 
@@ -202,6 +203,7 @@ export function Explorer({
       const nk = keyOf(c.id, p);
       const isOpen = expanded.has(nk);
       const Icon = NODE_ICONS[n.type] ?? NODE_ICONS.info;
+      const activate = () => (n.open ? open({ type: n.open.tab, conn: c.id, ref: n.open.ref, title: n.open.title }) : !n.leaf && toggle(c.id, p));
       rows.push(
         <div
           key={nk}
@@ -209,12 +211,15 @@ export function Explorer({
           aria-expanded={n.leaf ? undefined : isOpen}
           tabIndex={-1}
           className={cn(
-            'group flex h-[22px] cursor-default items-center gap-1 pr-2 whitespace-nowrap',
+            'group flex h-[22px] cursor-default items-center gap-1 pr-2 whitespace-nowrap touch:h-9',
             selected === nk ? 'bg-[color-mix(in_srgb,var(--node-accent)_20%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
           )}
           style={{ paddingLeft: 4 + depth * 14 }}
-          onClick={() => setSelected(nk)}
-          onDoubleClick={() => (n.open ? open({ type: n.open.tab, conn: c.id, ref: n.open.ref, title: n.open.title }) : !n.leaf && toggle(c.id, p))}
+          onClick={() => {
+            setSelected(nk);
+            if (touch) activate();
+          }}
+          onDoubleClick={activate}
           onContextMenu={(e) => {
             e.preventDefault();
             setSelected(nk);
@@ -281,12 +286,15 @@ export function Explorer({
           tabIndex={-1}
           title={session ? `${session.version}${session.detail ? ` · ${session.detail}` : ''}` : kind.name}
           className={cn(
-            'group flex h-[26px] cursor-default items-center gap-1.5 pr-2',
+            'group flex h-[26px] cursor-default items-center gap-1.5 pr-2 touch:h-10',
             selected === k ? 'bg-[color-mix(in_srgb,var(--node-accent)_20%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
             activeConn === c.id && selected !== k && 'bg-[color-mix(in_srgb,var(--node-fg)_3%,transparent)]',
           )}
           style={{ paddingLeft: 4 }}
-          onClick={() => setSelected(k)}
+          onClick={() => {
+            setSelected(k);
+            if (touch) toggle(c.id, []);
+          }}
           onDoubleClick={() => toggle(c.id, [])}
           onContextMenu={(e) => {
             e.preventDefault();

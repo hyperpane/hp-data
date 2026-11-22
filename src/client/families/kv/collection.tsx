@@ -1,11 +1,11 @@
 // A hash's fields, a list's items, a set's members, a sorted set's
 // members and scores, a stream's entries: a page of them as a table, each
-// opened (double-click) to read or change it, removed, and new ones added
+// opened (double-click, or a tap) to read or change it, removed, and new ones added
 // in the row at the bottom.
 
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { ColumnResizer, NodeButton, ToolButton, cn, styles, useColumnWidths } from '@hyperpane/ui';
+import { ColumnResizer, NodeButton, ToolButton, cn, styles, useColumnWidths, useTouch } from '@hyperpane/ui';
 import type { KvValue } from '../../../shared/kv.ts';
 import type { KvEdit } from '../../../shared/kv.ts';
 import { ValueViewer } from '../../ui/parts.tsx';
@@ -79,6 +79,7 @@ export function Collection(p: CollectionProps) {
   const { value: v, offset, limit } = p;
   const { head, rows } = rowsOf(v, offset);
   const [open, setOpen] = useState<{ row: Row; col: number } | null>(null);
+  const touch = useTouch();
   const last = head.length - 1;
   // The first column (a field, an entry's id, an index) is as wide as it was
   // dragged, for each kind of value (kept on this machine); the value takes
@@ -108,8 +109,9 @@ export function Collection(p: CollectionProps) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="group h-[22px] hover:bg-[var(--node-hover)]">
+              <tr key={r.id} className="group h-[22px] hover:bg-[var(--node-hover)] touch:h-9">
                 {r.cells.map((c, i) => (
+                  // biome-ignore lint/a11y/useKeyWithClickEvents: a finger's tap opens the cell, as a double-click does.
                   <td
                     key={i}
                     className={cn(
@@ -117,6 +119,7 @@ export function Collection(p: CollectionProps) {
                       i === 0 && head.length > 1 && 'text-[var(--node-muted)]',
                     )}
                     title={c.length > 500 ? c.slice(0, 500) : c}
+                    onClick={() => touch && setOpen({ row: r, col: i })}
                     onDoubleClick={() => setOpen({ row: r, col: i })}
                   >
                     {c}
@@ -125,7 +128,7 @@ export function Collection(p: CollectionProps) {
                 {!p.readOnly && (
                   <td className="border-b border-[color-mix(in_srgb,var(--node-border)_50%,transparent)] text-center">
                     {r.del && (
-                      <span className="opacity-0 group-hover:opacity-100">
+                      <span className="opacity-0 group-hover:opacity-100 touch:opacity-100">
                         <ToolButton label="Remove" icon={Trash2} onClick={() => p.remove(r.del!.what, r.del!.op)} />
                       </span>
                     )}
@@ -225,14 +228,14 @@ function AddRow({ value: v, edit, fail }: { value: Coll; edit(op: KvEdit): Promi
   const [pa, pb] = ph[v.type];
   return (
     <form
-      className="flex items-center gap-1 px-2 py-1.5"
+      className="flex items-center gap-1 px-2 py-1.5 max-sm:flex-wrap"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
       }}
     >
       <input
-        className={cn(inputClass, 'h-6 min-w-0 flex-1 text-[11.5px]')}
+        className={cn(inputClass, 'h-6 min-w-0 flex-1 text-[11.5px] max-sm:basis-full')}
         placeholder={pa}
         value={a}
         onChange={(e) => setA(e.target.value)}

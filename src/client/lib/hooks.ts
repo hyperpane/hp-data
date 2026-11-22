@@ -1,5 +1,5 @@
-// The window's hooks: a setting kept in this browser, an element's width,
-// a list that follows its end, and sending results out of the Rows port.
+// The window's hooks: a setting kept in this browser, a list that follows
+// its end, and sending results out of the Rows port.
 
 import { useEffect, useRef, useState } from 'react';
 import { useHost } from '@hyperpane/sdk/client';
@@ -39,19 +39,6 @@ export function read<T>(key: string, initial: T): T {
   } catch {
     return initial;
   }
-}
-
-/** An element's width, as it changes. */
-export function useWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
-  const ref = useRef<T>(null);
-  const [width, setWidth] = useState(0);
-  useEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width));
-    ro.observe(ref.current);
-    return () => ro.disconnect();
-  }, []);
-  return [ref, width];
 }
 
 /** Keeps a list scrolled to its end while it's there; scrolled up, it

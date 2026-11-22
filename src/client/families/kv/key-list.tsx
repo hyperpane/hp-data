@@ -106,7 +106,7 @@ export function KeyList(p: KeyListProps) {
           r.kind === 'folder' ? (
             <div
               key={`f:${r.prefix}`}
-              className="flex h-[22px] cursor-default items-center gap-1 pr-2 hover:bg-[var(--node-hover)]"
+              className="flex h-[22px] cursor-default items-center gap-1 pr-2 hover:bg-[var(--node-hover)] touch:h-9"
               style={{ paddingLeft: 6 + r.depth * 12 }}
               onClick={() => toggle(r.prefix)}
               onContextMenu={(e) =>
@@ -137,7 +137,7 @@ export function KeyList(p: KeyListProps) {
               data-kv-key={r.entry.key}
               title={r.entry.key}
               className={cn(
-                'flex h-[22px] cursor-default items-center gap-1.5 pr-2',
+                'flex h-[22px] cursor-default items-center gap-1.5 pr-2 touch:h-9',
                 r.entry.key === p.selected ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[var(--node-hover)]',
               )}
               style={{ paddingLeft: 6 + r.depth * 12 + (p.tree ? 16 : 0) }}

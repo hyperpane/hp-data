@@ -53,7 +53,7 @@ export function DocList({
           <div key={i} className="border-b border-[var(--node-border)]" onContextMenu={(e) => menu.open(e, items(i))}>
             <div
               className={cn(
-                'group flex h-[26px] cursor-default items-center gap-1 pr-1 pl-1 font-mono text-[11.5px] hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
+                'group flex h-[26px] cursor-default items-center gap-1 pr-1 pl-1 font-mono text-[11.5px] hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)] touch:h-10',
                 isOpen && 'bg-[color-mix(in_srgb,var(--node-fg)_3%,transparent)]',
               )}
               onClick={() =>
@@ -72,7 +72,7 @@ export function DocList({
               <button
                 type="button"
                 aria-label="Document menu"
-                className="flex size-5 flex-none items-center justify-center rounded text-[var(--node-muted)] opacity-0 group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--node-fg)_10%,transparent)] hover:text-[var(--node-fg)]"
+                className="flex size-5 flex-none items-center justify-center rounded text-[var(--node-muted)] opacity-0 group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--node-fg)_10%,transparent)] hover:text-[var(--node-fg)] touch:size-9 touch:opacity-100"
                 onClick={(e) => {
                   e.stopPropagation();
                   menu.open(e, items(i));

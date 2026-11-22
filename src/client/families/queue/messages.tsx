@@ -1,11 +1,12 @@
 // A topic's or a queue's messages: a toolbar (from the newest, the oldest
 // or an offset; a partition; how many; Refresh; Live where the engine can
 // tail; a filter over keys, values and headers), the messages as a table,
-// and the one selected in a pane beside it.
+// and the one selected in a pane beside it. Narrow, the table leaves out
+// keys and headers, and the selected message has the room to itself.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Radio, RefreshCw } from 'lucide-react';
-import { ColumnResizer, NodeButton, NodeInput, Picker, SplitPane, StatusBar, Toolbar, cn, styles, useColumnWidths } from '@hyperpane/ui';
+import { ColumnResizer, NodeButton, NodeInput, Picker, SplitPane, StatusBar, Toolbar, cn, styles, useColumnWidths, useCompact } from '@hyperpane/ui';
 import type { Message } from '../../../shared/queue.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { ErrorBox, count, ms } from '../../ui/parts.tsx';
@@ -120,6 +121,7 @@ export function Messages({
   // Time, where and the key are as wide as they were dragged (kept on this
   // machine); the value takes what's left.
   const cols = useColumnWidths('data.queue.messages', { time: 92, at: 76, key: 120 }, { min: 40, max: 600 });
+  const narrow = useCompact();
 
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -141,9 +143,9 @@ export function Messages({
           <colgroup>
             <col style={{ width: cols.widths.time }} />
             <col style={{ width: cols.widths.at }} />
-            <col style={{ width: cols.widths.key }} />
+            {!narrow && <col style={{ width: cols.widths.key }} />}
             <col />
-            <col style={{ width: 34 }} />
+            {!narrow && <col style={{ width: 34 }} />}
           </colgroup>
           <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-bg)]')}>
             <tr className="text-left text-[10.5px] text-[var(--node-muted)]">
@@ -155,14 +157,18 @@ export function Messages({
                 {caps.partitions ? 'Part:Offset' : 'Message'}
                 <ColumnResizer {...cols.resizer('at')} />
               </th>
-              <th className="relative border-b border-[var(--node-border)] px-2 py-1 font-normal">
-                {caps.engine === 'rabbitmq' ? 'Routing key' : caps.engine === 'sqs' ? 'Group' : 'Key'}
-                <ColumnResizer {...cols.resizer('key')} />
-              </th>
+              {!narrow && (
+                <th className="relative border-b border-[var(--node-border)] px-2 py-1 font-normal">
+                  {caps.engine === 'rabbitmq' ? 'Routing key' : caps.engine === 'sqs' ? 'Group' : 'Key'}
+                  <ColumnResizer {...cols.resizer('key')} />
+                </th>
+              )}
               <th className="border-b border-[var(--node-border)] px-2 py-1 font-normal">Value</th>
-              <th className="border-b border-[var(--node-border)] px-1 py-1 text-right font-normal" title="Headers">
-                H
-              </th>
+              {!narrow && (
+                <th className="border-b border-[var(--node-border)] px-1 py-1 text-right font-normal" title="Headers">
+                  H
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -174,7 +180,7 @@ export function Messages({
                   onClick={() => setSel(i)}
                   onDoubleClick={() => api.copy(m.value, 'the value')}
                   className={cn(
-                    'h-[22px] cursor-default',
+                    'h-[22px] cursor-default touch:h-9',
                     sel === i ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
                     fresh.has(m.id) && sel !== i && 'bg-[color-mix(in_srgb,#3fb950_10%,transparent)]',
                   )}
@@ -185,13 +191,15 @@ export function Messages({
                   <td className="truncate px-2 font-mono tabular-nums" title={m.id}>
                     {caps.partitions ? placeOf(m) : i + 1}
                   </td>
-                  <td className="truncate px-2 font-mono" title={m.key ?? ''}>
-                    {m.key ?? <span className="text-[var(--node-muted)]">—</span>}
-                  </td>
+                  {!narrow && (
+                    <td className="truncate px-2 font-mono" title={m.key ?? ''}>
+                      {m.key ?? <span className="text-[var(--node-muted)]">—</span>}
+                    </td>
+                  )}
                   <td className={cn('truncate px-2 font-mono', m.binary && 'text-[var(--node-muted)]')}>
                     {preview(m) || <span className="text-[var(--node-muted)]">{m.meta?.tombstone ? 'null (tombstone)' : 'empty'}</span>}
                   </td>
-                  <td className="px-1 text-right text-[var(--node-muted)] tabular-nums">{nh || ''}</td>
+                  {!narrow && <td className="px-1 text-right text-[var(--node-muted)] tabular-nums">{nh || ''}</td>}
                 </tr>
               );
             })}
@@ -289,6 +297,7 @@ export function Messages({
           initial={560}
           min={240}
           minOther={240}
+          compactBelow={640}
           first={table}
           second={<MessagePane m={selected} caps={caps} api={api} readOnly={p.readOnly} onAgain={() => onAgain(selected)} onClose={() => setSel(null)} />}
         />

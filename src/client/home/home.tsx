@@ -71,7 +71,7 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
 
   return (
     <div className="h-full overflow-auto">
-      <div className="mx-auto flex max-w-[1100px] flex-col gap-7 px-6 py-6">
+      <div className="mx-auto flex max-w-[1100px] flex-col gap-7 px-6 py-6 max-sm:gap-5 max-sm:px-4 max-sm:py-4">
         <header className="flex flex-wrap items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-[11px] bg-[linear-gradient(135deg,#9bd13a,#4f8a10)] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.18)]">
             <Database className="size-5" />
@@ -84,14 +84,14 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
                 : `${connections.length} ${connections.length === 1 ? 'connection' : 'connections'}${Object.keys(state?.open ?? {}).length ? ` · ${Object.keys(state!.open).length} connected` : ''}`}
             </span>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <label className="relative">
+          <div className="ml-auto flex items-center gap-2 max-sm:ml-0 max-sm:w-full">
+            <label className="relative max-sm:flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-[var(--node-muted)]" />
               <NodeInput
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={empty ? 'Find a database' : 'Search connections and databases'}
-                className="w-[260px] pl-7"
+                className="w-[260px] pl-7 max-sm:w-full"
               />
             </label>
           </div>

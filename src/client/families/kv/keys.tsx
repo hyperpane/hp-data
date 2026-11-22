@@ -1,10 +1,11 @@
 // A keys tab, as Redis Insight has it: the keys matching a pattern on the
-// left, the selected one's value on the right. The pattern, the tree or
-// flat choice and the selected key are kept with the tab.
+// left, the selected one's value on the right (one at a time when narrow,
+// with a way back to the keys). The pattern, the tree or flat choice and
+// the selected key are kept with the tab.
 
 import { useMemo, useState } from 'react';
 import { KeyRound } from 'lucide-react';
-import { NodeButton, SplitPane } from '@hyperpane/ui';
+import { NodeButton, PaneBar, SplitPane, useSplitCompact } from '@hyperpane/ui';
 import type { TabProps } from '../../app/tabs.ts';
 import { KeyList } from './key-list.tsx';
 import { KeyPanel } from './key-panel.tsx';
@@ -48,6 +49,8 @@ export function KeysView(p: TabProps) {
         initial={340}
         min={200}
         minOther={200}
+        compactBelow={640}
+        show={selected ? 'second' : 'first'}
         first={
           <KeyList
             scan={scan}
@@ -70,23 +73,26 @@ export function KeysView(p: TabProps) {
         }
         second={
           selected ? (
-            <KeyPanel
-              key={selected}
-              calls={calls}
-              api={api}
-              keyName={selected}
-              readOnly={readOnly}
-              stringsOnly={stringsOnly}
-              onRemoved={(k) => {
-                scan.drop([k]);
-                select(null);
-              }}
-              onRenamed={(from, to) => {
-                scan.renamed(from, to);
-                select(to);
-              }}
-              onTtl={(k, ttl) => scan.patch(k, { ttl })}
-            />
+            <>
+              <BackToKeys onBack={() => select(null)} />
+              <KeyPanel
+                key={selected}
+                calls={calls}
+                api={api}
+                keyName={selected}
+                readOnly={readOnly}
+                stringsOnly={stringsOnly}
+                onRemoved={(k) => {
+                  scan.drop([k]);
+                  select(null);
+                }}
+                onRenamed={(from, to) => {
+                  scan.renamed(from, to);
+                  select(to);
+                }}
+                onTtl={(k, ttl) => scan.patch(k, { ttl })}
+              />
+            </>
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 text-[var(--node-muted)]">
               <KeyRound className="size-6 opacity-50" />
@@ -116,4 +122,9 @@ export function KeysView(p: TabProps) {
       )}
     </div>
   );
+}
+
+/** The way back to the keys, over a key shown alone. */
+function BackToKeys({ onBack }: { onBack(): void }) {
+  return useSplitCompact() ? <PaneBar onBack={onBack} backLabel="Keys" /> : null;
 }

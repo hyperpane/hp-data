@@ -41,8 +41,8 @@ export function MessagePane({
   ];
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex h-8 flex-none items-center gap-1 border-b border-[var(--node-border)] px-2">
-        <span className="truncate font-mono text-[11.5px]">{placeOf(m)}</span>
+      <div className="flex h-8 flex-none items-center gap-1 border-b border-[var(--node-border)] px-2 touch:h-11">
+        <span className="min-w-0 truncate font-mono text-[11.5px]">{placeOf(m)}</span>
         {v.json && (
           <Tabs
             variant="pills"
@@ -57,14 +57,14 @@ export function MessagePane({
           />
         )}
         <div className="ml-auto flex flex-none items-center gap-1">
-          <NodeButton onClick={() => api.copy(v.json && mode === 'text' ? v.text : m.value, 'the value')}>
+          <NodeButton aria-label="Copy value" onClick={() => api.copy(v.json && mode === 'text' ? v.text : m.value, 'the value')}>
             <Copy className="size-3.5" />
-            Copy value
+            <span className="max-sm:hidden">Copy value</span>
           </NodeButton>
           {!readOnly && caps.noun !== 'exchange' && (
-            <NodeButton onClick={onAgain} title="Put it in the Publish form">
+            <NodeButton onClick={onAgain} title="Put it in the Publish form" aria-label="Publish again">
               <Forward className="size-3.5" />
-              Publish again
+              <span className="max-sm:hidden">Publish again</span>
             </NodeButton>
           )}
           <ToolButton label="Close" icon={X} onClick={onClose} />

@@ -74,7 +74,7 @@ export function ConnectionCard({
           e.stopPropagation();
           onMenu(e);
         }}
-        className="flex size-6 flex-none items-center justify-center rounded-[5px] text-[var(--node-muted)] opacity-0 group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--node-fg)_8%,transparent)] hover:text-[var(--node-fg)] focus-visible:opacity-100"
+        className="flex size-6 flex-none items-center justify-center rounded-[5px] text-[var(--node-muted)] opacity-0 group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--node-fg)_8%,transparent)] hover:text-[var(--node-fg)] focus-visible:opacity-100 touch:size-9 touch:opacity-100"
       >
         <MoreHorizontal className="size-4" />
       </button>

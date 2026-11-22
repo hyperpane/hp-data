@@ -1,12 +1,13 @@
 // The bucket's list, as Finder's: a header of sortable columns, folders
 // then files (an icon by extension, name, size, modified, storage class),
-// selection by click, ⌘-click and Shift-click, arrows and Enter; files
-// dropped from the computer land in the folder shown.
+// selection by click, ⌘-click and Shift-click, arrows and Enter (a tap
+// opens a folder, with a finger); files dropped from the computer land in
+// the folder shown. Narrow, it's names and sizes only.
 
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Folder } from 'lucide-react';
 import { formatTime } from '@hyperpane/sdk/client';
-import { cn, fileIcon } from '@hyperpane/ui';
+import { cn, fileIcon, useTouch } from '@hyperpane/ui';
 import { formatSize } from '../../ui/cells.ts';
 import type { Row, Sort, SortColumn } from './paths.ts';
 
@@ -30,14 +31,15 @@ export interface ListProps {
 const COLUMNS: { id: SortColumn; label: string; className: string }[] = [
   { id: 'name', label: 'Name', className: 'min-w-0 flex-1' },
   { id: 'size', label: 'Size', className: 'w-[72px] justify-end text-right' },
-  { id: 'modified', label: 'Modified', className: 'w-[128px]' },
-  { id: 'class', label: 'Class', className: 'w-[92px]' },
+  { id: 'modified', label: 'Modified', className: 'w-[128px] max-sm:hidden' },
+  { id: 'class', label: 'Class', className: 'w-[92px] max-sm:hidden' },
 ];
 
 export function List(p: ListProps) {
   const box = useRef<HTMLDivElement>(null);
   const [over, setOver] = useState(false);
   const depth = useRef(0);
+  const touch = useTouch();
 
   // Keeps the row the keyboard is on in view.
   useEffect(() => {
@@ -124,16 +126,18 @@ export function List(p: ListProps) {
           const Icon = row.folder ? Folder : fileIcon(row.name);
           const on = p.selected.has(row.key);
           return (
+            // biome-ignore lint/a11y/useKeyWithClickEvents: the keys are the list's (arrows, Enter), on its container.
             <div
               key={row.key}
               data-key={row.key}
               role="option"
               aria-selected={on}
               className={cn(
-                'flex h-[22px] cursor-default items-center gap-2 px-2 text-[11.5px] select-none',
+                'flex h-[22px] cursor-default items-center gap-2 px-2 text-[11.5px] select-none touch:h-9',
                 on ? 'bg-[color-mix(in_srgb,var(--node-accent)_22%,transparent)]' : 'hover:bg-[color-mix(in_srgb,var(--node-fg)_5%,transparent)]',
               )}
               onMouseDown={(e) => e.button === 0 && click(e, row)}
+              onClick={() => touch && row.folder && p.onOpen(row)}
               onDoubleClick={() => p.onOpen(row)}
               onContextMenu={(e) => {
                 if (!on) p.onSelect(new Set([row.key]), row.key);
@@ -146,8 +150,10 @@ export function List(p: ListProps) {
                 {row.folder && <span className="text-[var(--node-muted)]">/</span>}
               </span>
               <span className="w-[72px] flex-none text-right text-[var(--node-muted)] tabular-nums">{row.size === null ? '—' : formatSize(row.size)}</span>
-              <span className="w-[128px] flex-none truncate text-[var(--node-muted)] tabular-nums">{row.modified ? formatTime(row.modified) : ''}</span>
-              <span className="w-[92px] flex-none truncate text-[10.5px] text-[var(--node-muted)]">{row.storageClass ?? ''}</span>
+              <span className="w-[128px] flex-none truncate text-[var(--node-muted)] tabular-nums max-sm:hidden">
+                {row.modified ? formatTime(row.modified) : ''}
+              </span>
+              <span className="w-[92px] flex-none truncate text-[10.5px] text-[var(--node-muted)] max-sm:hidden">{row.storageClass ?? ''}</span>
             </div>
           );
         })}

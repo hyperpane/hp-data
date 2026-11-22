@@ -130,10 +130,10 @@ export function ConnectionDialog({
 
   return (
     <div
-      className="absolute inset-0 z-50 flex items-start justify-center overflow-auto bg-black/45 p-4 pt-[6vh]"
+      className="absolute inset-0 z-50 flex items-start justify-center overflow-auto bg-black/45 p-4 pt-[6vh] max-sm:items-end max-sm:p-0"
       onPointerDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex w-[min(560px,100%)] flex-col overflow-hidden rounded-[11px] border border-[var(--node-border)] bg-[var(--node-bg)] shadow-2xl">
+      <div className="flex w-[min(560px,100%)] flex-col overflow-hidden rounded-[11px] border border-[var(--node-border)] bg-[var(--node-bg)] shadow-2xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0">
         <div className="flex items-center gap-3 border-b border-[var(--node-border)] px-4 py-3">
           {kind ? <KindTile kind={kind} size={30} /> : null}
           <div className="flex min-w-0 flex-col">
@@ -150,7 +150,7 @@ export function ConnectionDialog({
             aria-label="Close"
             onClick={onClose}
             className={cn(
-              'flex size-6 items-center justify-center rounded-[5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]',
+              'flex size-6 flex-none items-center justify-center rounded-[5px] text-[var(--node-muted)] hover:text-[var(--node-fg)] touch:size-9',
               !(kind && !c) && 'ml-auto',
             )}
           >
@@ -198,7 +198,7 @@ export function ConnectionDialog({
             )}
             <div className="flex max-h-[62vh] flex-col gap-3 overflow-auto p-4">
               {section === 'general' && (
-                <div className="grid grid-cols-[1fr_150px] gap-2">
+                <div className="grid grid-cols-[1fr_150px] gap-2 max-sm:grid-cols-1">
                   <label className="flex flex-col gap-1">
                     <span className="text-[11px] text-[var(--node-muted)]">Name</span>
                     <NodeInput autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={kind.name} className="h-7" />
@@ -224,7 +224,10 @@ export function ConnectionDialog({
               {rows.map((row) => (
                 <div
                   key={row.map((f) => f.key).join()}
-                  className={cn('grid gap-2', row.length === 2 ? (row[1].key === 'port' ? 'grid-cols-[1fr_96px]' : 'grid-cols-2') : 'grid-cols-1')}
+                  className={cn(
+                    'grid gap-2',
+                    row.length === 2 ? (row[1].key === 'port' ? 'grid-cols-[1fr_96px]' : 'grid-cols-2 max-sm:grid-cols-1') : 'grid-cols-1',
+                  )}
                 >
                   {row.map((f) => {
                     const Wrap = f.type === 'boolean' || f.type === 'select' ? 'div' : 'label';
@@ -319,13 +322,13 @@ export function ConnectionDialog({
                 <span className="break-words whitespace-pre-wrap select-text">{test.error}</span>
               </div>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-sm:flex-wrap">
               <NodeButton disabled={test.state === 'testing' || missing.length > 0} onClick={doTest}>
                 {test.state === 'testing' && <LoaderCircle className="size-3.5 animate-spin" />}
                 Test Connection
               </NodeButton>
               {missing.length > 0 && <span className="text-[11px] text-[var(--node-muted)]">Fill in {missing.map((f) => f.label).join(', ')}.</span>}
-              <div className="ml-auto flex gap-2">
+              <div className="ml-auto flex gap-2 max-sm:w-full max-sm:justify-end">
                 <NodeButton onClick={onClose}>Cancel</NodeButton>
                 {!c && (
                   <NodeButton disabled={saving || missing.length > 0} onClick={() => doSave(false)}>

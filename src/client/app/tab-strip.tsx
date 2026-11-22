@@ -30,7 +30,7 @@ export function TabStrip({
 }) {
   const menu = useMenu();
   return (
-    <div className="flex h-9 flex-none items-stretch border-b border-[var(--node-border)]">
+    <div className="flex h-9 flex-none items-stretch border-b border-[var(--node-border)] touch:h-11">
       {left}
       <div className="flex min-w-0 flex-1 items-stretch overflow-x-auto [scrollbar-width:none]">
         {tabs.map((t) => {
@@ -72,8 +72,8 @@ export function TabStrip({
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={() => onClose(t.key)}
                   className={cn(
-                    'flex size-4 flex-none items-center justify-center rounded-[3px] hover:bg-[color-mix(in_srgb,var(--node-fg)_10%,transparent)]',
-                    on ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+                    'flex size-4 flex-none items-center justify-center rounded-[3px] hover:bg-[color-mix(in_srgb,var(--node-fg)_10%,transparent)] touch:size-8',
+                    on ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 touch:opacity-100',
                   )}
                 >
                   <X className="size-3" />

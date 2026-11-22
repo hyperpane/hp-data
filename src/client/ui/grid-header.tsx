@@ -52,7 +52,7 @@ export function GridHeader({
                 <ArrowUp className="ml-auto size-3 flex-none text-[var(--node-accent)]" />
               ))}
             <div
-              className="absolute top-0 right-[-3px] z-10 h-full w-[6px] cursor-col-resize"
+              className="absolute top-0 right-[-3px] z-10 h-full w-[6px] cursor-col-resize touch:right-[-8px] touch:w-4"
               onClick={(e) => e.stopPropagation()}
               onDoubleClick={(e) => {
                 e.stopPropagation();

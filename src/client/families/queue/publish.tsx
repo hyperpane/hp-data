@@ -196,7 +196,7 @@ export function PublishForm({
                 <ToolButton
                   label="Remove"
                   icon={Trash2}
-                  className="flex-none opacity-60 group-hover:opacity-100"
+                  className="flex-none opacity-60 group-hover:opacity-100 touch:opacity-100"
                   onClick={() => set({ headers: draft.headers.filter((_, j) => j !== i) })}
                 />
               )}
@@ -209,7 +209,7 @@ export function PublishForm({
           <Send className="size-3.5" />
           {busy ? 'Sending' : 'Send'}
         </NodeButton>
-        <span className="text-[10.5px] text-[var(--node-muted)]">⌘Enter</span>
+        <span className="text-[10.5px] text-[var(--node-muted)] touch:hidden">⌘Enter</span>
         <button
           type="button"
           className="ml-auto flex items-center gap-1 text-[10.5px] text-[var(--node-muted)] hover:text-[var(--node-fg)]"

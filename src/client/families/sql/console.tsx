@@ -167,7 +167,7 @@ export function SqlConsole({ tab, connection, kind, api, project, setState, visi
         {connection.readOnly && (
           <span className="ml-1 rounded-[3px] border border-[var(--node-border)] px-1 text-[10px] text-[var(--node-muted)]">read only</span>
         )}
-        <span className="ml-auto truncate text-[10.5px] text-[var(--node-muted)]">⌘Enter runs the statement at the cursor</span>
+        <span className="ml-auto truncate text-[10.5px] text-[var(--node-muted)] max-sm:hidden touch:hidden">⌘Enter runs the statement at the cursor</span>
       </Toolbar>
       <SplitPane
         id={`console.${kind.family}`}

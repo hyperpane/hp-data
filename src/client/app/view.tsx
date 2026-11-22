@@ -1,11 +1,12 @@
 // The window, laid out as DataGrip's: the Explorer on the left (every
 // connection and what's in it), the tabs on the right (Home first, then
 // consoles, tables, keys, collections, topics, buckets), and the
-// connection form over it all when one is added or edited.
+// connection form over it all when one is added or edited. A narrow window
+// (a phone's) has the tabs alone, and the Explorer slides in over them.
 
 import { useRef, useState } from 'react';
 import { PanelLeft } from 'lucide-react';
-import { NodeMessage, ResizeHandle, ToolButton, useResizable } from '@hyperpane/ui';
+import { COMPACT_WIDTH, DialogTitle, NodeMessage, ResizeHandle, Sheet, SheetContent, ToolButton, useResizable, useWidth } from '@hyperpane/ui';
 import { type Kind, kindOf } from '../../shared/kinds.ts';
 import type { Connection } from '../../shared/types.ts';
 import { type ExplorerHandle, Explorer } from '../explorer/tree.tsx';
@@ -13,9 +14,9 @@ import { FAMILIES } from '../families/index.ts';
 import { ConnectionDialog, type DialogTarget } from '../home/dialog.tsx';
 import { Home } from '../home/home.tsx';
 import type { ConnectionOps } from '../home/menu.ts';
-import { useKept, useWidth } from '../lib/hooks.ts';
+import { useKept } from '../lib/hooks.ts';
 import { TabStrip } from './tab-strip.tsx';
-import type { Tab } from './tabs.ts';
+import type { NewTab, Tab } from './tabs.ts';
 import { useWorkspace } from './workspace.ts';
 
 export function DataView() {
@@ -25,14 +26,29 @@ export function DataView() {
   const [dialog, setDialog] = useState<DialogTarget | null>(null);
   const explorer = useRef<ExplorerHandle | null>(null);
   const consoles = useRef(0);
-  const [box, width] = useWidth<HTMLDivElement>();
+  const box = useRef<HTMLDivElement>(null);
+  const width = useWidth(box);
+  const narrow = width > 0 && width < COMPACT_WIDTH;
+  // The Explorer slid in over a narrow window; what it opens puts it away.
+  const [sheet, setSheet] = useState(false);
   const side = useResizable({ id: 'data.sidebar', initial: 260, min: 180, max: () => (width ? Math.max(240, width - 320) : Infinity), axis: 'x' });
 
+  const open = (t: NewTab) => {
+    w.open(t);
+    setSheet(false);
+  };
+  // The connection form, with the Explorer put away: it comes up in its place.
+  const form = (d: DialogTarget) => {
+    setSheet(false);
+    setDialog(d);
+  };
+
+  /** Opens a connection's first tab, if it has one; says whether it did. */
   const firstTab = (c: Connection) => {
     const kind = kindOf(c.kind);
-    if (!kind) return;
+    if (!kind) return false;
     if (kind.family === 'sql')
-      w.open({
+      open({
         key: `${c.id}:console:main`,
         type: 'console',
         conn: c.id,
@@ -40,16 +56,19 @@ export function DataView() {
         title: c.name,
       });
     else if (kind.family === 'kv')
-      w.open({ type: 'keys', conn: c.id, ref: { database: String(c.values.db ?? 0) }, title: kind.engine === 'redis' ? `db${c.values.db ?? 0}` : c.name });
+      open({ type: 'keys', conn: c.id, ref: { database: String(c.values.db ?? 0) }, title: kind.engine === 'redis' ? `db${c.values.db ?? 0}` : c.name });
     else if (kind.family === 'object' && c.values.bucket)
-      w.open({ type: 'bucket', conn: c.id, ref: { bucket: String(c.values.bucket) }, title: String(c.values.bucket) });
+      open({ type: 'bucket', conn: c.id, ref: { bucket: String(c.values.bucket) }, title: String(c.values.bucket) });
+    else return false;
+    return true;
   };
 
   const ops: ConnectionOps = {
     openConnection(c) {
-      if (!sideOpen) setSideOpen(true);
+      if (!narrow && !sideOpen) setSideOpen(true);
       explorer.current?.reveal(c.id);
-      firstTab(c);
+      // Narrow, the Explorer comes in only for what has no tab of its own.
+      if (!firstTab(c) && narrow) setSheet(true);
     },
     connect(c) {
       explorer.current?.reveal(c.id);
@@ -62,7 +81,7 @@ export function DataView() {
       if (!kind) return;
       consoles.current++;
       const n = tabs.filter((t) => t.conn === c.id && t.type === 'console').length + 1;
-      w.open({
+      open({
         key: `${c.id}:console:${Date.now().toString(36)}${consoles.current}`,
         type: 'console',
         conn: c.id,
@@ -71,10 +90,10 @@ export function DataView() {
       });
     },
     edit(c) {
-      setDialog({ kind: kindOf(c.kind) ?? null, connection: c });
+      form({ kind: kindOf(c.kind) ?? null, connection: c });
     },
     duplicate(c) {
-      void api.call<Connection>('duplicate', { id: c.id }).then((d) => setDialog({ kind: kindOf(d.kind) ?? null, connection: d }), api.fail);
+      void api.call<Connection>('duplicate', { id: c.id }).then((d) => form({ kind: kindOf(d.kind) ?? null, connection: d }), api.fail);
     },
     async remove(c) {
       if (!(await api.confirm(`Remove ${c.name}?`, 'Its settings and saved password go from this server. Nothing in the database changes.', 'Remove', true)))
@@ -83,14 +102,14 @@ export function DataView() {
       await api.call('remove', { id: c.id }).catch(api.fail);
     },
     pickKind() {
-      setDialog({ kind: null });
+      form({ kind: null });
     },
   };
 
   if (error && !state) return <NodeMessage error>{error}</NodeMessage>;
 
-  const narrow = width > 0 && width < 640;
   const showSide = sideOpen && !narrow;
+  const tree = <Explorer state={state} api={api} project={project} ops={ops} open={open} handle={explorer} activeConn={active.conn} />;
 
   const body = (t: Tab) => {
     if (t.type === 'home') return <Home state={state} ops={ops} onAdd={(k: Kind) => setDialog({ kind: k })} />;
@@ -114,7 +133,7 @@ export function DataView() {
         readOnly={c.readOnly}
         visible={t.key === active.key}
         setState={(patch) => w.setTabState(t.key, patch)}
-        open={w.open}
+        open={open}
         retitle={(title) => w.retitle(t.key, title)}
       />
     );
@@ -125,7 +144,7 @@ export function DataView() {
       {showSide && (
         <>
           <aside className="flex min-h-0 flex-none flex-col" style={{ width: side.size }}>
-            <Explorer state={state} api={api} project={project} ops={ops} open={w.open} handle={explorer} activeConn={active.conn} />
+            {tree}
           </aside>
           <ResizeHandle axis="x" dragging={side.dragging} {...side.handleProps} />
         </>
@@ -140,18 +159,18 @@ export function DataView() {
           onCloseOthers={w.closeOthers}
           onCloseConnection={w.closeConnection}
           left={
-            !narrow && (
-              <div className="flex flex-none items-center border-r border-[var(--node-border)] px-1">
-                {
-                  <ToolButton
-                    label={sideOpen ? 'Hide the Explorer' : 'Show the Explorer'}
-                    icon={PanelLeft}
-                    active={sideOpen}
-                    onClick={() => setSideOpen(!sideOpen)}
-                  />
-                }
-              </div>
-            )
+            <div className="flex flex-none items-center border-r border-[var(--node-border)] px-1">
+              {narrow ? (
+                <ToolButton label="Show the Explorer" icon={PanelLeft} active={sheet} onClick={() => setSheet(true)} />
+              ) : (
+                <ToolButton
+                  label={sideOpen ? 'Hide the Explorer' : 'Show the Explorer'}
+                  icon={PanelLeft}
+                  active={sideOpen}
+                  onClick={() => setSideOpen(!sideOpen)}
+                />
+              )}
+            </div>
           }
         />
         <div className="relative min-h-0 flex-1">
@@ -162,6 +181,14 @@ export function DataView() {
           ))}
         </div>
       </main>
+      {narrow && (
+        <Sheet open={sheet} onOpenChange={setSheet}>
+          <SheetContent side="start" className="overflow-hidden text-xs text-[var(--node-fg)]">
+            <DialogTitle className="sr-only">Explorer</DialogTitle>
+            {tree}
+          </SheetContent>
+        </Sheet>
+      )}
       {dialog && (
         <ConnectionDialog
           target={dialog}

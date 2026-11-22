@@ -1,13 +1,14 @@
 // A bucket's tab: the folder shown as a breadcrumb (click one to go up),
 // Back and Up, the list (List.tsx) a page of 1,000 at a time with Load
 // more, a filter over what's loaded, Flat (everything under the folder),
-// and the selected file's preview beside it (Preview.tsx). Changes
+// and the selected file's preview beside it (Preview.tsx; in its place,
+// with a way back, when the window is narrow). Changes
 // (upload, new folder, rename, delete) aren't offered on a read-only
 // connection.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUp, Database, FolderPlus, ListTree, RefreshCw, Trash2, Upload } from 'lucide-react';
-import { NodeButton, NodeInput, ResizeHandle, StatusBar, ToolButton, Toolbar, cn, useMenu, useResizable } from '@hyperpane/ui';
+import { NodeButton, NodeInput, PaneBar, ResizeHandle, StatusBar, ToolButton, Toolbar, cn, useCompact, useMenu, useResizable } from '@hyperpane/ui';
 import type { ListResult } from '../../../shared/object.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { useKept } from '../../lib/hooks.ts';
@@ -35,6 +36,7 @@ export function BucketView(p: TabProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [anchor, setAnchor] = useState<string | null>(null);
   const preview = useResizable({ id: 'data.object.preview', initial: 340, min: 200, max: 900, axis: 'x', invert: true });
+  const compact = useCompact();
   const abort = useRef<AbortController | null>(null);
   const picker = useRef<HTMLInputElement>(null);
   const menu = useMenu();
@@ -203,7 +205,7 @@ export function BucketView(p: TabProps) {
           ))}
         </nav>
         <NodeInput
-          className="w-36"
+          className="w-36 max-sm:w-24"
           placeholder="Filter"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -233,40 +235,43 @@ export function BucketView(p: TabProps) {
       </Toolbar>
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
       <div className="flex min-h-0 flex-1">
-        <List
-          rows={rows}
-          selected={selected}
-          sort={sort}
-          onSort={setSort}
-          anchor={anchor}
-          onSelect={(s, a) => {
-            setSelected(s);
-            setAnchor(a);
-          }}
-          onOpen={open}
-          onMenu={showMenu}
-          onKey={onKey}
-          onDrop={readOnly ? null : (dt) => void droppedFiles(dt).then(put, api.fail)}
-          empty={
-            <p className="pointer-events-none px-3 py-3 text-[var(--node-muted)]">
-              {loading ? 'Loading' : filter ? 'Nothing loaded matches' : prefix ? 'This folder is empty' : 'This bucket is empty'}
-              {!readOnly && !loading && !filter ? ' Drop files here to upload them' : ''}
-            </p>
-          }
-          footer={
-            next && (
-              <div className="px-2 py-1.5">
-                <NodeButton disabled={loading} onClick={() => void load(true)}>
-                  {loading ? 'Loading' : 'Load more'}
-                </NodeButton>
-              </div>
-            )
-          }
-        />
+        <div className={cn('flex min-h-0 min-w-0 flex-1', compact && previewing && 'hidden')}>
+          <List
+            rows={rows}
+            selected={selected}
+            sort={sort}
+            onSort={setSort}
+            anchor={anchor}
+            onSelect={(s, a) => {
+              setSelected(s);
+              setAnchor(a);
+            }}
+            onOpen={open}
+            onMenu={showMenu}
+            onKey={onKey}
+            onDrop={readOnly ? null : (dt) => void droppedFiles(dt).then(put, api.fail)}
+            empty={
+              <p className="pointer-events-none px-3 py-3 text-[var(--node-muted)]">
+                {loading ? 'Loading' : filter ? 'Nothing loaded matches' : prefix ? 'This folder is empty' : 'This bucket is empty'}
+                {!readOnly && !loading && !filter ? ' Drop files here to upload them' : ''}
+              </p>
+            }
+            footer={
+              next && (
+                <div className="px-2 py-1.5">
+                  <NodeButton disabled={loading} onClick={() => void load(true)}>
+                    {loading ? 'Loading' : 'Load more'}
+                  </NodeButton>
+                </div>
+              )
+            }
+          />
+        </div>
         {previewing && (
           <>
-            <ResizeHandle axis="x" dragging={preview.dragging} {...preview.handleProps} />
-            <div className="flex min-h-0 flex-none flex-col" style={{ width: preview.size }}>
+            {!compact && <ResizeHandle axis="x" dragging={preview.dragging} {...preview.handleProps} />}
+            <div className={cn('flex min-h-0 flex-col', compact ? 'min-w-0 flex-1' : 'flex-none')} style={compact ? undefined : { width: preview.size }}>
+              {compact && <PaneBar onBack={() => setSelected(new Set())} backLabel="Files" />}
               <Preview
                 where={where}
                 objectKey={previewing}

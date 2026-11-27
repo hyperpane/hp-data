@@ -1,7 +1,7 @@
 // Small parts of the kv views: a type's badge, a dialog over the view,
 // a labelled field in one, and an empty or loading message.
 
-import { X } from 'lucide-react';
+import { X } from '@hyperpane/icons';
 import { NodeButton, ToolButton, cn } from '@hyperpane/ui';
 import type { KeyType } from '../../../shared/kv.ts';
 import { TYPE_INFO } from './lib.ts';
@@ -43,7 +43,7 @@ export function Dialog({
     >
       <form
         className={cn(
-          'rounded-surface flex max-h-full flex-col overflow-hidden border border-[var(--node-border)] bg-[var(--node-bg)]',
+          'rounded-surface flex max-h-full flex-col overflow-hidden border border-[var(--data-line)] bg-[var(--node-bg)]',
           wide ? 'w-[min(620px,100%)]' : 'w-[min(440px,100%)]',
         )}
         onSubmit={(e) => {
@@ -52,12 +52,12 @@ export function Dialog({
         }}
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
-        <div className="flex h-10 flex-none items-center border-b border-[var(--node-border)] ps-3 pe-1.5">
+        <div className="flex h-10 flex-none items-center border-b border-[var(--data-line)] ps-3 pe-1.5">
           <span className="truncate text-xs font-semibold">{title}</span>
           <ToolButton label="Close" icon={X} className="ms-auto" onClick={onClose} />
         </div>
         <div className="flex min-h-0 flex-col gap-3 overflow-auto p-3">{children}</div>
-        <div className="flex flex-none justify-end gap-1.5 border-t border-[var(--node-border)] px-3 py-2.5">
+        <div className="flex flex-none justify-end gap-1.5 border-t border-[var(--data-line)] px-3 py-2.5">
           <NodeButton variant="ghost" onClick={onClose}>
             Cancel
           </NodeButton>

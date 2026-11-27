@@ -3,7 +3,7 @@
 // JSON (the first 1 MB), images (as a Blob URL), else "No preview".
 
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, Download, Link } from 'lucide-react';
+import { Copy, Download, Link } from '@hyperpane/icons';
 import { formatTime } from '@hyperpane/sdk/client';
 import { JsonTree, NodeMessage, Spinner, ToolButton, cn, fileIcon } from '@hyperpane/ui';
 import { PREVIEW_BYTES, type ObjectDetails } from '../../../shared/object.ts';
@@ -88,7 +88,7 @@ export function Preview({
 
   return (
     <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
-      <div className="flex h-10 flex-none items-center gap-1 border-b border-[var(--node-border)] ps-3 pe-2.5 touch:h-12">
+      <div className="flex h-10 flex-none items-center gap-1 border-b border-[var(--data-line)] ps-3 pe-2.5 touch:h-12">
         <Icon className="size-3.5 flex-none text-[var(--node-muted)]" />
         <span className="ms-1 min-w-0 flex-1 truncate font-medium" title={objectKey}>
           {nameOf(objectKey)}
@@ -133,21 +133,21 @@ function Body({ content }: { content: Content | null }) {
   switch (content.kind) {
     case 'image':
       return (
-        <div className="flex min-h-[120px] flex-1 items-center justify-center border-t border-[var(--node-border)] bg-[repeating-conic-gradient(color-mix(in_srgb,var(--node-fg)_6%,transparent)_0%_25%,transparent_0%_50%)] bg-[length:16px_16px] p-3">
+        <div className="flex min-h-[120px] flex-1 items-center justify-center border-t border-[var(--data-line)] bg-[repeating-conic-gradient(color-mix(in_srgb,var(--node-fg)_6%,transparent)_0%_25%,transparent_0%_50%)] bg-[length:16px_16px] p-3">
           <img src={content.url} alt="" className="max-h-full max-w-full object-contain" />
         </div>
       );
     case 'json':
-      return <JsonTree value={content.value} depth={2} className="min-h-0 flex-1 border-t border-[var(--node-border)] px-2 py-2 font-mono text-xs" />;
+      return <JsonTree value={content.value} depth={2} className="min-h-0 flex-1 border-t border-[var(--data-line)] px-2 py-2 font-mono text-xs" />;
     case 'text':
       return (
-        <pre className="min-h-0 flex-1 border-t border-[var(--node-border)] px-3 py-2 font-mono text-xs leading-5 whitespace-pre-wrap break-words select-text">
+        <pre className="min-h-0 flex-1 border-t border-[var(--data-line)] px-3 py-2 font-mono text-xs leading-5 whitespace-pre-wrap break-words select-text">
           {content.text}
           {content.truncated && <span className="block pt-1 font-sans text-2xs text-[var(--node-muted)]">Only the first {formatSize(PREVIEW_BYTES)}</span>}
         </pre>
       );
     default:
-      return <p className="border-t border-[var(--node-border)] px-3 py-6 text-center text-[var(--node-muted)]">{content.why}</p>;
+      return <p className="border-t border-[var(--data-line)] px-3 py-6 text-center text-[var(--node-muted)]">{content.why}</p>;
   }
 }
 

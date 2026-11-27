@@ -5,7 +5,7 @@
 // keys and headers, and the selected message has the room to itself.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Radio, RefreshCw } from 'lucide-react';
+import { Radio, RefreshCw } from '@hyperpane/icons';
 import { ColumnResizer, NodeButton, NodeInput, Picker, SplitPane, StatusBar, Toolbar, cn, styles, useColumnWidths, useCompact } from '@hyperpane/ui';
 import type { Message } from '../../../shared/queue.ts';
 import type { TabProps } from '../../app/tabs.ts';
@@ -149,23 +149,23 @@ export function Messages({
           </colgroup>
           <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-header)]')}>
             <tr className="h-7 text-left text-2xs text-[var(--node-muted)]">
-              <th className="relative border-b border-[var(--node-border)] px-2 font-medium">
+              <th className="relative border-b border-[var(--data-line)] px-2 font-medium">
                 Time
                 <ColumnResizer {...cols.resizer('time')} />
               </th>
-              <th className="relative border-b border-[var(--node-border)] px-2 font-medium">
+              <th className="relative border-b border-[var(--data-line)] px-2 font-medium">
                 {caps.partitions ? 'Part:Offset' : 'Message'}
                 <ColumnResizer {...cols.resizer('at')} />
               </th>
               {!narrow && (
-                <th className="relative border-b border-[var(--node-border)] px-2 font-medium">
+                <th className="relative border-b border-[var(--data-line)] px-2 font-medium">
                   {caps.engine === 'rabbitmq' ? 'Routing key' : caps.engine === 'sqs' ? 'Group' : 'Key'}
                   <ColumnResizer {...cols.resizer('key')} />
                 </th>
               )}
-              <th className="border-b border-[var(--node-border)] px-2 font-medium">Value</th>
+              <th className="border-b border-[var(--data-line)] px-2 font-medium">Value</th>
               {!narrow && (
-                <th className="border-b border-[var(--node-border)] px-1 text-right font-medium" title="Headers">
+                <th className="border-b border-[var(--data-line)] px-1 text-right font-medium" title="Headers">
                   H
                 </th>
               )}
@@ -180,7 +180,7 @@ export function Messages({
                   onClick={() => setSel(i)}
                   onDoubleClick={() => api.copy(m.value, 'the value')}
                   className={cn(
-                    'h-7 cursor-default touch:h-10 [&>td]:border-b [&>td]:border-[var(--node-border)]',
+                    'h-7 cursor-default touch:h-10 [&>td]:border-b [&>td]:border-[var(--data-line)]',
                     sel === i ? 'bg-[var(--node-selection-inactive)] group-focus-within/list:bg-[var(--node-selection)]' : 'hover:bg-[var(--node-hover)]',
                     fresh.has(m.id) && sel !== i && 'bg-[color-mix(in_srgb,var(--ansi-2)_10%,transparent)]',
                   )}
@@ -298,7 +298,7 @@ export function Messages({
           onChange={(e) => setFilter(e.target.value)}
         />
       </Toolbar>
-      {caps.peekNote && <div className="flex-none border-b border-[var(--node-border)] px-3 pb-2 text-2xs text-[var(--node-muted)]">{caps.peekNote}</div>}
+      {caps.peekNote && <div className="flex-none border-b border-[var(--data-line)] px-3 pb-2 text-2xs text-[var(--node-muted)]">{caps.peekNote}</div>}
       {error && <ErrorBox error={error} onClose={() => setError(null)} />}
       {selected ? (
         <SplitPane

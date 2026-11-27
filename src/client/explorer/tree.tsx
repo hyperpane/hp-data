@@ -5,8 +5,8 @@
 // menu (Open, Refresh, Copy Name, and its family's own).
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, ChevronsDownUp, Database, Ellipsis, LoaderCircle, Plus, RefreshCw, Search, TriangleAlert } from 'lucide-react';
-import { Badge, Empty, NodeButton, NodeInput, ToolButton, Toolbar, cn, useMenu, useTouch, type MenuEntry } from '@hyperpane/ui';
+import { ChevronRight, Database, Ellipsis, LoaderCircle, Plus, Search, TriangleAlert, X } from '@hyperpane/icons';
+import { NodeButton, NodeInput, ToolButton, cn, useMenu, useTouch, type MenuEntry } from '@hyperpane/ui';
 import { address, kindOf } from '../../shared/kinds.ts';
 import { optionsMenu, usePrefs } from './options.ts';
 import type { Connection, State, TreeNode } from '../../shared/types.ts';
@@ -15,7 +15,8 @@ import { FAMILIES } from '../families/index.ts';
 import { connectionMenu, type ConnectionOps } from '../home/menu.ts';
 import type { Api } from '../lib/api.ts';
 import { NODE_COLORS, NODE_ICONS } from '../ui/icons.tsx';
-import { KindTile, rowState } from '../ui/parts.tsx';
+import { header, row, section, chip } from '../ui/look.ts';
+import { Blank, KindTile, rowState } from '../ui/parts.tsx';
 
 interface Loaded {
   loading?: boolean;
@@ -24,6 +25,12 @@ interface Loaded {
 }
 
 const keyOf = (conn: string, path: string[]) => [conn, ...path].join('\u0000');
+
+/** A row's start at a depth: 16px a level, from the row's own 4px. */
+const INDENT = (depth: number) => 4 + depth * 16;
+
+const chevron =
+  'flex size-5 flex-none items-center justify-center rounded-[5px] text-[var(--node-muted)] transition-colors duration-100 hover:bg-[var(--data-fill-hover)] hover:text-[var(--node-fg)]';
 
 export interface ExplorerHandle {
   /** Expands a connection (connecting it). */
@@ -172,10 +179,18 @@ export function Explorer({
     const l = loaded.get(k);
     if (l?.error) {
       rows.push(
-        <div key={`${k}:error`} className="mx-1.5 flex items-start gap-2 py-1.5 pe-2 text-2xs text-[var(--ansi-1)]" style={{ paddingLeft: 8 + depth * 14 }}>
-          <TriangleAlert className="mt-px size-3.5 flex-none" />
-          <span className="min-w-0 flex-1 break-words select-text">{l.error}</span>
-          <button type="button" className="flex-none font-medium text-[var(--node-muted)] hover:text-[var(--node-fg)]" onClick={() => refresh(c.id, path)}>
+        <div
+          key={`${k}:error`}
+          className="mx-1.5 my-0.5 flex items-start gap-2 rounded-control bg-[color-mix(in_srgb,var(--data-error)_8%,transparent)] py-1.5 pe-1.5 text-xs leading-4 text-[var(--node-fg)]"
+          style={{ paddingLeft: INDENT(depth) + 22 }}
+        >
+          <TriangleAlert className="mt-px size-3.5 flex-none text-[var(--data-error)]" />
+          <span className="min-w-0 flex-1 py-px break-words select-text">{l.error}</span>
+          <button
+            type="button"
+            className="-my-0.5 h-5 flex-none rounded-chip px-1.5 font-medium text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)]"
+            onClick={() => refresh(c.id, path)}
+          >
             Retry
           </button>
         </div>,
@@ -184,7 +199,7 @@ export function Explorer({
     }
     if (l?.loading && !l.nodes) {
       rows.push(
-        <div key={`${k}:loading`} className="mx-1.5 flex h-7 items-center gap-2 text-2xs text-[var(--node-muted)]" style={{ paddingLeft: 8 + depth * 14 }}>
+        <div key={`${k}:loading`} className="mx-1.5 flex h-7 items-center gap-2 text-xs text-[var(--node-muted)]" style={{ paddingLeft: INDENT(depth) + 24 }}>
           <LoaderCircle className="size-3.5 animate-spin" />
           {path.length ? 'Loading' : 'Connecting'}
         </div>,
@@ -194,7 +209,7 @@ export function Explorer({
     const nodes = visible(c.id, path);
     if (l?.nodes && !l.nodes.length)
       rows.push(
-        <div key={`${k}:empty`} className="mx-1.5 flex h-7 items-center text-2xs text-[var(--node-muted)]" style={{ paddingLeft: 26 + depth * 14 }}>
+        <div key={`${k}:empty`} className="mx-1.5 flex h-7 items-center text-xs text-[var(--node-muted)]" style={{ paddingLeft: INDENT(depth) + 24 }}>
           Empty
         </div>,
       );
@@ -210,11 +225,8 @@ export function Explorer({
           role="treeitem"
           aria-expanded={n.leaf ? undefined : isOpen}
           tabIndex={-1}
-          className={cn(
-            'rounded-control group mx-1.5 flex h-7 cursor-default items-center gap-1.5 pe-2 whitespace-nowrap outline-none touch:h-10',
-            rowState(selected === nk),
-          )}
-          style={{ paddingLeft: 4 + depth * 14 }}
+          className={cn(row.compact, 'mx-1.5 gap-1.5 whitespace-nowrap', rowState(selected === nk))}
+          style={{ paddingLeft: INDENT(depth) }}
           onClick={() => {
             setSelected(nk);
             if (touch) activate();
@@ -230,17 +242,17 @@ export function Explorer({
             type="button"
             tabIndex={-1}
             aria-label={isOpen ? 'Collapse' : 'Expand'}
-            className={cn('-me-0.5 flex size-4 flex-none items-center justify-center text-[var(--node-muted)]', n.leaf && 'invisible')}
+            className={cn(chevron, n.leaf && 'invisible')}
             onClick={(e) => {
               e.stopPropagation();
               toggle(c.id, p);
             }}
           >
-            {isOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+            <ChevronRight className={cn('size-3.5 transition-transform duration-150 ease-out motion-reduce:transition-none', isOpen && 'rotate-90')} />
           </button>
           <Icon className="size-3.5 flex-none" style={{ color: NODE_COLORS[n.type] ?? 'var(--node-muted)' }} />
           <span className="truncate">{n.label ?? n.name}</span>
-          {details && n.detail && <span className="truncate text-2xs text-[var(--node-muted)]">{n.detail}</span>}
+          {details && n.detail && <span className="min-w-0 truncate text-xs text-[var(--node-muted)] tabular-nums">{n.detail}</span>}
         </div>,
       );
       if (isOpen && !n.leaf) pushNodes(c, p, depth + 1);
@@ -266,8 +278,9 @@ export function Explorer({
   for (const [group, list] of groups) {
     if (groups.length > 1 || group)
       rows.push(
-        <div key={`group:${group}`} className="mt-1 flex h-7 items-center px-3.5 text-xs font-medium text-[var(--node-muted)] first:mt-0">
-          {group || 'Other'}
+        <div key={`group:${group}`} className={cn(section.header, 'mt-2 px-3.5 first:mt-0')}>
+          <span className="truncate">{group || 'Other'}</span>
+          <span className={section.count}>{list.length}</span>
         </div>,
       );
     for (const c of list) {
@@ -286,11 +299,12 @@ export function Explorer({
           tabIndex={-1}
           title={session ? `${session.version}${session.detail ? ` · ${session.detail}` : ''}` : kind.name}
           className={cn(
-            'rounded-control group mx-1.5 flex h-7 cursor-default items-center gap-2 pe-2 outline-none touch:h-10',
+            row.base,
+            'mx-1.5 gap-1.5',
             rowState(selected === k),
             activeConn === c.id && selected !== k && 'bg-[color-mix(in_srgb,var(--node-fg)_4%,transparent)]',
           )}
-          style={{ paddingLeft: 4 }}
+          style={{ paddingLeft: INDENT(0) }}
           onClick={() => {
             setSelected(k);
             if (touch) toggle(c.id, []);
@@ -306,29 +320,31 @@ export function Explorer({
             type="button"
             tabIndex={-1}
             aria-label={isOpen ? 'Collapse' : 'Expand'}
-            className="-me-1 flex size-4 flex-none items-center justify-center text-[var(--node-muted)]"
+            className={chevron}
             onClick={(e) => {
               e.stopPropagation();
               toggle(c.id, []);
             }}
           >
-            {isOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+            <ChevronRight className={cn('size-3.5 transition-transform duration-150 ease-out motion-reduce:transition-none', isOpen && 'rotate-90')} />
           </button>
-          <span className="relative flex-none">
-            <KindTile kind={kind} size={18} />
-            {session && <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border-[1.5px] border-[var(--node-bg)] bg-[var(--ansi-2)]" />}
-            {l?.error && !session && (
-              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border-[1.5px] border-[var(--node-bg)] bg-[var(--ansi-1)]" />
+          <span className="relative me-0.5 flex-none">
+            <KindTile kind={kind} size={20} />
+            {(session || (l?.error && !session)) && (
+              <span
+                className="absolute -right-[3px] -bottom-[3px] size-2.5 rounded-full border-2 border-[var(--data-rail)]"
+                style={{ background: session ? 'var(--data-ok)' : 'var(--data-error)' }}
+              />
             )}
           </span>
-          {c.color && <span className="-mx-1 h-3 w-[3px] flex-none rounded-full" style={{ background: c.color }} />}
           <span className="truncate font-medium">{c.name}</span>
+          {c.color && <span aria-hidden className="size-1.5 flex-none rounded-full" style={{ background: c.color }} />}
           {c.readOnly && (
-            <Badge size="sm" shape="rounded" title="Read only">
+            <span className={cn(chip.base, chip.neutral, 'h-[18px] px-1 text-[10px]')} title="Read only">
               RO
-            </Badge>
+            </span>
           )}
-          {l?.loading && <LoaderCircle className="ml-auto size-3 flex-none animate-spin text-[var(--node-muted)]" />}
+          {l?.loading && <LoaderCircle className="ms-auto size-3.5 flex-none animate-spin text-[var(--node-muted)]" />}
         </div>,
       );
       if (isOpen) pushNodes(c, [], 1);
@@ -337,17 +353,29 @@ export function Explorer({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Toolbar>
-        <span className="me-auto truncate ps-1 text-xs font-medium">Explorer</span>
+      <div data-measure="explorer" className={cn(header.base, 'gap-1')}>
+        <label className="relative flex min-w-0 flex-1 items-center">
+          <Search aria-hidden className="pointer-events-none absolute left-2.5 size-3.5 text-[var(--node-muted)]" />
+          <NodeInput
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            onKeyDown={(e) => e.key === 'Escape' && setFilter('')}
+            placeholder={connections.length ? `Filter ${connections.length === 1 ? '1 connection' : `${connections.length} connections`}` : 'Filter'}
+            aria-label="Filter"
+            className={cn('w-full ps-8 text-[13px]', filter && 'pe-7')}
+          />
+          {filter && (
+            <button
+              type="button"
+              aria-label="Clear the filter"
+              onClick={() => setFilter('')}
+              className="absolute right-1 flex size-5 items-center justify-center rounded-full text-[var(--node-muted)] hover:bg-[var(--data-fill-hover)] hover:text-[var(--node-fg)] touch:size-8"
+            >
+              <X className="size-3" />
+            </button>
+          )}
+        </label>
         <ToolButton label="New connection" icon={Plus} onClick={() => ops.pickKind()} />
-        <ToolButton
-          label="Refresh everything open"
-          icon={RefreshCw}
-          onClick={() => {
-            for (const c of connections.filter((c) => expanded.has(keyOf(c.id, [])))) refresh(c.id, []);
-          }}
-        />
-        <ToolButton label="Collapse all" icon={ChevronsDownUp} onClick={() => setExpanded(new Set())} />
         <ToolButton
           label="Explorer options"
           icon={Ellipsis}
@@ -364,6 +392,9 @@ export function Explorer({
                 disconnectAll: () => {
                   for (const c of connections) if (state?.open[c.id]) ops.disconnect(c);
                 },
+                refreshOpen: () => {
+                  for (const c of connections.filter((c) => expanded.has(keyOf(c.id, [])))) refresh(c.id, []);
+                },
                 expandOpen: () => {
                   for (const c of connections.filter((c) => state?.open[c.id])) handle.current?.reveal(c.id);
                 },
@@ -372,27 +403,21 @@ export function Explorer({
             )
           }
         />
-      </Toolbar>
-      <div className="flex-none px-2 pt-2 pb-1">
-        <label className="relative block">
-          <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-[var(--node-muted)]" />
-          <NodeInput value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter" aria-label="Filter" className="w-full pl-7" />
-        </label>
       </div>
-      <div role="tree" className="group/list min-h-0 flex-1 overflow-auto py-1 text-xs select-none">
+      <div role="tree" className="group/list flex min-h-0 flex-1 flex-col gap-px overflow-auto py-1.5 text-[13px] select-none">
         {state && !connections.length ? (
-          <Empty
-            bordered={false}
+          <Blank
             icon={<Database />}
             title="No connections yet"
-            description="Connect a database, a store, a queue or a bucket"
-            action={
+            actions={
               <NodeButton variant="primary" onClick={() => ops.pickKind()}>
                 <Plus />
                 New connection
               </NodeButton>
             }
-          />
+          >
+            Connect a database, a store, a queue or a bucket
+          </Blank>
         ) : (
           rows
         )}

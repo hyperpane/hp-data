@@ -4,8 +4,8 @@
 // indexes, foreign keys) and DDL.
 
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Plus, RefreshCw, RotateCcw, SquareTerminal, Upload } from 'lucide-react';
-import { NodeButton, NodeInput, Picker, Spinner, StatusBar, Tabs, ToolButton, Toolbar, ToolbarSeparator, ToolbarSpacer, cn } from '@hyperpane/ui';
+import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Plus, RefreshCw, RotateCcw, SquareTerminal, Upload } from '@hyperpane/icons';
+import { NodeButton, NodeInput, Picker, Tabs, ToolButton, Toolbar, ToolbarSeparator, ToolbarSpacer, cn } from '@hyperpane/ui';
 import { qualified, type Dialect } from '../../../shared/sql.ts';
 import type { Cell } from '../../../shared/types.ts';
 import type { BrowseResult, RowEdit, TableInfo, TableRef } from '../../../shared/sql.ts';
@@ -13,7 +13,8 @@ import type { TabProps } from '../../app/tabs.ts';
 import { useRowsPort } from '../../lib/hooks.ts';
 import { Grid, type GridEdits, hasEdits, noEdits } from '../../ui/grid.tsx';
 import { CodeEditor } from '../../ui/code.tsx';
-import { ErrorBox, ValueViewer, count, ms, softField } from '../../ui/parts.tsx';
+import { footer } from '../../ui/look.ts';
+import { ErrorBox, Loading, ValueViewer, count, ms, softField } from '../../ui/parts.tsx';
 import { Structure } from './structure.tsx';
 
 const SIZES = ['50', '100', '200', '500', '1000'] as const;
@@ -135,7 +136,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <Toolbar className={cn(view === 'data' && 'border-b-0')}>
+      <Toolbar data-measure="table" className={cn('h-11 gap-1 px-2 touch:h-12', view === 'data' && 'border-b-0')}>
         <Tabs
           variant="pills"
           label="View"
@@ -154,10 +155,10 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               icon={RefreshCw}
               onClick={() => (hasEdits(edits) ? api.toast('Save or revert the changes first', true) : setTick((t) => t + 1))}
             />
-            <ToolbarSeparator />
+            <ToolbarSeparator className="mx-1" />
             <ToolButton label="First page" icon={ChevronFirst} disabled={offset === 0} onClick={() => go(0)} />
             <ToolButton label="Previous page" icon={ChevronLeft} disabled={offset === 0} onClick={() => go(offset - Number(size))} />
-            <span className="min-w-[90px] text-center text-2xs text-[var(--node-muted)] tabular-nums">
+            <span className="min-w-[96px] text-center text-xs text-[var(--node-muted)] tabular-nums">
               {rowsShown ? `${(offset + 1).toLocaleString()}–${(offset + rowsShown).toLocaleString()}` : '0'}
               {total !== null ? ` of ${total.toLocaleString()}` : ''}
             </span>
@@ -171,7 +172,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             <Picker
               label="Rows per page"
               size="sm"
-              className={softField}
+              className={cn('text-[13px]', softField)}
               value={size}
               options={SIZES.map((x) => ({ value: x, label: x }))}
               onValueChange={(v) => {
@@ -181,13 +182,13 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
             />
             {editable && (
               <>
-                <ToolbarSeparator />
+                <ToolbarSeparator className="mx-1" />
                 <ToolButton label="Add a row" icon={Plus} onClick={() => setEdits((e) => ({ ...e, added: [...e.added, page!.columns.map(() => null)] }))} />
               </>
             )}
             {hasEdits(edits) && (
               <>
-                <ToolbarSeparator />
+                <ToolbarSeparator className="mx-1" />
                 <NodeButton variant="primary" disabled={saving} onClick={submit} title="⌘S">
                   <Upload />
                   Save {count(pending.length, 'change')}
@@ -217,9 +218,9 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
         )}
       </Toolbar>
       {view === 'data' && (
-        <div className="flex flex-none items-center gap-2 border-b border-[var(--node-border)] px-2.5 pb-2">
+        <div className="flex flex-none items-center gap-2 px-2 pb-2">
           <div className="relative flex min-w-0 flex-1">
-            <span className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 font-mono text-2xs font-medium text-[var(--ansi-5)]">WHERE</span>
+            <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 font-mono text-[11px] font-semibold tracking-wide text-[var(--ansi-5)]">WHERE</span>
             <NodeInput
               value={where}
               onChange={(e) => setWhere(e.target.value)}
@@ -233,13 +234,13 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               placeholder={`a condition, as in SQL: ${page?.columns[1]?.name ?? 'name'} LIKE 'a%'  (Enter applies)`}
               spellCheck={false}
               aria-label="WHERE"
-              className="w-full ps-14 font-mono"
+              className="w-full ps-[60px] font-mono text-xs"
             />
           </div>
           {order.length > 0 && (
             <button
               type="button"
-              className="rounded-control h-7 flex-none px-2 font-mono text-2xs text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)] max-sm:max-w-[40%] max-sm:truncate"
+              className="rounded-control h-7 flex-none bg-[var(--data-fill)] px-2.5 font-mono text-[11px] text-[var(--node-muted)] hover:bg-[var(--data-fill-hover)] hover:text-[var(--node-fg)] max-sm:max-w-[40%] max-sm:truncate"
               title="Click a column’s header to sort, Shift-click to add; click here to clear"
               onClick={() => setOrder([])}
             >
@@ -273,37 +274,31 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               table={name}
               copy={api.copy}
               onOpenValue={(r, c, v) => setValue({ r, c, value: v })}
-              className={cn('flex-1', loading && 'opacity-60')}
+              className={cn('flex-1 border-t border-[var(--data-line)]', loading && 'opacity-60')}
               empty={applied ? 'No row matches the filter' : 'The table is empty'}
             />
-            <StatusBar>
-              <span>{count(rowsShown, 'row')}</span>
+            <div className={footer}>
+              <span className="text-[var(--node-fg)]">{count(rowsShown, 'row')}</span>
               <span>{ms(page.ms)}</span>
               {readOnly ? (
-                <span>read only</span>
+                <span>Read only</span>
               ) : (
                 !page.editable && <span>Not editable: {kind.engine === 'clickhouse' ? 'ClickHouse rows aren’t edited one by one' : 'no primary key'}</span>
               )}
-              {hasEdits(edits) && <span className="text-[var(--ansi-3)]">{count(pending.length, 'change')} not saved (⌘S)</span>}
-              <span className="ms-auto truncate font-mono">{page.sql}</span>
-            </StatusBar>
+              {hasEdits(edits) && <span className="font-medium text-[var(--data-warn)]">{count(pending.length, 'change')} not saved (⌘S)</span>}
+              <span className="ms-auto min-w-0 truncate font-mono text-[11px]">{page.sql}</span>
+            </div>
           </>
         ) : (
           !error && (
-            <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--node-muted)]">
-              <Spinner size="xs" />
-              Loading {table.table}
-            </div>
+            <Loading>Loading {table.table}</Loading>
           )
         )
       ) : view === 'structure' ? (
         info ? (
           <Structure info={info} copy={api.copy} />
         ) : (
-          <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--node-muted)]">
-            <Spinner size="xs" />
-            Loading
-          </div>
+          <Loading />
         )
       ) : (
         <CodeEditor value={info?.ddl ?? '-- Loading'} language="sql" dialect={dialect === 'clickhouse' ? 'standard' : dialect} readOnly className="flex-1" />

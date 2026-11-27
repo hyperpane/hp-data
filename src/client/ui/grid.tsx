@@ -11,7 +11,7 @@ import type { Cell, Column } from '../../shared/types.ts';
 import { type CopyFormat, editable as editText, isBytes, parseInput, rowsAs } from './cells.ts';
 import { CellValue } from './grid-cell.tsx';
 import { GridHeader } from './grid-header.tsx';
-import { type GridEdits, NUM_W, ROW, type Sel, initialWidth, noEdits, rangeOf } from './grid-model.ts';
+import { type GridEdits, HEAD, NUM_W, ROW, type Sel, initialWidth, noEdits, rangeOf } from './grid-model.ts';
 
 export { type GridEdits, ROW, hasEdits, noEdits } from './grid-model.ts';
 
@@ -67,8 +67,8 @@ export function Grid(p: GridProps) {
 
   const w = (i: number) => widths[i] ?? 120;
   const total = NUM_W + columns.reduce((s, _, i) => s + w(i), 0);
-  const first = Math.max(0, Math.floor(scroll.top / ROW) - 8);
-  const last = Math.min(all.length, Math.ceil((scroll.top + scroll.height) / ROW) + 8);
+  const first = Math.max(0, Math.floor((scroll.top - HEAD) / ROW) - 8);
+  const last = Math.min(all.length, Math.ceil((scroll.top + scroll.height - HEAD) / ROW) + 8);
 
   const valueAt = (r: number, c: number): Cell => {
     const k = `${r}:${c}`;
@@ -147,7 +147,7 @@ export function Grid(p: GridProps) {
     const r = rows.length + added.length - 1;
     setSel({ a: [r, 0], b: [r, 0] });
     requestAnimationFrame(() => {
-      if (box.current) box.current.scrollTop = r * ROW;
+      if (box.current) box.current.scrollTop = HEAD + r * ROW;
     });
   };
 
@@ -156,7 +156,7 @@ export function Grid(p: GridProps) {
     if (!el) return;
     const top = r * ROW;
     if (top < el.scrollTop) el.scrollTop = top;
-    else if (top + ROW * 2 > el.scrollTop + el.clientHeight) el.scrollTop = top + ROW * 2 - el.clientHeight;
+    else if (HEAD + top + ROW > el.scrollTop + el.clientHeight) el.scrollTop = HEAD + top + ROW - el.clientHeight;
     let x = NUM_W;
     for (let i = 0; i < c; i++) x += w(i);
     if (x < el.scrollLeft + NUM_W) el.scrollLeft = x - NUM_W;
@@ -239,7 +239,7 @@ export function Grid(p: GridProps) {
   const down = useRef<[number, number] | null>(null);
 
   if (!columns.length)
-    return <div className={cn('flex items-center justify-center p-6 text-xs text-[var(--node-muted)]', p.className)}>{p.empty ?? 'Nothing to show'}</div>;
+    return <div className={cn('flex items-center justify-center p-6 text-[13px] text-[var(--node-muted)]', p.className)}>{p.empty ?? 'Nothing to show'}</div>;
 
   return (
     <div
@@ -247,9 +247,9 @@ export function Grid(p: GridProps) {
       tabIndex={0}
       onKeyDown={onKey}
       onScroll={(e) => setScroll({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight })}
-      className={cn('relative min-h-0 overflow-auto font-mono text-xs outline-none select-none', p.className)}
+      className={cn('group/grid relative min-h-0 overflow-auto text-[13px] outline-none select-none', p.className)}
     >
-      <div style={{ width: total, height: (all.length + 1) * ROW }} className="relative">
+      <div style={{ width: Math.max(total, 0), minWidth: '100%', height: HEAD + all.length * ROW }} className="relative">
         <GridHeader columns={columns} all={all} total={total} w={w} setWidths={setWidths} order={p.order} onSort={p.onSort} />
         {/* The rows in view. */}
         {all.slice(first, last).map((_row, k) => {
@@ -257,13 +257,17 @@ export function Grid(p: GridProps) {
           const isNew = r >= rows.length;
           const gone = edits.deleted.has(r);
           return (
-            <div key={r} className="absolute left-0 flex" style={{ top: (r + 1) * ROW, height: ROW, width: total }}>
+            <div
+              key={r}
+              className={cn('group/gridrow absolute left-0 flex min-w-full border-b border-[var(--data-line)] hover:bg-[var(--data-row-hover)]', gone && 'opacity-60')}
+              style={{ top: HEAD + r * ROW, height: ROW, width: total }}
+            >
               <div
                 className={cn(
-                  'sticky left-0 z-10 flex flex-none items-center justify-end border-r border-b border-[var(--node-border)] bg-[var(--node-bg)] pe-2 text-2xs text-[var(--node-muted)] tabular-nums',
-                  sel && range(sel).whole && r >= range(sel).r0 && r <= range(sel).r1 && 'text-[var(--node-accent)]',
-                  isNew && 'text-[var(--ansi-2)]',
-                  gone && 'text-[var(--ansi-1)] line-through',
+                  'sticky left-0 z-10 flex flex-none items-center justify-end bg-[var(--node-bg)] pe-3 text-[11px] text-[color-mix(in_srgb,var(--node-muted)_80%,transparent)] tabular-nums shadow-[inset_-1px_0_0_var(--data-line)]',
+                  sel && range(sel).whole && r >= range(sel).r0 && r <= range(sel).r1 && 'bg-[color-mix(in_srgb,var(--node-accent)_12%,var(--node-bg))] font-medium text-[var(--node-accent)]',
+                  isNew && 'text-[var(--data-ok)]',
+                  gone && 'text-[var(--data-error)] line-through',
                 )}
                 style={{ width: NUM_W }}
                 onPointerDown={(e) => {
@@ -283,13 +287,14 @@ export function Grid(p: GridProps) {
                   <div
                     key={c}
                     className={cn(
-                      'flex flex-none items-center overflow-hidden border-r border-b border-r-[color-mix(in_srgb,var(--node-border)_50%,transparent)] border-b-[var(--node-border)] px-2 whitespace-pre',
+                      'relative flex flex-none items-center overflow-hidden px-3 whitespace-pre',
                       (typeof v === 'number' ||
                         (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v) && /int|num|dec|float|double|real/i.test(col.type ?? ''))) &&
-                        'justify-end',
-                      on && 'bg-[color-mix(in_srgb,var(--node-accent)_18%,transparent)]',
-                      changed && 'bg-[color-mix(in_srgb,var(--ansi-3)_18%,transparent)]',
-                      isNew && 'bg-[color-mix(in_srgb,var(--ansi-2)_10%,transparent)]',
+                        'justify-end tabular-nums',
+                      on && 'bg-[var(--data-cell-picked)]',
+                      on && sel && !range(sel).whole && sel.b[0] === r && sel.b[1] === c && 'shadow-[inset_0_0_0_1.5px_var(--data-cell-edge)]',
+                      changed && 'bg-[color-mix(in_srgb,var(--data-warn)_16%,transparent)]',
+                      isNew && 'bg-[color-mix(in_srgb,var(--data-ok)_9%,transparent)]',
                       gone && 'text-[var(--node-muted)] line-through',
                     )}
                     style={{ width: w(c) }}
@@ -321,7 +326,7 @@ export function Grid(p: GridProps) {
                             box.current?.focus();
                           }
                         }}
-                        className="h-full w-full bg-[var(--node-bg)] font-mono text-xs text-[var(--node-fg)] outline outline-1 outline-[var(--node-accent)]"
+                        className="rounded-chip -mx-2 h-[calc(100%-4px)] w-[calc(100%+16px)] bg-[var(--node-bg)] px-2 text-[13px] text-[var(--node-fg)] shadow-[0_0_0_1.5px_var(--node-accent),0_4px_12px_-4px_rgb(0_0_0/0.35)] outline-none"
                       />
                     ) : (
                       <CellValue v={v} />
@@ -333,7 +338,7 @@ export function Grid(p: GridProps) {
           );
         })}
       </div>
-      {!all.length && <div className="absolute inset-x-0 top-12 text-center font-sans text-xs text-[var(--node-muted)]">{p.empty ?? 'No rows'}</div>}
+      {!all.length && <div className="absolute inset-x-0 top-16 text-center text-[13px] text-[var(--node-muted)]">{p.empty ?? 'No rows'}</div>}
       {menu.element}
     </div>
   );

@@ -5,7 +5,7 @@
 // show as saved; typing one replaces it.
 
 import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, X, XCircle } from 'lucide-react';
+import { CheckCircle2, X, XCircle } from '@hyperpane/icons';
 import { Checkbox, NodeButton, NodeInput, Spinner, Tabs, ToolButton, cn } from '@hyperpane/ui';
 import { type Field, type Kind, type Values, kindOf, parseUrl, shown } from '../../shared/kinds.ts';
 import type { Connection, ConnectionInput, SessionInfo } from '../../shared/types.ts';
@@ -130,15 +130,19 @@ export function ConnectionDialog({
 
   return (
     <div
-      className="absolute inset-0 z-50 flex items-start justify-center overflow-auto bg-black/45 p-4 pt-[6vh] max-sm:items-end max-sm:p-0"
+      className="absolute inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-4 pt-[6vh] backdrop-blur-[2px] max-sm:items-end max-sm:p-0"
       onPointerDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="rounded-surface flex w-[min(560px,100%)] flex-col overflow-hidden border border-[var(--node-border)] bg-[var(--node-bg)] max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0">
-        <div className="flex items-center gap-3 border-b border-[var(--node-border)] ps-4 pe-3 py-3">
-          {kind ? <KindTile kind={kind} size={32} /> : null}
+      <div
+        role="dialog"
+        aria-label={c ? `Edit ${c.name}` : 'New connection'}
+        className="rounded-panel flex w-[min(580px,100%)] flex-col overflow-hidden bg-[var(--node-bg)] shadow-dialog ring-1 ring-[var(--data-line-strong)] max-sm:rounded-b-none"
+      >
+        <div className="flex items-center gap-3 ps-5 pe-3 pt-4 pb-3">
+          {kind ? <KindTile kind={kind} size={36} /> : null}
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-semibold">{c ? `Edit ${c.name}` : kind ? `New ${kind.name} connection` : 'New connection'}</span>
-            <span className="truncate text-2xs text-[var(--node-muted)]">{kind ? kind.tagline : 'Pick what you want to connect to'}</span>
+            <span className="text-[15px] leading-5 font-semibold tracking-title">{c ? `Edit ${c.name}` : kind ? `New ${kind.name} connection` : 'New connection'}</span>
+            <span className="truncate text-xs text-[var(--node-muted)]">{kind ? kind.tagline : 'Pick what you want to connect to'}</span>
           </div>
           <div className="ms-auto flex flex-none items-center gap-1">
             {kind && !c && (
@@ -163,7 +167,8 @@ export function ConnectionDialog({
             {sections.length > 1 && (
               <Tabs
                 label="Settings"
-                className="px-2.5"
+                variant="pills"
+                className="mx-5 mb-1 self-start"
                 value={section}
                 onValueChange={setSection}
                 items={sections.map((x) => {
@@ -188,16 +193,16 @@ export function ConnectionDialog({
                 })}
               />
             )}
-            <div className="flex max-h-[62vh] flex-col gap-3 overflow-auto p-4 max-sm:max-h-none">
+            <div className="flex max-h-[62vh] flex-col gap-4 overflow-auto px-5 pt-3 pb-5 max-sm:max-h-none">
               {section === 'general' && (
-                <div className="grid grid-cols-[1fr_150px] gap-3 max-sm:grid-cols-1">
+                <div className="grid grid-cols-[1fr_160px] gap-3 max-sm:grid-cols-1">
                   <label className="flex flex-col gap-1.5">
                     <span className="text-xs font-medium text-[var(--node-muted)]">Name</span>
-                    <NodeInput autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={kind.name} />
+                    <NodeInput autoFocus className="text-[13px]" value={name} onChange={(e) => setName(e.target.value)} placeholder={kind.name} />
                   </label>
                   <label className="flex flex-col gap-1.5">
                     <span className="text-xs font-medium text-[var(--node-muted)]">Group</span>
-                    <NodeInput value={group} onChange={(e) => setGroup(e.target.value)} placeholder="Local, Production" />
+                    <NodeInput className="text-[13px]" value={group} onChange={(e) => setGroup(e.target.value)} placeholder="Local, Production" />
                   </label>
                 </div>
               )}
@@ -208,7 +213,7 @@ export function ConnectionDialog({
                     value={url}
                     onChange={(e) => fromUrl(e.target.value)}
                     placeholder={`${kind.schemes[0]}://user:password@host:port/name  (paste one to fill the fields)`}
-                    className="font-mono"
+                    className="font-mono text-xs"
                     spellCheck={false}
                   />
                 </label>
@@ -232,7 +237,7 @@ export function ConnectionDialog({
                           </span>
                         )}
                         <FieldInput f={f} value={f.secret ? secrets[f.key] : values[f.key]} saved={!!c?.saved.includes(f.key)} onChange={(v) => set(f, v)} />
-                        {f.help && <span className="text-2xs text-[var(--node-muted)]">{f.help}</span>}
+                        {f.help && <span className="text-xs leading-4 text-[var(--node-muted)]">{f.help}</span>}
                       </Wrap>
                     );
                   })}
@@ -241,7 +246,7 @@ export function ConnectionDialog({
               {section === 'ssh' && values.sshEnabled === true && values.sshHost && (
                 <button
                   type="button"
-                  className="self-start text-2xs text-[var(--node-muted)] underline underline-offset-2 hover:text-[var(--node-fg)]"
+                  className="self-start text-xs text-[var(--node-muted)] underline underline-offset-2 hover:text-[var(--node-fg)]"
                   onClick={() =>
                     void api
                       .call<{ forgotten: boolean }>('forgetSshHost', { host: values.sshHost, port: values.sshPort ?? 22 })
@@ -260,23 +265,23 @@ export function ConnectionDialog({
                 </button>
               )}
               {section === 'general' && (
-                <div className="flex flex-wrap items-center gap-4 pt-1">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
                   <Checkbox
-                    className="text-xs"
+                    className="text-[13px]"
                     title="No edits from tables, no writes from consoles (as far as can be told)"
                     checked={readOnly}
                     onCheckedChange={setReadOnly}
                     label="Read only"
                   />
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[var(--node-muted)]">Color</span>
+                    <span className="text-xs font-medium text-[var(--node-muted)]">Color</span>
                     <button
                       type="button"
                       aria-label="No color"
                       onClick={() => setColor(null)}
                       className={cn(
-                        'size-4 rounded-full border border-[var(--node-border)]',
-                        color === null && 'ring-2 ring-[var(--node-accent)] ring-offset-1 ring-offset-[var(--node-bg)]',
+                        'relative size-5 rounded-full ring-1 ring-[var(--data-line-strong)] ring-inset after:absolute after:inset-1 after:rotate-45 after:border-t after:border-[var(--node-muted)] after:content-[""]',
+                        color === null && 'ring-2 ring-[var(--node-fg)] ring-offset-2 ring-offset-[var(--node-bg)]',
                       )}
                     />
                     {COLORS.map((x) => (
@@ -285,41 +290,41 @@ export function ConnectionDialog({
                         type="button"
                         aria-label={x}
                         onClick={() => setColor(x)}
-                        className={cn('size-4 rounded-full', color === x && 'ring-2 ring-[var(--node-fg)] ring-offset-1 ring-offset-[var(--node-bg)]')}
+                        className={cn('size-5 rounded-full transition-transform duration-100 hover:scale-110', color === x && 'ring-2 ring-[var(--node-fg)] ring-offset-2 ring-offset-[var(--node-bg)]')}
                         style={{ background: x }}
                       />
                     ))}
                   </div>
                 </div>
               )}
-              {section === 'general' && kind.note && <p className="text-2xs text-[var(--node-muted)]">{kind.note}</p>}
+              {section === 'general' && kind.note && <p className="text-xs leading-relaxed text-[var(--node-muted)]">{kind.note}</p>}
             </div>
           </>
         )}
 
         {kind && (
-          <div className="flex flex-col gap-2.5 border-t border-[var(--node-border)] px-4 py-3">
+          <div className="flex flex-col gap-3 border-t border-[var(--data-line)] bg-[var(--data-rail)] px-5 py-3.5">
             {test.state === 'ok' && (
-              <div className="flex items-center gap-2 text-xs text-[var(--ansi-2)]">
-                <CheckCircle2 className="size-3.5 flex-none" />
-                <span>
+              <div className="rounded-control flex items-center gap-2 bg-[color-mix(in_srgb,var(--data-ok)_10%,transparent)] px-2.5 py-2 text-[13px] ring-1 ring-[color-mix(in_srgb,var(--data-ok)_20%,transparent)] ring-inset">
+                <CheckCircle2 className="size-4 flex-none text-[var(--data-ok)]" />
+                <span className="min-w-0 truncate">
                   Connected: {test.info?.version}
                   {test.info?.detail ? <span className="text-[var(--node-muted)]"> · {test.info.detail}</span> : null}
                 </span>
               </div>
             )}
             {test.state === 'failed' && (
-              <div className="flex items-start gap-2 text-xs text-[var(--ansi-1)]">
-                <XCircle className="mt-0.5 size-3.5 flex-none" />
-                <span className="break-words whitespace-pre-wrap select-text">{test.error}</span>
+              <div className="rounded-control flex items-start gap-2 bg-[color-mix(in_srgb,var(--data-error)_9%,transparent)] px-2.5 py-2 text-[13px] ring-1 ring-[color-mix(in_srgb,var(--data-error)_20%,transparent)] ring-inset">
+                <XCircle className="mt-0.5 size-4 flex-none text-[var(--data-error)]" />
+                <span className="min-w-0 break-words whitespace-pre-wrap select-text">{test.error}</span>
               </div>
             )}
-            <div className="flex items-center gap-2 max-sm:flex-wrap">
+            <div data-measure="dialog-foot" className="flex items-center gap-2 max-sm:flex-wrap">
               <NodeButton disabled={test.state === 'testing' || missing.length > 0} onClick={doTest}>
                 {test.state === 'testing' && <Spinner size="xs" />}
                 Test Connection
               </NodeButton>
-              {missing.length > 0 && <span className="text-2xs text-[var(--node-muted)]">Fill in {missing.map((f) => f.label).join(', ')}.</span>}
+              {missing.length > 0 && <span className="min-w-0 truncate text-xs text-[var(--node-muted)]">Fill in {missing.map((f) => f.label).join(', ')}.</span>}
               <div className="ms-auto flex gap-1.5 max-sm:w-full max-sm:justify-end">
                 <NodeButton variant="ghost" onClick={onClose}>
                   Cancel

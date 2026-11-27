@@ -5,7 +5,7 @@
 // the folder shown. Narrow, it's names and sizes only.
 
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ChevronUp, Folder } from 'lucide-react';
+import { ChevronDown, ChevronUp, Folder } from '@hyperpane/icons';
 import { formatTime } from '@hyperpane/sdk/client';
 import { cn, fileIcon, useTouch } from '@hyperpane/ui';
 import { formatSize } from '../../ui/cells.ts';
@@ -94,7 +94,7 @@ export function List(p: ListProps) {
 
   return (
     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col" {...drops}>
-      <div className="flex h-7 flex-none items-center gap-2 border-b border-[var(--node-border)] bg-[var(--node-header)] px-3.5 text-2xs font-medium text-[var(--node-muted)] select-none">
+      <div className="flex h-7 flex-none items-center gap-2 border-b border-[var(--data-line)] bg-[var(--node-header)] px-3.5 text-2xs font-medium text-[var(--node-muted)] select-none">
         <span className="w-4 flex-none" />
         {COLUMNS.map((c) => (
           <button

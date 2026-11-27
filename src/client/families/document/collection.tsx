@@ -5,7 +5,7 @@
 // only.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus, RefreshCw, SquareTerminal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus, RefreshCw, SquareTerminal } from '@hyperpane/icons';
 import { NodeButton, NodeInput, Picker, Spinner, StatusBar, Tabs, ToolButton, Toolbar, cn } from '@hyperpane/ui';
 import type { DocFindResult } from '../../../shared/document.ts';
 import type { TabProps } from '../../app/tabs.ts';

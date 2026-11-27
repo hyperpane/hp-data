@@ -3,8 +3,8 @@
 // bars, splits, tabs and pickers are the kit’s.)
 
 import { useEffect, useState } from 'react';
-import { TriangleAlert, X } from 'lucide-react';
-import { NodeButton, ToolButton, cn } from '@hyperpane/ui';
+import { TriangleAlert, X } from '@hyperpane/icons';
+import { IconTile, NodeButton, Spinner, ToolButton, cn } from '@hyperpane/ui';
 import type { Kind } from '../../shared/kinds.ts';
 import type { Cell } from '../../shared/types.ts';
 import { editable, formatSize, isBytes } from './cells.ts';
@@ -40,25 +40,69 @@ function isLight(hex: string): boolean {
 /** A field's soft fill, as the kit's NodeInput has it: for a Picker or a
  * text area beside the kit's fields. */
 export const softField =
-  'border-transparent bg-[color-mix(in_srgb,var(--node-fg)_6%,transparent)] hover:border-transparent hover:bg-[color-mix(in_srgb,var(--node-fg)_9%,transparent)]';
+  'border-transparent bg-[var(--data-fill)] hover:border-transparent hover:bg-[var(--data-fill-hover)]';
 
 /** A text area for code (statements, a key, JSON) with the field's look. */
 export const codeArea =
-  'rounded-control border border-transparent bg-[color-mix(in_srgb,var(--node-fg)_6%,transparent)] px-2 py-1.5 font-mono text-xs text-[var(--node-fg)] outline-none transition-[border-color,box-shadow] duration-100 placeholder:text-[var(--node-muted)] hover:bg-[color-mix(in_srgb,var(--node-fg)_9%,transparent)] focus:border-[var(--node-accent)] focus:bg-transparent focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--node-accent)_22%,transparent)]';
+  'rounded-control border border-transparent bg-[var(--data-fill)] px-2.5 py-2 font-mono text-xs leading-5 text-[var(--node-fg)] outline-none transition-[border-color,box-shadow,background-color] duration-100 placeholder:text-[var(--node-muted)] hover:bg-[var(--data-fill-hover)] focus:border-[color-mix(in_srgb,var(--node-accent)_75%,transparent)] focus:bg-transparent focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--node-accent)_16%,transparent)]';
 
-/** What failed, along the top of a view: a quiet red band, one line under it. */
+/** What failed, along the top of a view: a card tinted red, its icon on a
+ * round tile, the message (selectable), and a way to put it away. */
 export function ErrorBox({ error, onClose, className }: { error: string; onClose?(): void; className?: string }) {
   return (
     <div
       role="alert"
       className={cn(
-        'flex flex-none items-start gap-2 border-b border-[var(--node-border)] bg-[color-mix(in_srgb,var(--ansi-1)_8%,transparent)] px-2.5 py-1.5 text-xs whitespace-pre-wrap text-[var(--node-fg)] select-text',
+        'rounded-card mx-2 mt-2 flex flex-none items-start gap-2.5 bg-[color-mix(in_srgb,var(--data-error)_9%,transparent)] py-2 ps-2.5 pe-1.5 text-[13px] text-[var(--node-fg)] ring-1 ring-[color-mix(in_srgb,var(--data-error)_20%,transparent)] ring-inset select-text',
         className,
       )}
     >
-      <TriangleAlert className="mt-[7px] size-3.5 flex-none text-[var(--ansi-1)]" />
-      <span className="min-w-0 flex-1 py-1.5 leading-4">{error}</span>
-      {onClose && <ToolButton label="Dismiss" icon={X} onClick={onClose} />}
+      <span className="mt-0.5 grid size-5 flex-none place-items-center rounded-full bg-[color-mix(in_srgb,var(--data-error)_16%,transparent)] text-[var(--data-error)]">
+        <TriangleAlert className="size-3" />
+      </span>
+      <span className="min-w-0 flex-1 py-px leading-5 break-words whitespace-pre-wrap">{error}</span>
+      {onClose && <ToolButton label="Dismiss" icon={X} className="-my-0.5" onClick={onClose} />}
+    </div>
+  );
+}
+
+/** A message in the middle of a pane: an icon on a soft tile, a short
+ * title, a muted line, and what can be done (one primary at most). */
+export function Blank({
+  icon,
+  title,
+  children,
+  actions,
+  error,
+  className,
+}: {
+  icon?: React.ReactNode;
+  title?: React.ReactNode;
+  children?: React.ReactNode;
+  actions?: React.ReactNode;
+  error?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn('flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-auto p-6 text-center', className)}>
+      {icon && <IconTile icon={icon} size="lg" tint={error ? 'var(--data-error)' : undefined} />}
+      {(title || children) && (
+        <div className="flex max-w-80 flex-col gap-1">
+          {title && <div className="text-[13px] font-medium text-[var(--node-fg)]">{title}</div>}
+          {children && <div className="text-xs leading-relaxed text-[var(--node-muted)] [overflow-wrap:anywhere]">{children}</div>}
+        </div>
+      )}
+      {actions && <div className="flex flex-wrap justify-center gap-2">{actions}</div>}
+    </div>
+  );
+}
+
+/** Loading, in the middle of a pane: a spinner and a word. */
+export function Loading({ children = 'Loading' }: { children?: React.ReactNode }) {
+  return (
+    <div className="flex min-h-0 flex-1 items-center justify-center gap-2 text-[13px] text-[var(--node-muted)]">
+      <Spinner size="xs" />
+      {children}
     </div>
   );
 }
@@ -82,13 +126,13 @@ export function ValueViewer({
   useEffect(() => setDraft(text), [text]);
   return (
     <div
-      className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 p-6 max-sm:p-3"
+      className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 p-6 backdrop-blur-[2px] max-sm:p-3"
       onPointerDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="rounded-surface flex max-h-full w-[min(720px,100%)] flex-col overflow-hidden border border-[var(--node-border)] bg-[var(--node-bg)]">
-        <div className="flex h-10 flex-none items-center gap-2 border-b border-[var(--node-border)] ps-3 pe-2.5">
-          <span className="truncate font-medium">{title}</span>
-          <span className="flex-none text-2xs text-[var(--node-muted)]">
+      <div className="rounded-panel flex max-h-full w-[min(720px,100%)] flex-col overflow-hidden bg-[var(--node-bg)] shadow-dialog ring-1 ring-[var(--data-line-strong)]">
+        <div className="flex h-11 flex-none items-center gap-2 border-b border-[var(--data-line)] ps-4 pe-2">
+          <span className="truncate text-[13px] font-medium">{title}</span>
+          <span className="flex-none text-xs text-[var(--node-muted)] tabular-nums">
             {value === null ? 'NULL' : isBytes(value) ? formatSize(value.size) : `${text.length.toLocaleString()} characters`}
           </span>
           <div className="ms-auto flex flex-none gap-1">
@@ -118,7 +162,7 @@ export function ValueViewer({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === 'Escape' && onClose()}
-          className="min-h-[240px] flex-1 resize-none bg-transparent p-3 font-mono text-xs leading-5 text-[var(--node-fg)] outline-none"
+          className="min-h-[240px] flex-1 resize-none bg-transparent px-4 py-3 font-mono text-xs leading-5 text-[var(--node-fg)] outline-none"
         />
       </div>
     </div>
@@ -131,7 +175,9 @@ export const count = (n: number, one: string, many = `${one}s`) => `${n.toLocale
 /** ms in a few characters: "84 ms", "1.2 s". */
 export const ms = (n: number) => (n < 1000 ? `${Math.round(n)} ms` : `${(n / 1000).toFixed(n < 10000 ? 2 : 1)} s`);
 
-/** A row's look in a list or a tree: hovered, or selected (the accent's
- * selection while its list, a `group/list`, has the keys; quieter when not). */
+/** A row's look in a list or a tree: hovered, or picked (a soft accent
+ * pill while its list, a `group/list`, has the keys; quieter when not). */
 export const rowState = (selected: boolean) =>
-  selected ? 'bg-[var(--node-selection-inactive)] group-focus-within/list:bg-[var(--node-selection)]' : 'hover:bg-[var(--node-hover)]';
+  selected
+    ? 'bg-[var(--data-selected-quiet)] group-focus-within/list:bg-[var(--data-selected)]'
+    : 'hover:bg-[var(--node-hover)]';

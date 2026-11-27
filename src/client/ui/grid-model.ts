@@ -5,7 +5,9 @@
 import type { Cell, Column } from '../../shared/types.ts';
 import { display } from './cells.ts';
 
-export const ROW = 24;
+/** A row's height, and the header's (taller: a name and its type). */
+export const ROW = 28;
+export const HEAD = 32;
 
 export interface GridEdits {
   /** Changed cells: `${row}:${col}` → the new value. */
@@ -26,11 +28,12 @@ export interface Sel {
 }
 
 export const MIN_W = 60;
-export const NUM_W = 48;
+export const NUM_W = 52;
 
 export function initialWidth(c: Column, rows: Cell[][], i: number): number {
-  let w = Math.max(c.name.length * 7.5 + 34, 70);
-  for (let r = 0; r < Math.min(rows.length, 50); r++) w = Math.max(w, Math.min(display(rows[r][i]).length * 7 + 18, 320));
+  // The header: the name (13px), its type (11px), the key's icon, padding.
+  let w = Math.max(c.name.length * 7.4 + (c.type ? Math.min(c.type.length, 14) * 6 + 8 : 0) + (c.key ? 18 : 0) + 28, 72);
+  for (let r = 0; r < Math.min(rows.length, 50); r++) w = Math.max(w, Math.min(display(rows[r][i]).length * 7.2 + 28, 340));
   return Math.round(w);
 }
 

@@ -5,7 +5,7 @@
 // with the tab, the last few hundred of each.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Eraser } from 'lucide-react';
+import { Eraser } from '@hyperpane/icons';
 import { ToolButton, cn } from '@hyperpane/ui';
 import { address } from '../../../shared/kinds.ts';
 import type { KvReply } from '../../../shared/kv.ts';
@@ -131,7 +131,7 @@ export function ConsoleView(p: TabProps) {
         ))}
       </div>
       <form
-        className="flex h-10 flex-none items-center gap-2 border-t border-[var(--node-border)] px-3 touch:h-12"
+        className="flex h-10 flex-none items-center gap-2 border-t border-[var(--data-line)] px-3 touch:h-12"
         onSubmit={(e) => {
           e.preventDefault();
           void run();

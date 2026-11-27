@@ -3,7 +3,7 @@
 // Delete) on a right-click or its ⋯ button.
 
 import { useEffect, useState } from 'react';
-import { ChevronRight, FileSearch, MoreHorizontal } from 'lucide-react';
+import { ChevronRight, FileSearch, MoreHorizontal } from '@hyperpane/icons';
 import { Empty, JsonTree, type MenuEntry, cn, useMenu } from '@hyperpane/ui';
 import { oneLine, pretty } from './format.ts';
 
@@ -51,7 +51,7 @@ export function DocList({
       {docs.map((d, i) => {
         const isOpen = open.has(i);
         return (
-          <div key={i} className="border-b border-[var(--node-border)]" onContextMenu={(e) => menu.open(e, items(i))}>
+          <div key={i} className="border-b border-[var(--data-line)]" onContextMenu={(e) => menu.open(e, items(i))}>
             <div
               className={cn(
                 'group flex h-7 cursor-default items-center gap-1.5 ps-2 pe-1 font-mono text-xs hover:bg-[var(--node-hover)] touch:h-10',

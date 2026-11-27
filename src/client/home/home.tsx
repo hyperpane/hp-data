@@ -3,12 +3,14 @@
 // connections yet, it's a welcome and the kinds to pick from.
 
 import { useMemo, useState } from 'react';
-import { Database, Plus, Search, SearchX } from 'lucide-react';
-import { Empty, NodeButton, NodeInput, useMenu } from '@hyperpane/ui';
+import { Database, Plus, Search, SearchX } from '@hyperpane/icons';
+import { IconTile, NodeButton, NodeInput, cn, useMenu } from '@hyperpane/ui';
 import { CATEGORIES, KINDS, type Kind, address, kindOf } from '../../shared/kinds.ts';
 import type { Connection, State } from '../../shared/types.ts';
 import { ConnectionCard, KindCard } from './cards.tsx';
 import { connectionMenu, type ConnectionOps } from './menu.ts';
+import { section as sectionLook } from '../ui/look.ts';
+import { Blank } from '../ui/parts.tsx';
 
 const RECENT = 6;
 
@@ -16,8 +18,8 @@ function Section({ title, detail, children, action }: { title: string; detail?: 
   return (
     <section className="flex flex-col gap-3">
       <div className="flex min-h-7 items-center gap-2">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        {detail && <span className="text-2xs text-[var(--node-muted)]">{detail}</span>}
+        <h2 className="text-[13px] font-semibold">{title}</h2>
+        {detail && <span className="text-xs text-[var(--node-muted)] tabular-nums">{detail}</span>}
         <span className="ms-auto">{action}</span>
       </div>
       {children}
@@ -25,7 +27,18 @@ function Section({ title, detail, children, action }: { title: string; detail?: 
   );
 }
 
-const grid = (min: number) => ({ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap: 8 }) as const;
+/** A group's label in a section: 11px, uppercase, its count after it. */
+function Group({ label, n, note }: { label: string; n?: number; note?: string }) {
+  return (
+    <div className={cn(sectionLook.header, 'h-6 px-0')}>
+      <span className="truncate">{label}</span>
+      {n !== undefined && <span className={sectionLook.count}>{n}</span>}
+      {note && <span className="truncate font-normal tracking-normal normal-case">{note}</span>}
+    </div>
+  );
+}
+
+const grid = (min: number) => ({ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap: 10 }) as const;
 
 export function Home({ state, ops, onAdd }: { state: State | null; ops: ConnectionOps; onAdd(kind: Kind): void }) {
   const [query, setQuery] = useState('');
@@ -71,14 +84,12 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
 
   return (
     <div className="h-full overflow-auto">
-      <div className="mx-auto flex max-w-[1100px] flex-col gap-8 px-6 py-6 max-sm:gap-6 max-sm:px-4 max-sm:py-4">
+      <div className="mx-auto flex max-w-[1100px] flex-col gap-10 px-8 pt-7 pb-10 max-sm:gap-7 max-sm:px-4 max-sm:py-4">
         <header className="flex flex-wrap items-center gap-3">
-          <span className="rounded-surface flex size-10 flex-none items-center justify-center bg-[#6aa51f] text-white">
-            <Database className="size-5" />
-          </span>
-          <div className="flex min-w-0 flex-col">
-            <h1 className="text-base leading-tight font-semibold">{empty ? 'Welcome to Data' : 'Data'}</h1>
-            <span className="text-xs text-[var(--node-muted)]">
+          <IconTile icon={<Database />} size="lg" tint="#6aa51f" />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <h1 className="text-[15px] leading-5 font-semibold tracking-title">{empty ? 'Welcome to Data' : 'Data'}</h1>
+            <span className="text-xs text-[var(--node-muted)] tabular-nums">
               {empty
                 ? 'Connect a database, a key-value store, a queue or a bucket to start'
                 : `${connections.length} ${connections.length === 1 ? 'connection' : 'connections'}${Object.keys(state?.open ?? {}).length ? ` · ${Object.keys(state!.open).length} connected` : ''}`}
@@ -86,21 +97,21 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
           </div>
           <div className="ml-auto flex items-center gap-2 max-sm:ml-0 max-sm:w-full">
             <label className="relative max-sm:flex-1">
-              <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-[var(--node-muted)]" />
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-[var(--node-muted)]" />
               <NodeInput
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={empty ? 'Find a database' : 'Search connections and databases'}
                 aria-label="Search"
-                className="w-[260px] pl-7 max-sm:w-full"
+                className="w-[280px] ps-8 text-[13px] max-sm:w-full"
               />
             </label>
           </div>
         </header>
 
-        {!empty && recent.length > 0 && !q && (
+        {!empty && connections.length > RECENT && recent.length > 0 && !q && (
           <Section title="Recent connections">
-            <div style={grid(230)}>{recent.map((c) => card(c, true))}</div>
+            <div style={grid(240)}>{recent.map((c) => card(c, true))}</div>
           </Section>
         )}
 
@@ -116,13 +127,13 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
             }
           >
             {mine.length === 0 ? (
-              <Empty bordered={false} className="py-6" icon={<SearchX />} title="Nothing matches" description={`No connection matches “${query}”`} />
+              <Blank className="py-8" icon={<SearchX />} title="Nothing matches">{`No connection matches “${query}”`}</Blank>
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-5">
                 {groups.map(([group, list]) => (
                   <div key={group} className="flex flex-col gap-2">
-                    {(groups.length > 1 || group) && <div className="text-xs font-medium text-[var(--node-muted)]">{group || 'Other'}</div>}
-                    <div style={grid(250)}>{list.map((c) => card(c))}</div>
+                    {(groups.length > 1 || group) && <Group label={group || 'Other'} n={list.length} />}
+                    <div style={grid(260)}>{list.map((c) => card(c))}</div>
                   </div>
                 ))}
               </div>
@@ -131,17 +142,14 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
         )}
 
         <Section title="Add connection" detail={empty ? 'Pick what you want to connect to' : undefined}>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-7">
             {CATEGORIES.map((cat) => {
               const list = kinds.filter((k) => k.category === cat.id);
               if (!list.length) return null;
               return (
                 <div key={cat.id} className="flex flex-col gap-2">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xs font-medium">{cat.title}</span>
-                    <span className="truncate text-2xs text-[var(--node-muted)]">{cat.description}</span>
-                  </div>
-                  <div style={grid(190)}>
+                  <Group label={cat.title} note={cat.description} />
+                  <div style={grid(200)}>
                     {list.map((k) => (
                       <KindCard key={k.id} kind={k} onClick={() => onAdd(k)} />
                     ))}
@@ -150,7 +158,7 @@ export function Home({ state, ops, onAdd }: { state: State | null; ops: Connecti
               );
             })}
             {!kinds.length && (
-              <Empty bordered={false} className="py-6" icon={<SearchX />} title="Nothing to add" description={`Data doesn’t connect to “${query}” yet`} />
+              <Blank className="py-8" icon={<SearchX />} title="Nothing to add">{`Data doesn’t connect to “${query}” yet`}</Blank>
             )}
           </div>
         </Section>

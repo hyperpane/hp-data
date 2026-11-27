@@ -2,7 +2,7 @@
   "manifest": 1,
   "id": "data",
   "name": "Data",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "publisher": "hyperpane",
   "description": "Every database on your canvas: PostgreSQL, MySQL, SQLite, ClickHouse, Redis, MongoDB, Elasticsearch, DynamoDB, Kafka, RabbitMQ, SQS and S3, with saved connections, consoles and editable tables.",
   "icon": "icon.svg",

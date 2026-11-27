@@ -115,7 +115,7 @@ function Table({
               <th
                 key={i}
                 className={cn(
-                  'relative h-7 border-b border-[var(--node-border)] bg-[var(--node-header)] px-2 font-medium',
+                  'relative h-7 border-b border-[var(--data-line)] bg-[var(--node-header)] px-2 font-medium',
                   right.includes(i) ? 'text-right' : 'text-left',
                 )}
               >
@@ -134,7 +134,7 @@ function Table({
                 key={j}
                 className={cn(
                   widths && 'truncate',
-                  'h-7 border-b border-[var(--node-border)] px-2 font-mono tabular-nums select-text',
+                  'h-7 border-b border-[var(--data-line)] px-2 font-mono tabular-nums select-text',
                   right.includes(j) && 'text-right',
                   j === 0 && !right.includes(0) && 'font-sans',
                 )}

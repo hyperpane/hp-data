@@ -7,7 +7,7 @@
 // connection.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUp, Database, FolderOpen, FolderPlus, ListTree, RefreshCw, SearchX, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, ArrowUp, Database, FolderOpen, FolderPlus, ListTree, RefreshCw, SearchX, Trash2, Upload } from '@hyperpane/icons';
 import {
   Empty,
   NodeButton,

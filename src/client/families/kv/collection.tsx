@@ -4,7 +4,7 @@
 // in the row at the bottom.
 
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2 } from '@hyperpane/icons';
 import { ColumnResizer, NodeButton, ToolButton, cn, styles, useColumnWidths, useTouch } from '@hyperpane/ui';
 import type { KvValue } from '../../../shared/kv.ts';
 import type { KvEdit } from '../../../shared/kv.ts';
@@ -99,12 +99,12 @@ export function Collection(p: CollectionProps) {
           <thead className={cn(styles.stickyTableHead, 'bg-[var(--node-header)]')}>
             <tr className="h-7 text-left text-2xs text-[var(--node-muted)]">
               {head.map((h, i) => (
-                <th key={h} className="relative border-b border-[var(--node-border)] px-2 font-sans font-medium">
+                <th key={h} className="relative border-b border-[var(--data-line)] px-2 font-sans font-medium">
                   {h}
                   {i === 0 && head.length > 1 && <ColumnResizer {...cols.resizer(first)} />}
                 </th>
               ))}
-              {!p.readOnly && <th className="border-b border-[var(--node-border)]" />}
+              {!p.readOnly && <th className="border-b border-[var(--data-line)]" />}
             </tr>
           </thead>
           <tbody>
@@ -114,7 +114,7 @@ export function Collection(p: CollectionProps) {
                   // biome-ignore lint/a11y/useKeyWithClickEvents: a finger's tap opens the cell, as a double-click does.
                   <td
                     key={i}
-                    className={cn('truncate border-b border-[var(--node-border)] px-2', i === 0 && head.length > 1 && 'text-[var(--node-muted)]')}
+                    className={cn('truncate border-b border-[var(--data-line)] px-2', i === 0 && head.length > 1 && 'text-[var(--node-muted)]')}
                     title={c.length > 500 ? c.slice(0, 500) : c}
                     onClick={() => touch && setOpen({ row: r, col: i })}
                     onDoubleClick={() => setOpen({ row: r, col: i })}
@@ -123,7 +123,7 @@ export function Collection(p: CollectionProps) {
                   </td>
                 ))}
                 {!p.readOnly && (
-                  <td className="border-b border-[var(--node-border)] text-center">
+                  <td className="border-b border-[var(--data-line)] text-center">
                     {r.del && (
                       <span className="inline-flex opacity-0 group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
                         <ToolButton label="Remove" icon={Trash2} onClick={() => p.remove(r.del!.what, r.del!.op)} />
@@ -138,7 +138,7 @@ export function Collection(p: CollectionProps) {
         {!p.readOnly && <AddRow value={v} edit={p.edit} fail={p.fail} />}
       </div>
       {v.total > limit && (
-        <div className="flex h-10 flex-none items-center gap-2 border-t border-[var(--node-border)] px-2.5 text-2xs text-[var(--node-muted)] touch:h-12">
+        <div className="flex h-10 flex-none items-center gap-2 border-t border-[var(--data-line)] px-2.5 text-2xs text-[var(--node-muted)] touch:h-12">
           <span className="tabular-nums">
             {(offset + 1).toLocaleString()}–{Math.min(offset + limit, v.total).toLocaleString()} of {v.total.toLocaleString()}
           </span>

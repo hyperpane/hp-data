@@ -4,7 +4,7 @@
 // the selected key are kept with the tab.
 
 import { useMemo, useState } from 'react';
-import { KeyRound, Plus } from 'lucide-react';
+import { KeyRound, Plus } from '@hyperpane/icons';
 import { Empty, NodeButton, PaneBar, SplitPane, useSplitCompact } from '@hyperpane/ui';
 import type { TabProps } from '../../app/tabs.ts';
 import { KeyList } from './key-list.tsx';

@@ -23,6 +23,7 @@ export interface OptionsActions {
   newConnection(): void;
   connectAll(): void;
   disconnectAll(): void;
+  refreshOpen(): void;
   expandOpen(): void;
   collapse(): void;
 }
@@ -44,6 +45,7 @@ export function optionsMenu(p: Prefs, a: OptionsActions): (MenuEntry | null)[] {
     { label: tick(p.details, 'Show Details (counts, types, sizes)'), run: () => p.setDetails(!p.details) },
     { label: tick(p.onlyOpen, 'Only Connected'), run: () => p.setOnlyOpen(!p.onlyOpen) },
     null,
+    { label: 'Refresh Everything Open', run: a.refreshOpen },
     { label: 'Expand Connected', run: a.expandOpen },
     { label: 'Collapse All', run: a.collapse },
   ];

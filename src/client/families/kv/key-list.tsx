@@ -3,7 +3,7 @@
 // SCAN has more. ↑ and ↓ move through them.
 
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Folder, FolderTree, List, Plus, RefreshCw, Search } from 'lucide-react';
+import { ChevronDown, ChevronRight, Folder, FolderTree, List, Plus, RefreshCw, Search } from '@hyperpane/icons';
 import { NodeButton, NodeInput, StatusBar, ToolButton, cn, useMenu } from '@hyperpane/ui';
 import type { KeyEntry } from '../../../shared/kv.ts';
 import { type KeyNode, keyTree, ttlText } from './lib.ts';
@@ -69,7 +69,7 @@ export function KeyList(p: KeyListProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <form
-        className="flex h-10 flex-none items-center gap-1 border-b border-[var(--node-border)] px-2.5 touch:h-12"
+        className="flex h-10 flex-none items-center gap-1 border-b border-[var(--data-line)] px-2.5 touch:h-12"
         onSubmit={(e) => {
           e.preventDefault();
           p.onPattern(typed.trim() || '*');

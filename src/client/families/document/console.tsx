@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EditorView } from '@codemirror/view';
-import { Braces, History, Play, Square } from 'lucide-react';
+import { Braces, History, Play, Square } from '@hyperpane/icons';
 import { Badge, Empty, JsonTree, NodeButton, Spinner, SplitPane, StatusBar, Tabs, ToolButton, Toolbar, useMenu } from '@hyperpane/ui';
 import type { CommandResult } from '../../../shared/document.ts';
 import type { TabProps } from '../../app/tabs.ts';

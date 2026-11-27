@@ -22,11 +22,11 @@ import {
   Table2,
   Users,
   Zap,
-  type LucideIcon,
-} from 'lucide-react';
+  type Icon as IconComponent,
+} from '@hyperpane/icons';
 import type { NodeType, TabType } from '../../shared/types.ts';
 
-export const NODE_ICONS: Record<NodeType, LucideIcon> = {
+export const NODE_ICONS: Record<NodeType, IconComponent> = {
   database: Database,
   schema: Layers,
   folder: Folder,
@@ -64,7 +64,7 @@ export const NODE_COLORS: Partial<Record<NodeType, string>> = {
   bucket: '#e3a33b',
 };
 
-export const TAB_ICONS: Record<TabType, LucideIcon> = {
+export const TAB_ICONS: Record<TabType, IconComponent> = {
   home: House,
   console: SquareTerminal,
   table: Table2,

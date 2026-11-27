@@ -3,7 +3,7 @@
 // ⌘Enter, and confirmed in a toast. A read-only connection can't.
 
 import { useEffect, useRef, useState } from 'react';
-import { Plus, Send, Trash2 } from 'lucide-react';
+import { Plus, Send, Trash2 } from '@hyperpane/icons';
 import { NodeButton, NodeInput, Picker, Tabs, ToolButton } from '@hyperpane/ui';
 import type { TabProps } from '../../app/tabs.ts';
 import { CodeEditor } from '../../ui/code.tsx';
@@ -106,7 +106,7 @@ export function PublishForm({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {readOnly && (
-        <div className="flex-none border-b border-[var(--node-border)] bg-[var(--node-header)] px-3 py-2 text-xs text-[var(--node-muted)]">
+        <div className="flex-none border-b border-[var(--data-line)] bg-[var(--node-header)] px-3 py-2 text-xs text-[var(--node-muted)]">
           This connection is read only: nothing can be published from it
         </div>
       )}
@@ -212,7 +212,7 @@ export function PublishForm({
           );
         })}
       </div>
-      <div className="mt-3 flex h-12 flex-none items-center gap-2 border-t border-[var(--node-border)] px-3">
+      <div className="mt-3 flex h-12 flex-none items-center gap-2 border-t border-[var(--data-line)] px-3">
         <NodeButton variant="primary" disabled={readOnly || busy} onClick={() => void send()}>
           <Send />
           {busy ? 'Sending' : 'Send'}

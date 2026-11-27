@@ -56,8 +56,8 @@ export function DocEditor({
         }
       }}
     >
-      <div className="rounded-surface flex h-[min(620px,100%)] w-[min(760px,100%)] flex-col overflow-hidden border border-[var(--node-border)] bg-[var(--node-bg)]">
-        <div className="flex h-10 flex-none items-center gap-2 border-b border-[var(--node-border)] ps-3 pe-2.5">
+      <div className="rounded-surface flex h-[min(620px,100%)] w-[min(760px,100%)] flex-col overflow-hidden border border-[var(--data-line)] bg-[var(--node-bg)]">
+        <div className="flex h-10 flex-none items-center gap-2 border-b border-[var(--data-line)] ps-3 pe-2.5">
           <span className="truncate font-medium">{editing.title}</span>
           {hint && <span className="truncate text-2xs text-[var(--node-muted)]">{hint}</span>}
           <div className="ms-auto flex flex-none gap-1">

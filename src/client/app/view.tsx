@@ -5,7 +5,7 @@
 // (a phone's) has the tabs alone, and the Explorer slides in over them.
 
 import { useRef, useState } from 'react';
-import { PanelLeft } from 'lucide-react';
+import { PanelLeft } from '@hyperpane/icons';
 import { COMPACT_WIDTH, DialogTitle, NodeMessage, ResizeHandle, Sheet, SheetContent, ToolButton, useResizable, useWidth } from '@hyperpane/ui';
 import { type Kind, kindOf } from '../../shared/kinds.ts';
 import type { Connection } from '../../shared/types.ts';
@@ -15,11 +15,14 @@ import { ConnectionDialog, type DialogTarget } from '../home/dialog.tsx';
 import { Home } from '../home/home.tsx';
 import type { ConnectionOps } from '../home/menu.ts';
 import { useKept } from '../lib/hooks.ts';
+import { useDataStyles } from '../ui/look.ts';
+import { Blank } from '../ui/parts.tsx';
 import { TabStrip } from './tab-strip.tsx';
 import type { NewTab, Tab } from './tabs.ts';
 import { useWorkspace } from './workspace.ts';
 
 export function DataView() {
+  useDataStyles();
   const w = useWorkspace();
   const { api, project, state, error, tabs, active } = w;
   const [sideOpen, setSideOpen] = useKept('data.sideOpen', true);
@@ -115,7 +118,7 @@ export function DataView() {
     if (t.type === 'home') return <Home state={state} ops={ops} onAdd={(k: Kind) => setDialog({ kind: k })} />;
     const c = w.connection(t.conn);
     const kind = w.kindOf(c);
-    if (!c || !kind) return <NodeMessage>{state ? 'This connection was removed' : 'Loading'}</NodeMessage>;
+    if (!c || !kind) return state ? <Blank title="This connection was removed">Close this tab, or add the connection again.</Blank> : <NodeMessage>Loading</NodeMessage>;
     const View = FAMILIES[kind.family].views[t.type];
     if (!View)
       return (
@@ -140,10 +143,10 @@ export function DataView() {
   };
 
   return (
-    <div ref={box} className="relative flex h-full min-w-0 text-xs text-[var(--node-fg)]">
+    <div ref={box} className="relative flex h-full min-w-0 text-[13px] text-[var(--node-fg)]">
       {showSide && (
         <>
-          <aside className="flex min-h-0 flex-none flex-col" style={{ width: side.size }}>
+          <aside className="flex min-h-0 flex-none flex-col bg-[var(--data-rail)]" style={{ width: side.size }}>
             {tree}
           </aside>
           <ResizeHandle axis="x" dragging={side.dragging} {...side.handleProps} />
@@ -159,14 +162,13 @@ export function DataView() {
           onCloseOthers={w.closeOthers}
           onCloseConnection={w.closeConnection}
           left={
-            <div className="flex flex-none items-center ps-1.5">
+            <div className="flex flex-none items-center ps-2">
               {narrow ? (
                 <ToolButton label="Show the Explorer" icon={PanelLeft} active={sheet} onClick={() => setSheet(true)} />
               ) : (
                 <ToolButton
                   label={sideOpen ? 'Hide the Explorer' : 'Show the Explorer'}
                   icon={PanelLeft}
-                  active={sideOpen}
                   onClick={() => setSideOpen(!sideOpen)}
                 />
               )}
@@ -183,7 +185,7 @@ export function DataView() {
       </main>
       {narrow && (
         <Sheet open={sheet} onOpenChange={setSheet}>
-          <SheetContent side="start" className="overflow-hidden text-xs text-[var(--node-fg)]">
+          <SheetContent side="start" className="overflow-hidden bg-[var(--data-rail)] text-[13px] text-[var(--node-fg)]">
             <DialogTitle className="sr-only">Explorer</DialogTitle>
             {tree}
           </SheetContent>

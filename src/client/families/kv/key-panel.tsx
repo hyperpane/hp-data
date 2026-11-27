@@ -3,7 +3,7 @@
 // its value in the editor its type needs.
 
 import { useCallback, useEffect, useState } from 'react';
-import { Clock, Copy, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { Clock, Copy, Pencil, RefreshCw, Trash2 } from '@hyperpane/icons';
 import { NodeButton, Spinner, ToolButton, Toolbar, cn } from '@hyperpane/ui';
 import type { KvValue } from '../../../shared/kv.ts';
 import type { KvEdit } from '../../../shared/kv.ts';
@@ -121,7 +121,7 @@ export function KeyPanel(p: KeyPanelProps) {
         </div>
       </Toolbar>
       {value?.meta && (
-        <div className="flex flex-none flex-wrap gap-x-4 gap-y-1 border-b border-[var(--node-border)] px-3 pb-2 text-2xs text-[var(--node-muted)]">
+        <div className="flex flex-none flex-wrap gap-x-4 gap-y-1 border-b border-[var(--data-line)] px-3 pb-2 text-2xs text-[var(--node-muted)]">
           {Object.entries(value.meta).map(([k, v]) => (
             <span key={k}>
               {k} <span className="font-mono text-[var(--node-fg)]">{v}</span>

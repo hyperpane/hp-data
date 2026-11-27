@@ -2,10 +2,10 @@
 // sorted by, and a handle on its right edge to drag its width (double-click
 // fits it to what it shows).
 
-import { ArrowDown, ArrowUp, Key } from 'lucide-react';
+import { ArrowDown, ArrowUp, Key } from '@hyperpane/icons';
 import { cn, styles } from '@hyperpane/ui';
 import type { Cell, Column } from '../../shared/types.ts';
-import { MIN_W, NUM_W, ROW, initialWidth } from './grid-model.ts';
+import { HEAD, MIN_W, NUM_W, initialWidth } from './grid-model.ts';
 
 export function GridHeader({
   columns,
@@ -27,8 +27,11 @@ export function GridHeader({
   const sortOf = (name: string) => order?.find((o) => o.column === name);
   const p = { onSort };
   return (
-    <div className={cn(styles.stickyTop, 'z-20 flex bg-[var(--node-bg)]')} style={{ height: ROW, width: total }}>
-      <div className="sticky left-0 z-30 flex-none border-r border-b border-[var(--node-border)] bg-[var(--node-header)]" style={{ width: NUM_W }} />
+    <div
+      className={cn(styles.stickyTop, 'z-20 flex min-w-full bg-[var(--node-bg)] shadow-[inset_0_-1px_0_var(--data-line-strong)]')}
+      style={{ height: HEAD, width: total }}
+    >
+      <div className="sticky left-0 z-30 flex-none bg-[var(--node-bg)] shadow-[inset_-1px_0_0_var(--data-line),inset_0_-1px_0_var(--data-line-strong)]" style={{ width: NUM_W }} />
       {columns.map((c, i) => {
         const s = sortOf(c.name);
         return (
@@ -36,23 +39,23 @@ export function GridHeader({
             key={c.name + i}
             title={[c.name, c.type, c.key ? 'primary key' : null, c.nullable === false ? 'not null' : null].filter(Boolean).join(' · ')}
             className={cn(
-              'relative flex flex-none items-center gap-1.5 border-r border-b border-[var(--node-border)] bg-[var(--node-header)] px-2 font-sans font-medium',
-              p.onSort && 'cursor-pointer hover:bg-[var(--node-hover)]',
+              'group/head relative flex flex-none items-center gap-1.5 px-3 text-xs font-medium text-[var(--node-fg)]',
+              p.onSort && 'cursor-pointer transition-colors duration-100 hover:bg-[var(--data-row-hover)]',
             )}
             style={{ width: w(i) }}
             onClick={(e) => p.onSort?.(c.name, e.shiftKey)}
           >
-            {c.key && <Key className="size-3 flex-none text-[var(--ansi-3)]" />}
+            {c.key && <Key className="size-3.5 flex-none text-[var(--data-key)]" />}
             <span className="truncate">{c.name}</span>
-            {c.type && <span className="truncate text-2xs font-normal text-[var(--node-muted)]">{c.type}</span>}
+            {c.type && <span className="truncate text-[11px] font-normal text-[var(--node-muted)]">{c.type}</span>}
             {s &&
               (s.desc ? (
-                <ArrowDown className="ms-auto size-3 flex-none text-[var(--node-accent)]" />
+                <ArrowDown className="ms-auto size-3.5 flex-none text-[var(--node-accent)]" />
               ) : (
-                <ArrowUp className="ms-auto size-3 flex-none text-[var(--node-accent)]" />
+                <ArrowUp className="ms-auto size-3.5 flex-none text-[var(--node-accent)]" />
               ))}
             <div
-              className="absolute top-0 right-[-3px] z-10 h-full w-[6px] cursor-col-resize touch:right-[-8px] touch:w-4"
+              className="absolute top-0 right-[-3px] z-10 h-full w-[6px] cursor-col-resize after:absolute after:inset-y-2 after:left-[2.5px] after:w-px after:bg-[var(--data-line)] after:content-[''] hover:after:inset-y-0 hover:after:w-0.5 hover:after:bg-[var(--node-accent)] touch:right-[-8px] touch:w-4"
               onClick={(e) => e.stopPropagation()}
               onDoubleClick={(e) => {
                 e.stopPropagation();

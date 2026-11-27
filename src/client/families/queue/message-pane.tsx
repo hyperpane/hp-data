@@ -3,7 +3,7 @@
 // about it; copied, or put in the Publish form to send again.
 
 import { useState } from 'react';
-import { Copy, Forward, X } from 'lucide-react';
+import { Copy, Forward, X } from '@hyperpane/icons';
 import { JsonTree, NodeButton, Tabs, ToolButton } from '@hyperpane/ui';
 import type { Message } from '../../../shared/queue.ts';
 import type { Api } from '../../lib/api.ts';
@@ -41,7 +41,7 @@ export function MessagePane({
   ];
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex h-10 flex-none items-center gap-1 border-b border-[var(--node-border)] ps-3 pe-2.5 touch:h-12">
+      <div className="flex h-10 flex-none items-center gap-1 border-b border-[var(--data-line)] ps-3 pe-2.5 touch:h-12">
         <span className="min-w-0 truncate font-mono text-xs font-medium">{placeOf(m)}</span>
         {v.json && (
           <Tabs
@@ -71,7 +71,7 @@ export function MessagePane({
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
-        <section className="border-b border-[var(--node-border)]">
+        <section className="border-b border-[var(--data-line)]">
           {m.binary && <p className="px-3 pt-2 text-2xs text-[var(--node-muted)]">Not text: shown as base64.</p>}
           {m.meta?.truncated && <p className="px-3 pt-2 text-2xs text-[var(--node-muted)]">Cut at 1 MB: the rest isn’t shown</p>}
           {v.json && mode === 'tree' ? (
@@ -91,7 +91,7 @@ export function MessagePane({
 
 function Pairs({ title, rows, empty, api }: { title: string; rows: [string, string][]; empty?: string; api: Api }) {
   return (
-    <section className="border-b border-[var(--node-border)] px-3 pb-2">
+    <section className="border-b border-[var(--data-line)] px-3 pb-2">
       <h3 className="flex h-7 items-center text-xs font-medium text-[var(--node-muted)]">{title}</h3>
       {!rows.length && <p className="text-xs text-[var(--node-muted)]">{empty}</p>}
       <table className="w-full table-fixed text-xs">

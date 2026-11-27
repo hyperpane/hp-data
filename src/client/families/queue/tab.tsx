@@ -3,7 +3,7 @@
 // and Details (partitions, consumer groups and their lag, bindings).
 
 import { useEffect, useMemo, useState } from 'react';
-import { Eraser, RefreshCw, Trash2 } from 'lucide-react';
+import { Eraser, RefreshCw, Trash2 } from '@hyperpane/icons';
 import { Spinner, Tabs, ToolButton, cn, useAsync } from '@hyperpane/ui';
 import type { QueueInfo } from '../../../shared/queue.ts';
 import type { TabProps } from '../../app/tabs.ts';

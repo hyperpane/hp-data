@@ -17,8 +17,8 @@ export function FieldInput({
   saved: boolean;
   onChange(v: string | number | boolean): void;
 }) {
-  const cls = 'h-7 w-full';
-  if (f.type === 'boolean') return <Checkbox className="h-7 text-xs" checked={value === true} onCheckedChange={onChange} label={f.label} />;
+  const cls = 'h-7 w-full text-[13px]';
+  if (f.type === 'boolean') return <Checkbox className="h-7 text-[13px]" checked={value === true} onCheckedChange={onChange} label={f.label} />;
   if (f.type === 'textarea')
     return (
       <textarea
@@ -34,7 +34,7 @@ export function FieldInput({
     return (
       <Picker
         size="sm"
-        className={cn('w-full', softField)}
+        className={cn('w-full text-[13px]', softField)}
         label={f.label}
         value={String(value ?? f.default ?? '')}
         options={f.options ?? []}
@@ -45,7 +45,7 @@ export function FieldInput({
     <NodeInput
       className={cn(
         cls,
-        f.type !== 'password' && (f.key === 'host' || f.key === 'url' || f.key === 'file' || f.key === 'endpoint' || f.key === 'brokers') && 'font-mono',
+        f.type !== 'password' && (f.key === 'host' || f.key === 'url' || f.key === 'file' || f.key === 'endpoint' || f.key === 'brokers') && 'font-mono text-xs',
       )}
       type={f.type === 'password' ? 'password' : f.type === 'number' ? 'number' : 'text'}
       value={value === undefined ? '' : String(value)}

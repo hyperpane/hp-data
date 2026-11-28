@@ -160,7 +160,7 @@ export function PublishForm({
         {language === 'json' && pretty(draft.value).json && (
           <button
             type="button"
-            className="rounded-control h-7 px-2 text-xs text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)]"
+            className="rounded-full h-7 px-2 text-xs text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)]"
             onClick={() => set({ value: pretty(draft.value).text })}
           >
             Format

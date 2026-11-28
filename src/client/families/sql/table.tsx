@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Plus, RefreshCw, RotateCcw, SquareTerminal, Upload } from '@hyperpane/icons';
-import { NodeButton, NodeInput, Picker, Tabs, ToolButton, Toolbar, ToolbarSeparator, ToolbarSpacer, cn } from '@hyperpane/ui';
+import { NodeButton, NodeInput, Picker, Tabs, ToolButton, Toolbar, ToolbarSeparator, ToolbarSpacer, cn, isComposing } from '@hyperpane/ui';
 import { qualified, type Dialect } from '../../../shared/sql.ts';
 import type { Cell } from '../../../shared/types.ts';
 import type { BrowseResult, RowEdit, TableInfo, TableRef } from '../../../shared/sql.ts';
@@ -225,7 +225,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
               value={where}
               onChange={(e) => setWhere(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !isComposing(e)) {
                   setOffset(0);
                   setApplied(where);
                   setTick((t) => t + 1);
@@ -240,7 +240,7 @@ export function SqlTable({ tab, connection, kind, api, project, setState, open, 
           {order.length > 0 && (
             <button
               type="button"
-              className="rounded-control h-7 flex-none bg-[var(--data-fill)] px-2.5 font-mono text-[11px] text-[var(--node-muted)] hover:bg-[var(--data-fill-hover)] hover:text-[var(--node-fg)] max-sm:max-w-[40%] max-sm:truncate"
+              className="rounded-full h-7 flex-none bg-[var(--data-fill)] px-2.5 font-mono text-[11px] text-[var(--node-muted)] hover:bg-[var(--data-fill-hover)] hover:text-[var(--node-fg)] max-sm:max-w-[40%] max-sm:truncate"
               title="Click a column’s header to sort, Shift-click to add; click here to clear"
               onClick={() => setOrder([])}
             >

@@ -73,7 +73,7 @@ export function DocList({
               <button
                 type="button"
                 aria-label="Document menu"
-                className="rounded-control flex size-6 flex-none items-center justify-center text-[var(--node-muted)] opacity-0 group-hover:opacity-100 hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)] focus-visible:opacity-100 touch:size-9 touch:opacity-100"
+                className="rounded-full flex size-6 flex-none items-center justify-center text-[var(--node-muted)] opacity-0 group-hover:opacity-100 hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)] focus-visible:opacity-100 touch:size-9 touch:opacity-100"
                 onClick={(e) => {
                   e.stopPropagation();
                   menu.open(e, items(i));

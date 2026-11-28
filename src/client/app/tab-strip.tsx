@@ -58,7 +58,7 @@ export function TabStrip({
               }}
               aria-label={home ? 'Home' : undefined}
               className={cn(
-                'group rounded-control relative flex h-7 max-w-[220px] flex-none cursor-default items-center gap-1.5 text-[13px] transition-colors duration-100 touch:h-9',
+                'group rounded-full relative flex h-7 max-w-[220px] flex-none cursor-default items-center gap-1.5 text-[13px] transition-colors duration-100 touch:h-9',
                 home ? 'w-7 justify-center touch:w-9' : on ? 'ps-2 pe-1' : 'ps-2 pe-2.5 hover:pe-1 focus-within:pe-1 touch:pe-1',
                 on
                   ? 'bg-[var(--data-fill-hover)] text-[var(--node-fg)]'
@@ -74,7 +74,7 @@ export function TabStrip({
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={() => onClose(t.key)}
                   className={cn(
-                    'flex size-5 flex-none items-center justify-center rounded-[5px] text-[var(--node-muted)] hover:bg-[var(--data-fill-active)] hover:text-[var(--node-fg)] touch:size-7',
+                    'flex size-5 flex-none items-center justify-center rounded-full text-[var(--node-muted)] hover:bg-[var(--data-fill-active)] hover:text-[var(--node-fg)] touch:size-7',
                     on ? 'flex' : 'hidden group-hover:flex focus-visible:flex touch:flex',
                   )}
                 >

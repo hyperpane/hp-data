@@ -8,6 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUp, Database, FolderOpen, FolderPlus, ListTree, RefreshCw, SearchX, Trash2, Upload } from '@hyperpane/icons';
+import { useBack } from '@hyperpane/sdk/client';
 import {
   Empty,
   NodeButton,
@@ -105,6 +106,9 @@ export function BucketView(p: TabProps) {
   const next = pages[pages.length - 1]?.next ?? null;
   const one = selected.size === 1 ? [...selected][0] : null;
   const previewing = one && !one.endsWith('/') ? one : null;
+  // The header's back, while the tab is shown: from a preview shown alone to
+  // the files, else as Back does.
+  useBack(!p.visible ? null : compact && previewing ? () => setSelected(new Set()) : back.current.length ? goBack : null);
 
   const run = async (what: string | null, fn: () => Promise<unknown>, refresh = true) => {
     setBusy(what);
@@ -192,7 +196,7 @@ export function BucketView(p: TabProps) {
         <nav className="flex min-w-0 flex-1 items-center overflow-hidden ps-1 text-xs" aria-label="Folder">
           <button
             type="button"
-            className={cn('rounded-control flex h-7 flex-none items-center gap-1.5 px-1.5 hover:bg-[var(--node-hover)]', !prefix && 'font-medium')}
+            className={cn('rounded-full flex h-7 flex-none items-center gap-1.5 px-1.5 hover:bg-[var(--node-hover)]', !prefix && 'font-medium')}
             onClick={() => go('')}
           >
             <Database className="size-3.5 text-[var(--node-muted)]" />
@@ -204,7 +208,7 @@ export function BucketView(p: TabProps) {
               <button
                 type="button"
                 title={c.prefix}
-                className={cn('rounded-control h-7 truncate px-1.5 hover:bg-[var(--node-hover)]', i === list.length - 1 && 'font-medium')}
+                className={cn('rounded-full h-7 truncate px-1.5 hover:bg-[var(--node-hover)]', i === list.length - 1 && 'font-medium')}
                 onClick={() => go(c.prefix)}
               >
                 {c.name}

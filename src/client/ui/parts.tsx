@@ -53,7 +53,7 @@ export function ErrorBox({ error, onClose, className }: { error: string; onClose
     <div
       role="alert"
       className={cn(
-        'rounded-card mx-2 mt-2 flex flex-none items-start gap-2.5 bg-[color-mix(in_srgb,var(--data-error)_9%,transparent)] py-2 ps-2.5 pe-1.5 text-[13px] text-[var(--node-fg)] ring-1 ring-[color-mix(in_srgb,var(--data-error)_20%,transparent)] ring-inset select-text',
+        'rounded-card mx-2 mt-2 flex flex-none items-start gap-2.5 bg-[color-mix(in_srgb,var(--data-error)_9%,transparent)] py-2 ps-2.5 pe-1.5 text-[13px] text-[var(--node-fg)] select-text',
         className,
       )}
     >

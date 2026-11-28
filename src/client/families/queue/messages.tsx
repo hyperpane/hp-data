@@ -6,7 +6,22 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Radio, RefreshCw } from '@hyperpane/icons';
-import { ColumnResizer, NodeButton, NodeInput, Picker, SplitPane, StatusBar, Toolbar, cn, styles, useColumnWidths, useCompact } from '@hyperpane/ui';
+import { useBack } from '@hyperpane/sdk/client';
+import {
+  ColumnResizer,
+  NodeButton,
+  NodeInput,
+  Picker,
+  SplitPane,
+  StatusBar,
+  Toolbar,
+  cn,
+  styles,
+  useColumnWidths,
+  useCompact,
+  useSplitCompact,
+  isComposing,
+} from '@hyperpane/ui';
 import type { Message } from '../../../shared/queue.ts';
 import type { TabProps } from '../../app/tabs.ts';
 import { ErrorBox, count, ms, softField } from '../../ui/parts.tsx';
@@ -32,12 +47,15 @@ export function Messages({
   caps,
   base,
   partitions,
+  onScreen,
   onAgain,
 }: {
   p: TabProps;
   caps: Caps;
   base: Record<string, unknown>;
   partitions: number[];
+  /** Whether these messages are what's shown (their tab, and Messages in it). */
+  onScreen: boolean;
   onAgain(m: Message): void;
 }) {
   const { api } = p;
@@ -259,7 +277,7 @@ export function Messages({
             placeholder="offset"
             aria-label="Offset"
             onChange={(e) => set({ offset: e.target.value })}
-            onKeyDown={(e) => e.key === 'Enter' && void load()}
+            onKeyDown={(e) => e.key === 'Enter' && !isComposing(e) && void load()}
           />
         )}
         <Picker
@@ -309,7 +327,12 @@ export function Messages({
           minOther={240}
           compactBelow={640}
           first={table}
-          second={<MessagePane m={selected} caps={caps} api={api} readOnly={p.readOnly} onAgain={() => onAgain(selected)} onClose={() => setSel(null)} />}
+          second={
+            <>
+              <BackToMessages shown={onScreen} onBack={() => setSel(null)} />
+              <MessagePane m={selected} caps={caps} api={api} readOnly={p.readOnly} onAgain={() => onAgain(selected)} onClose={() => setSel(null)} />
+            </>
+          }
         />
       ) : (
         table
@@ -321,4 +344,10 @@ export function Messages({
       </StatusBar>
     </div>
   );
+}
+
+/** The header's back, over a message shown alone: to the messages. */
+function BackToMessages({ shown, onBack }: { shown: boolean; onBack(): void }) {
+  useBack(useSplitCompact() && shown ? onBack : null);
+  return null;
 }

@@ -95,15 +95,15 @@ export const header = {
 export const footer =
   'scrollbar-none flex h-8 min-w-0 flex-none items-center gap-3 overflow-x-auto border-t border-[var(--data-line)] px-3 text-xs text-[var(--node-muted)] tabular-nums whitespace-nowrap touch:h-10';
 
-/** A chip: a small tinted label. Its colour comes from `--chip`. */
+/** A chip: a small tinted pill. Its colour comes from `--chip`. */
 export const chip = {
-  base: 'inline-flex h-5 flex-none items-center gap-1 rounded-chip px-1.5 text-[11px] leading-none font-medium tabular-nums whitespace-nowrap',
+  base: 'inline-flex h-5 flex-none items-center gap-1 rounded-full px-2 text-[11px] leading-none font-medium tabular-nums whitespace-nowrap',
   tinted: 'bg-[color-mix(in_srgb,var(--chip,var(--node-fg))_14%,transparent)] text-[var(--chip,var(--node-muted))]',
   neutral: 'bg-[var(--data-fill)] text-[var(--node-muted)]',
 } as const;
 
 const buttonBase = [
-  'inline-flex h-7 flex-none items-center justify-center gap-1.5 rounded-control px-3 text-[13px] font-medium whitespace-nowrap transition-[background-color,color,filter,scale] duration-100 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 touch:h-9 [&_svg]:size-4 [&_svg]:flex-none',
+  'inline-flex h-7 flex-none items-center justify-center gap-1.5 rounded-full px-3 text-[13px] font-medium whitespace-nowrap transition-[background-color,color,filter,scale] duration-100 active:scale-[0.98] disabled:cursor-default disabled:opacity-50 touch:h-9 [&_svg]:size-4 [&_svg]:flex-none',
   styles.focusRing,
 ].join(' ');
 
@@ -115,7 +115,7 @@ export const button = {
   icon: 'w-7 px-0 touch:w-9',
   /** Disabled, it greys to a quiet fill rather than a dim accent. */
   primary:
-    'bg-[var(--node-accent)] text-white shadow-[0_1px_0_0_color-mix(in_srgb,white_18%,transparent)_inset,0_1px_2px_0_color-mix(in_srgb,black_25%,transparent)] hover:brightness-110 active:brightness-95 disabled:bg-[var(--data-fill)] disabled:text-[var(--node-muted)] disabled:shadow-none disabled:opacity-100',
+    'bg-[var(--node-accent)] text-white hover:brightness-110 active:brightness-95 disabled:bg-[var(--data-fill)] disabled:text-[var(--node-muted)] disabled:shadow-none disabled:opacity-100',
   secondary: 'bg-[var(--data-fill)] text-[var(--node-fg)] hover:bg-[var(--data-fill-hover)] active:bg-[var(--data-fill-active)]',
   ghost: 'text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)] active:bg-[var(--node-active)]',
   danger: 'bg-[color-mix(in_srgb,var(--data-error)_14%,transparent)] text-[var(--data-error)] hover:bg-[color-mix(in_srgb,var(--data-error)_22%,transparent)]',
@@ -123,10 +123,12 @@ export const button = {
 
 /** A field: 28px (`lg` 32px in a form), a soft fill, the accent's ring while it has the keys. */
 export const field =
-  'h-7 min-w-0 rounded-control bg-[var(--data-fill)] px-2.5 text-[13px] text-[var(--node-fg)] outline-none placeholder:text-[var(--node-muted)] transition-[background-color,box-shadow] duration-100 hover:bg-[var(--data-fill-hover)] focus:bg-transparent focus:shadow-[0_0_0_1.5px_var(--node-accent)] touch:h-9';
+  'h-7 min-w-0 rounded-full bg-[var(--data-fill)] px-2.5 text-[13px] text-[var(--node-fg)] outline-none placeholder:text-[var(--node-muted)] transition-[background-color,box-shadow] duration-100 hover:bg-[var(--data-fill-hover)] focus:bg-transparent focus:shadow-[0_0_0_1.5px_var(--node-accent)] touch:h-9';
 
-/** A card: a raised surface with a hairline, 10px corners. */
-export const card = `rounded-card ${styles.raisedSurface}`;
+/** A card: a raised surface (a fill, no line), 10px corners. Data's own
+ * step off the window rather than the kit's raised surface, which a light
+ * theme draws in the window's own white, so the card would vanish. */
+export const card = 'rounded-card bg-[var(--data-raised)]';
 
 /** A key's hint (⌘↵) in a button: small, in the text's colour, faded. */
 export const kbd = 'font-sans text-[11px] font-medium tracking-wide opacity-70';

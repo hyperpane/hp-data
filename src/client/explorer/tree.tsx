@@ -30,7 +30,7 @@ const keyOf = (conn: string, path: string[]) => [conn, ...path].join('\u0000');
 const INDENT = (depth: number) => 4 + depth * 16;
 
 const chevron =
-  'flex size-5 flex-none items-center justify-center rounded-[5px] text-[var(--node-muted)] transition-colors duration-100 hover:bg-[var(--data-fill-hover)] hover:text-[var(--node-fg)]';
+  'flex size-5 flex-none items-center justify-center rounded-full text-[var(--node-muted)] transition-colors duration-100 hover:bg-[var(--data-fill-hover)] hover:text-[var(--node-fg)]';
 
 export interface ExplorerHandle {
   /** Expands a connection (connecting it). */
@@ -188,7 +188,7 @@ export function Explorer({
           <span className="min-w-0 flex-1 py-px break-words select-text">{l.error}</span>
           <button
             type="button"
-            className="-my-0.5 h-5 flex-none rounded-chip px-1.5 font-medium text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)]"
+            className="-my-0.5 h-5 flex-none rounded-full px-2 font-medium text-[var(--node-muted)] hover:bg-[var(--node-hover)] hover:text-[var(--node-fg)]"
             onClick={() => refresh(c.id, path)}
           >
             Retry

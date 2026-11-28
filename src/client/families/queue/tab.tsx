@@ -84,6 +84,7 @@ export function QueueTab(p: TabProps) {
             caps={caps}
             base={base}
             partitions={partitions}
+            onScreen={p.visible && view === 'messages'}
             onAgain={(m) => {
               setDraft({
                 key: m.key ?? '',

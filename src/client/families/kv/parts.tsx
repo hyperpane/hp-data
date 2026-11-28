@@ -10,7 +10,7 @@ export function TypeBadge({ type, className }: { type: KeyType; className?: stri
   const t = TYPE_INFO[type] ?? TYPE_INFO.other;
   return (
     <span
-      className={cn('inline-flex h-4 w-11 flex-none items-center justify-center rounded-[4px] font-mono text-[10px] font-medium', className)}
+      className={cn('inline-flex h-4 w-11 flex-none items-center justify-center rounded-full font-mono text-[10px] font-medium', className)}
       style={{ color: t.color, background: `color-mix(in srgb, ${t.color} 16%, transparent)` }}
     >
       {t.label}
@@ -81,7 +81,7 @@ export function Field({ label, children, help }: { label: string; children: Reac
 }
 
 export const inputClass =
-  'rounded-control h-7 border border-transparent bg-[color-mix(in_srgb,var(--node-fg)_6%,transparent)] px-2 font-mono text-xs text-[var(--node-fg)] outline-none transition-[border-color,box-shadow] duration-100 placeholder:text-[var(--node-muted)] hover:bg-[color-mix(in_srgb,var(--node-fg)_9%,transparent)] focus:border-[var(--node-accent)] focus:bg-transparent focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--node-accent)_22%,transparent)] touch:h-9';
+  'rounded-full h-7 border border-transparent bg-[color-mix(in_srgb,var(--node-fg)_6%,transparent)] px-2 font-mono text-xs text-[var(--node-fg)] outline-none transition-[border-color,box-shadow] duration-100 placeholder:text-[var(--node-muted)] hover:bg-[color-mix(in_srgb,var(--node-fg)_9%,transparent)] focus:border-[var(--node-accent)] focus:bg-transparent focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--node-accent)_22%,transparent)] touch:h-9';
 
 export function Muted({ children, error }: { children: React.ReactNode; error?: boolean }) {
   return <div className={cn('px-3 py-3 text-xs', error ? 'text-[var(--ansi-1)] select-text' : 'text-[var(--node-muted)]')}>{children}</div>;

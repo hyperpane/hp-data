@@ -303,9 +303,9 @@ export function ConnectionDialog({
         )}
 
         {kind && (
-          <div className="flex flex-col gap-3 border-t border-[var(--data-line)] bg-[var(--data-rail)] px-5 py-3.5">
+          <div className="flex flex-col gap-3 border-t border-[var(--data-line)] bg-[var(--data-rail)] px-5 py-3">
             {test.state === 'ok' && (
-              <div className="rounded-control flex items-center gap-2 bg-[color-mix(in_srgb,var(--data-ok)_10%,transparent)] px-2.5 py-2 text-[13px] ring-1 ring-[color-mix(in_srgb,var(--data-ok)_20%,transparent)] ring-inset">
+              <div className="rounded-control flex items-center gap-2 bg-[color-mix(in_srgb,var(--data-ok)_10%,transparent)] px-2.5 py-2 text-[13px]">
                 <CheckCircle2 className="size-4 flex-none text-[var(--data-ok)]" />
                 <span className="min-w-0 truncate">
                   Connected: {test.info?.version}
@@ -314,7 +314,7 @@ export function ConnectionDialog({
               </div>
             )}
             {test.state === 'failed' && (
-              <div className="rounded-control flex items-start gap-2 bg-[color-mix(in_srgb,var(--data-error)_9%,transparent)] px-2.5 py-2 text-[13px] ring-1 ring-[color-mix(in_srgb,var(--data-error)_20%,transparent)] ring-inset">
+              <div className="rounded-control flex items-start gap-2 bg-[color-mix(in_srgb,var(--data-error)_9%,transparent)] px-2.5 py-2 text-[13px]">
                 <XCircle className="mt-0.5 size-4 flex-none text-[var(--data-error)]" />
                 <span className="min-w-0 break-words whitespace-pre-wrap select-text">{test.error}</span>
               </div>

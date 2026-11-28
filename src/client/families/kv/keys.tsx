@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from 'react';
 import { KeyRound, Plus } from '@hyperpane/icons';
+import { useBack } from '@hyperpane/sdk/client';
 import { Empty, NodeButton, PaneBar, SplitPane, useSplitCompact } from '@hyperpane/ui';
 import type { TabProps } from '../../app/tabs.ts';
 import { KeyList } from './key-list.tsx';
@@ -74,7 +75,7 @@ export function KeysView(p: TabProps) {
         second={
           selected ? (
             <>
-              <BackToKeys onBack={() => select(null)} />
+              <BackToKeys shown={p.visible} onBack={() => select(null)} />
               <KeyPanel
                 key={selected}
                 calls={calls}
@@ -134,7 +135,10 @@ export function KeysView(p: TabProps) {
   );
 }
 
-/** The way back to the keys, over a key shown alone. */
-function BackToKeys({ onBack }: { onBack(): void }) {
-  return useSplitCompact() ? <PaneBar onBack={onBack} backLabel="Keys" /> : null;
+/** The way back to the keys, over a key shown alone: this bar, and the
+ * header's back while the tab is shown. */
+function BackToKeys({ shown, onBack }: { shown: boolean; onBack(): void }) {
+  const alone = useSplitCompact();
+  useBack(alone && shown ? onBack : null);
+  return alone ? <PaneBar onBack={onBack} backLabel="Keys" /> : null;
 }

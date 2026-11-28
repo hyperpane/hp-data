@@ -6,7 +6,7 @@
 // Only the rows in view are drawn, so a hundred thousand are fine.
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { type MenuEntry, cn, useMenu } from '@hyperpane/ui';
+import { type MenuEntry, cn, useMenu, isComposing } from '@hyperpane/ui';
 import type { Cell, Column } from '../../shared/types.ts';
 import { type CopyFormat, editable as editText, isBytes, parseInput, rowsAs } from './cells.ts';
 import { CellValue } from './grid-cell.tsx';
@@ -320,7 +320,7 @@ export function Grid(p: GridProps) {
                         onBlur={commit}
                         onKeyDown={(e) => {
                           e.stopPropagation();
-                          if (e.key === 'Enter') commit();
+                          if (e.key === 'Enter' && !isComposing(e)) commit();
                           else if (e.key === 'Escape') {
                             setEditing(null);
                             box.current?.focus();
